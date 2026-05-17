@@ -172,7 +172,7 @@ export const MirimInscricaoPage: React.FC = () => {
                 <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
                   <div className="flex items-center gap-3 text-orange-500 mb-2">
                     <User size={28} />
-                    <h2 className="text-2xl font-bold text-white">Nome do Peão Mirim</h2>
+                    <h2 className="text-2xl font-bold text-white">Nome do Peão Mirim <span className="text-red-500">*</span></h2>
                   </div>
                   <input 
                     type="text" 
@@ -195,7 +195,7 @@ export const MirimInscricaoPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-zinc-400 text-sm mb-1 block">Idade</label>
+                      <label className="text-zinc-400 text-sm mb-1 block">Idade <span className="text-red-500">*</span></label>
                       <input 
                         type="number" 
                         name="idade"
@@ -207,7 +207,7 @@ export const MirimInscricaoPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-zinc-400 text-sm mb-1 block">Peso (kg)</label>
+                      <label className="text-zinc-400 text-sm mb-1 block">Peso (kg) <span className="text-red-500">*</span></label>
                       <input 
                         type="number" 
                         name="peso"
@@ -230,7 +230,7 @@ export const MirimInscricaoPage: React.FC = () => {
                     <h2 className="text-2xl font-bold text-white">Contato</h2>
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Nome do Responsável</label>
+                    <label className="text-zinc-400 text-sm mb-1 block">Nome do Responsável <span className="text-red-500">*</span></label>
                     <input 
                       type="text" 
                       name="responsavel"
@@ -242,7 +242,7 @@ export const MirimInscricaoPage: React.FC = () => {
                     />
                   </div>
                   <div className="mt-2">
-                    <label className="text-zinc-400 text-sm mb-1 block">WhatsApp do Responsável</label>
+                    <label className="text-zinc-400 text-sm mb-1 block">WhatsApp do Responsável <span className="text-red-500">*</span></label>
                     <div className="flex items-center gap-3 text-orange-500 absolute ml-4 mt-4">
                       <Phone size={20} className="text-zinc-500" />
                     </div>

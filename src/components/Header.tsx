@@ -40,7 +40,7 @@ export const Header: React.FC = () => {
         
         {/* Logo Esquerda */}
         <div className="flex-1 flex justify-start h-full shrink-0">
-          <div className="cursor-pointer h-full flex items-center py-2" onClick={() => navigate('/ExpoGoiabal/Inicio')}>
+          <div className="cursor-pointer h-full flex items-center py-2" onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Inicio'); }}>
             <img 
               src="/logo-header.png" 
               alt="ExpoGoiabal Logo" 
@@ -55,6 +55,7 @@ export const Header: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => window.scrollTo(0, 0)}
               className={({ isActive }) => 
                 `text-[10px] xl:text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                   isActive 
@@ -111,7 +112,7 @@ export const Header: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => { setIsMobileMenuOpen(false); window.scrollTo(0, 0); }}
               className={({ isActive }) => 
                 `text-sm font-bold uppercase tracking-widest transition-all duration-300 ${
                   isActive 
