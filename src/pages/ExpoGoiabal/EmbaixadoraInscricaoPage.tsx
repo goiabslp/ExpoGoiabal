@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from '../../components/Header';
-import { User, Calendar, Phone, Upload, ArrowRight, ArrowLeft, CheckCircle, Video, RefreshCcw, Star } from 'lucide-react';
+import { User, Calendar, Phone, Upload, ArrowRight, ArrowLeft, CheckCircle, Video, RefreshCcw, Star, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const EmbaixadoraInscricaoPage: React.FC = () => {
@@ -16,6 +16,7 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
   const [isTermosOpen, setIsTermosOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
+  const [showVideoInfoModal, setShowVideoInfoModal] = useState(false);
 
   // Calcula a data máxima (18 anos atrás a partir de hoje)
   const maxDate18YearsAgo = new Date();
@@ -25,7 +26,11 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
   const nextStep = () => {
     // Validação passo 1
     if (step === 1 && !formData.modalidade) return;
-    setStep(prev => Math.min(prev + 1, 6));
+    const next = Math.min(step + 1, 6);
+    if (next === 5 && step !== 5) {
+      setShowVideoInfoModal(true);
+    }
+    setStep(next);
   };
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
@@ -283,7 +288,15 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
                   <div className="flex items-center gap-3 text-yellow-500 mb-2">
                     <Video size={28} />
-                    <h2 className="text-2xl font-bold text-white">Vídeo de Apresentação</h2>
+                    <h2 className="text-2xl font-bold text-white flex-1">Vídeo de Apresentação</h2>
+                    <button 
+                      type="button"
+                      onClick={() => setShowVideoInfoModal(true)}
+                      className="ml-auto text-zinc-400 hover:text-yellow-500 transition-colors bg-zinc-800/50 hover:bg-zinc-800 p-2 rounded-full border border-zinc-700/50 hover:border-yellow-500/30"
+                      title="Privacidade do Vídeo"
+                    >
+                      <ShieldCheck size={20} />
+                    </button>
                   </div>
                   <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-2 shadow-inner">
                     <p className="text-zinc-300 text-sm md:text-base text-center">Grave um breve vídeo dizendo a seguinte frase:</p>
@@ -329,8 +342,8 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Checkbox Termos Global (Sempre Visível após Modalidade e antes do Success) */}
-              {step > 1 && step < 6 && (
+              {/* Checkbox Termos Global (Sempre Visível após Modalidade e antes do Vídeo) */}
+              {step > 1 && step < 5 && (
                 <div className="flex items-start gap-3 mt-8 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 animate-in fade-in">
                   <input 
                     type="checkbox" 
@@ -482,6 +495,52 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 className="mt-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors"
               >
                 Tentar Novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Info do Vídeo */}
+      {showVideoInfoModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-yellow-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(255,215,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            
+            {/* Decoração temática */}
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-500/20 to-transparent"></div>
+            
+            <button 
+              onClick={() => setShowVideoInfoModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full backdrop-blur-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,215,0,0.4)] animate-pulse">
+                <ShieldCheck size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Atenção, {formData.modalidade || 'Candidata'}!
+                </h3>
+                <div className="h-1 w-16 bg-yellow-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Fique tranquila! Seu vídeo <strong className="text-yellow-500">não será divulgado</strong> ou postado em lugar nenhum.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                Ele será utilizado exclusivamente pela nossa equipe interna apenas para <strong className="text-white">confirmar a sua identidade</strong> e garantir a segurança do processo seletivo.
+              </p>
+
+              <button 
+                onClick={() => setShowVideoInfoModal(false)}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.02] text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+              >
+                Entendi, continuar
               </button>
             </div>
           </div>
