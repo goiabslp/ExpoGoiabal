@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-zinc-900 text-zinc-100 font-sans antialiased m-0 p-0;
+  }
+}
+
+@layer utilities {
+  .shadow-yellow-glow {
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+  }
+  
+  .glass-panel {
+    @apply bg-transparent md:bg-black/40 backdrop-blur-none md:backdrop-blur-md border-transparent md:border-white/10;
+  }
+}
