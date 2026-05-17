@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Shield, Users, Video, ArrowLeft, CheckCircle, Activity, Baby } from 'lucide-react';
+import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminPage: React.FC = () => {
