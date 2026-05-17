@@ -7,6 +7,7 @@ import { MarchaPage } from '../pages/ExpoGoiabal/MarchaPage';
 import { InscricaoPage } from '../pages/ExpoGoiabal/InscricaoPage';
 import { EmbaixadoraInscricaoPage } from '../pages/ExpoGoiabal/EmbaixadoraInscricaoPage';
 import { TresTamboresPage } from '../pages/ExpoGoiabal/TresTamboresPage';
+import { MirimInscricaoPage } from '../pages/ExpoGoiabal/MirimInscricaoPage';
 import { AdminPage } from '../pages/Admin/AdminPage';
 
 export const router = createBrowserRouter([
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/Embaixadora/inscricao',
     element: <EmbaixadoraInscricaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Mirim/inscricao',
+    element: <MirimInscricaoPage />,
   },
   {
     path: '/ExpoGoiabal/3tambores',

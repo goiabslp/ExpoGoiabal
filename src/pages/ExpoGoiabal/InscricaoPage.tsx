@@ -17,7 +17,7 @@ export const InscricaoPage: React.FC = () => {
             Inscrições
           </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full px-4">
             {/* Card 1: Embaixadora */}
             <div 
               onClick={() => navigate('/ExpoGoiabal/Embaixadora/inscricao')}
@@ -26,7 +26,7 @@ export const InscricaoPage: React.FC = () => {
               <img 
                 src="/Embaixadora.png" 
                 alt="Inscrição Embaixadora" 
-                className="w-3/4 max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(255,215,0,0.6)] transition-all duration-500"
+                className="w-3/4 md:w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(255,215,0,0.6)] transition-all duration-500"
               />
             </div>
 
@@ -38,7 +38,19 @@ export const InscricaoPage: React.FC = () => {
               <img 
                 src="/Tambores.png" 
                 alt="Inscrição 3 Tambores" 
-                className="w-3/4 max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(34,211,238,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-500"
+                className="w-3/4 md:w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(34,211,238,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-500"
+              />
+            </div>
+
+            {/* Card 3: Peão Mirim */}
+            <div 
+              onClick={() => navigate('/ExpoGoiabal/Mirim/inscricao')}
+              className="cursor-pointer group flex items-center justify-center transition-all duration-500 hover:scale-105"
+            >
+              <img 
+                src="/Mirim.png" 
+                alt="Inscrição Peão Mirim" 
+                className="w-3/4 md:w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(255,100,0,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(255,100,0,0.6)] transition-all duration-500"
               />
             </div>
           </div>

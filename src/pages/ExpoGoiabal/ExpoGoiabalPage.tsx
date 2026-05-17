@@ -105,6 +105,63 @@ export const ExpoGoiabalPage: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Seção de Inscrições */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto mt-24 mb-32 flex flex-col items-center gap-10">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-200 to-yellow-500 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+              Inscrições
+            </h2>
+            <div className="w-24 h-1 bg-yellow-500 rounded-full drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 w-full px-8 mt-8">
+            {/* Card 1: Embaixadora */}
+            <div 
+              onClick={() => navigate('/ExpoGoiabal/Embaixadora/inscricao')}
+              className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full group-hover:bg-yellow-500/40 transition-all duration-500"></div>
+                <img 
+                  src="/Embaixadora.png" 
+                  alt="Inscrição Embaixadora e Madrinha" 
+                  className="relative w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_20px_rgba(255,215,0,0.4)] group-hover:drop-shadow-[0_0_40px_rgba(255,215,0,0.8)] transition-all duration-500 border border-yellow-500/20 group-hover:border-yellow-500/60"
+                />
+              </div>
+            </div>
+
+            {/* Card 2: 3 Tambores */}
+            <div 
+              onClick={() => navigate('/ExpoGoiabal/3tambores')}
+              className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full group-hover:bg-cyan-500/40 transition-all duration-500"></div>
+                <img 
+                  src="/Tambores.png" 
+                  alt="Inscrição 3 Tambores" 
+                  className="relative w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_20px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-500 border border-cyan-500/20 group-hover:border-cyan-500/60"
+                />
+              </div>
+            </div>
+
+            {/* Card 3: Peão Mirim */}
+            <div 
+              onClick={() => navigate('/ExpoGoiabal/Mirim/inscricao')}
+              className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full group-hover:bg-orange-500/40 transition-all duration-500"></div>
+                <img 
+                  src="/Mirim.png" 
+                  alt="Inscrição Peão Mirim" 
+                  className="relative w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_20px_rgba(255,100,0,0.4)] group-hover:drop-shadow-[0_0_40px_rgba(255,100,0,0.8)] transition-all duration-500 border border-orange-500/20 group-hover:border-orange-500/60"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
