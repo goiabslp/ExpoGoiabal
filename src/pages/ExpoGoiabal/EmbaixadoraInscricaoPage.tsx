@@ -270,13 +270,17 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                     <Video size={28} />
                     <h2 className="text-2xl font-bold text-white">Vídeo de Apresentação</h2>
                   </div>
-                  <p className="text-zinc-400">Grave um breve vídeo dizendo por que você quer ser a Embaixadora.</p>
+                  <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-2 shadow-inner">
+                    <p className="text-zinc-300 text-sm md:text-base text-center">Grave um breve vídeo dizendo a seguinte frase:</p>
+                    <p className="text-yellow-500 font-bold text-lg md:text-xl text-center mt-2 italic drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">
+                      "Eu quero ser a {formData.modalidade || 'Embaixadora'} da ExpoGoiabal 2026"
+                    </p>
+                  </div>
                   
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-zinc-700 border-dashed rounded-2xl cursor-pointer hover:bg-zinc-800/50 hover:border-yellow-500 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-10 h-10 text-zinc-500 group-hover:text-yellow-500 mb-3 transition-colors" />
-                      <p className="mb-2 text-sm text-zinc-400"><span className="font-semibold text-white">Clique para enviar</span> ou arraste o vídeo</p>
-                      <p className="text-xs text-zinc-500">MP4, MOV (MAX. 50MB)</p>
+                  <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-zinc-700 border-dashed rounded-xl cursor-pointer hover:bg-zinc-800/50 hover:border-yellow-500 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <Upload className="w-5 h-5 text-zinc-500 group-hover:text-yellow-500 transition-colors" />
+                      <p className="text-sm text-zinc-400"><span className="font-semibold text-white">Clique para enviar</span> ou arraste (Máx. 50MB)</p>
                     </div>
                     <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} required />
                   </label>
