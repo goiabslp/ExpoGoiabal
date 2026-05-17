@@ -59,6 +59,7 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
           .upload(filePath, formData.video);
 
         if (uploadError) {
+          console.error("Supabase Upload Error:", uploadError);
           throw new Error('Erro ao fazer upload do vídeo. Verifique o tamanho (Max. 50MB) ou tente novamente.');
         }
 
