@@ -31,6 +31,19 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'whatsapp') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 11);
+      let formatted = cleaned;
+      if (cleaned.length > 0) formatted = '(' + cleaned;
+      if (cleaned.length > 2) formatted = '(' + cleaned.slice(0, 2) + ') ' + cleaned.slice(2);
+      if (cleaned.length > 3) formatted = '(' + cleaned.slice(0, 2) + ') ' + cleaned.slice(2, 3) + ' ' + cleaned.slice(3);
+      if (cleaned.length > 7) formatted = '(' + cleaned.slice(0, 2) + ') ' + cleaned.slice(2, 3) + ' ' + cleaned.slice(3, 7) + '-' + cleaned.slice(7);
+      
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -256,7 +269,9 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                     name="whatsapp"
                     value={formData.whatsapp}
                     onChange={handleInputChange}
-                    placeholder="(00) 00000-0000"
+                    placeholder="(00) 0 0000-0000"
+                    maxLength={16}
+                    minLength={16}
                     required
                     className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
                   />
