@@ -19,16 +19,16 @@ export const ExpoGoiabalPage: React.FC = () => {
       <main className="flex-1 relative flex flex-col items-center justify-center p-4">
         {/* Background Image Layer (Mobile) */}
         <div 
-          className="md:hidden absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/background2.png)', backgroundAttachment: 'fixed' }}
+          className="md:hidden fixed inset-0 z-0 bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{ backgroundImage: 'url(/background2.png)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-zinc-900/80 to-zinc-900/95" />
         </div>
 
         {/* Background Image Layer (Desktop) */}
         <div 
-          className="hidden md:block absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/background.png)', backgroundAttachment: 'fixed' }}
+          className="hidden md:block fixed inset-0 z-0 bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{ backgroundImage: 'url(/background.png)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-zinc-900/80 to-zinc-900/95" />
         </div>
