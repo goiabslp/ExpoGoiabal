@@ -196,38 +196,24 @@ export const ExpoGoiabalPage: React.FC = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
-                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:00</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Apresentação dos Peões e Mirim em Carneiro.</p>
-                </div>
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Shows de Música</span>
-                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">22:30</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Edmilson do Forró e Celio Nonato.</p>
-                </div>
-                {expandedDay === 'quinta' && (
-                  <>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Abertura Oficial</span>
-                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:30</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Apresentação das Autoridades e Organizadores.</p>
+                {(expandedDay === 'quinta' ? [
+                  { title: "Recepção aos Cavaleiros", time: "18:00", desc: "Apresentação dos Cavaleiros e Churrasco." },
+                  { title: "Abertura do Rodeio", time: "20:00", desc: "Apresentação dos Peões e Mirim em Carneiro." },
+                  { title: "Show de Rodeio", time: "20:40", desc: "Montarias em bois e cavalos." },
+                  { title: "Edmilson do Forró", time: "22:30", desc: "Show de Música no palco principal." },
+                  { title: "Celio Nonato", time: "01:00", desc: "Show de Música no palco principal." }
+                ] : [
+                  { title: "Abertura do Rodeio", time: "20:00", desc: "Apresentação dos Peões e Mirim em Carneiro." },
+                  { title: "Edmilson do Forró", time: "22:30", desc: "Show de Música no palco principal." }
+                ]).map((item, idx) => (
+                  <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-white text-lg">{item.title}</span>
+                      <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">{item.time}</span>
                     </div>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
-                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">21:00</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
-                    </div>
-                  </>
-                )}
+                    <p className="text-sm text-zinc-400">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -248,45 +234,26 @@ export const ExpoGoiabalPage: React.FC = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Prova 3 Tambores (Feminino)</span>
-                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">20:20</span>
+                {(expandedDay === 'sexta' ? [
+                  { title: "Abertura do Rodeio", time: "19:30", desc: "Apresentação e Entrada dos Peões." },
+                  { title: "Abertura Oficial", time: "20:00", desc: "Apresentação das Autoridades e Organizadores." },
+                  { title: "Prova 3 Tambores (Feminino)", time: "20:20", desc: "Montaria Feminina em Cavalos." },
+                  { title: "Show de Rodeio", time: "21:00", desc: "Montarias em bois e cavalos." },
+                  { title: "Andrey Ferraz", time: "22:30", desc: "Show de Música no palco principal." },
+                  { title: "Naiara Azevedo", time: "00:30", desc: "Show de Música no palco principal." },
+                  { title: "DJ Brinks", time: "02:30", desc: "Festa comandada pelo DJ." }
+                ] : [
+                  { title: "Prova 3 Tambores (Feminino)", time: "20:20", desc: "Montaria Feminina em Cavalos." },
+                  { title: "Naiara Azevedo", time: "00:30", desc: "Show de Música no palco principal." }
+                ]).map((item, idx) => (
+                  <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-white text-lg">{item.title}</span>
+                      <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">{item.time}</span>
+                    </div>
+                    <p className="text-sm text-zinc-400">{item.desc}</p>
                   </div>
-                  <p className="text-sm text-zinc-400">Montaria Feminina em Cavalos.</p>
-                </div>
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Shows de Música</span>
-                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">22:30</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Andrey Ferraz, Naiara Azevedo, DJ Brinks.</p>
-                </div>
-                {expandedDay === 'sexta' && (
-                  <>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
-                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">19:30</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Apresentação e Entrada dos Peões.</p>
-                    </div>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Abertura Oficial</span>
-                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">20:00</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Apresentação das Autoridades e Organizadores.</p>
-                    </div>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
-                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">21:00</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
-                    </div>
-                  </>
-                )}
+                ))}
               </div>
             </div>
 
@@ -307,38 +274,25 @@ export const ExpoGoiabalPage: React.FC = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Prova 3 Tambores (Final)</span>
-                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:30</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Final da Competição.</p>
-                </div>
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Shows de Música</span>
-                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">22:30</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Marconi e Diego, Althair e Alexandre, Banda Nova Face.</p>
-                </div>
-                {expandedDay === 'sabado' && (
-                  <>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
-                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:00</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Apresentação e Entrada dos Peões.</p>
+                {(expandedDay === 'sabado' ? [
+                  { title: "Abertura do Rodeio", time: "20:00", desc: "Apresentação e Entrada dos Peões e Mirim em Carneiro." },
+                  { title: "Prova 3 Tambores (Final)", time: "20:30", desc: "Final da Competição." },
+                  { title: "Show de Rodeio", time: "21:00", desc: "Montarias em bois e cavalos." },
+                  { title: "Marconi e Diego", time: "22:30", desc: "Show de Música no palco principal." },
+                  { title: "Althair e Alexandre", time: "00:30", desc: "Show de Música no palco principal." },
+                  { title: "Banda Nova Face", time: "02:30", desc: "Show de Música no palco principal." }
+                ] : [
+                  { title: "Prova 3 Tambores (Final)", time: "20:30", desc: "Final da Competição." },
+                  { title: "Althair e Alexandre", time: "00:30", desc: "Show de Música no palco principal." }
+                ]).map((item, idx) => (
+                  <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-white text-lg">{item.title}</span>
+                      <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">{item.time}</span>
                     </div>
-                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
-                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">21:00</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
-                    </div>
-                  </>
-                )}
+                    <p className="text-sm text-zinc-400">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -359,23 +313,25 @@ export const ExpoGoiabalPage: React.FC = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Concurso de Marcha</span>
-                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">10:00</span>
+                {(expandedDay === 'domingo' ? [
+                  { title: "Concurso de Marcha", time: "10:00", desc: "37ª Cavalgada de São José do Goiabal - MG." },
+                  { title: "Banda Savassy", time: "13:00", desc: "Show de Música ao vivo." },
+                  { title: "Nilson Garcia", time: "16:00", desc: "Show de Música ao vivo." }
+                ] : [
+                  { title: "Concurso de Marcha", time: "10:00", desc: "37ª Cavalgada de São José do Goiabal - MG." },
+                  { title: "Banda Savassy", time: "13:00", desc: "Show de Música ao vivo." }
+                ]).map((item, idx) => (
+                  <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-white text-lg">{item.title}</span>
+                      <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">{item.time}</span>
+                    </div>
+                    <p className="text-sm text-zinc-400">{item.desc}</p>
                   </div>
-                  <p className="text-sm text-zinc-400">37ª Cavalgada de São José do Goiabal - MG.</p>
-                </div>
-                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-white text-lg">Shows de Música</span>
-                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">13:00</span>
-                  </div>
-                  <p className="text-sm text-zinc-400">Banda Savassy, Nilson Garcia.</p>
-                </div>
+                ))}
                 {expandedDay === 'domingo' && (
                   <div className="md:col-span-2 bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4 flex items-center justify-center">
-                    <p className="text-zinc-400 text-center">Fim das atividades com música ao vivo durante toda a tarde e encerramento da ExpoGoiabal 2026!</p>
+                    <p className="text-zinc-400 text-center font-medium">Fim das atividades com música ao vivo durante toda a tarde e encerramento da ExpoGoiabal 2026!</p>
                   </div>
                 )}
               </div>
