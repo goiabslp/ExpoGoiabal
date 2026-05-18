@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Music, Trophy } from 'lucide-react';
+import { Music, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const ExpoGoiabalPage: React.FC = () => {
   const navigate = useNavigate();
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+
+  const toggleDay = (day: string) => {
+    setExpandedDay(prev => prev === day ? null : day);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-900">
@@ -182,6 +187,13 @@ export const ExpoGoiabalPage: React.FC = () => {
                   <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-yellow-400 transition-colors">Quinta-Feira</h3>
                   <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">04 de Junho</p>
                 </div>
+                <button 
+                  onClick={() => toggleDay('quinta')}
+                  className="flex items-center gap-2 text-yellow-500 hover:text-yellow-400 transition-colors font-bold uppercase tracking-widest text-sm bg-yellow-500/10 px-4 py-2 rounded-xl"
+                >
+                  {expandedDay === 'quinta' ? 'Menos Detalhes' : 'Mais Detalhes'}
+                  {expandedDay === 'quinta' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
@@ -198,6 +210,24 @@ export const ExpoGoiabalPage: React.FC = () => {
                   </div>
                   <p className="text-sm text-zinc-400">Edmilson do Forró e Celio Nonato.</p>
                 </div>
+                {expandedDay === 'quinta' && (
+                  <>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Abertura Oficial</span>
+                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:30</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Apresentação das Autoridades e Organizadores.</p>
+                    </div>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
+                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">21:00</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -209,6 +239,13 @@ export const ExpoGoiabalPage: React.FC = () => {
                   <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Sexta-Feira</h3>
                   <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">05 de Junho</p>
                 </div>
+                <button 
+                  onClick={() => toggleDay('sexta')}
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-bold uppercase tracking-widest text-sm bg-cyan-500/10 px-4 py-2 rounded-xl"
+                >
+                  {expandedDay === 'sexta' ? 'Menos Detalhes' : 'Mais Detalhes'}
+                  {expandedDay === 'sexta' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
@@ -225,6 +262,31 @@ export const ExpoGoiabalPage: React.FC = () => {
                   </div>
                   <p className="text-sm text-zinc-400">Andrey Ferraz, Naiara Azevedo, DJ Brinks.</p>
                 </div>
+                {expandedDay === 'sexta' && (
+                  <>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
+                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">19:30</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Apresentação e Entrada dos Peões.</p>
+                    </div>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Abertura Oficial</span>
+                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">20:00</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Apresentação das Autoridades e Organizadores.</p>
+                    </div>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
+                        <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">21:00</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -236,6 +298,13 @@ export const ExpoGoiabalPage: React.FC = () => {
                   <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-yellow-400 transition-colors">Sábado</h3>
                   <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">06 de Junho</p>
                 </div>
+                <button 
+                  onClick={() => toggleDay('sabado')}
+                  className="flex items-center gap-2 text-yellow-500 hover:text-yellow-400 transition-colors font-bold uppercase tracking-widest text-sm bg-yellow-500/10 px-4 py-2 rounded-xl"
+                >
+                  {expandedDay === 'sabado' ? 'Menos Detalhes' : 'Mais Detalhes'}
+                  {expandedDay === 'sabado' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
@@ -252,6 +321,24 @@ export const ExpoGoiabalPage: React.FC = () => {
                   </div>
                   <p className="text-sm text-zinc-400">Marconi e Diego, Althair e Alexandre, Banda Nova Face.</p>
                 </div>
+                {expandedDay === 'sabado' && (
+                  <>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
+                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:00</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Apresentação e Entrada dos Peões.</p>
+                    </div>
+                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-white text-lg">Show de Rodeio</span>
+                        <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">21:00</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Montarias em bois e cavalos.</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -263,6 +350,13 @@ export const ExpoGoiabalPage: React.FC = () => {
                   <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Domingo</h3>
                   <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">07 de Junho</p>
                 </div>
+                <button 
+                  onClick={() => toggleDay('domingo')}
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-bold uppercase tracking-widest text-sm bg-cyan-500/10 px-4 py-2 rounded-xl"
+                >
+                  {expandedDay === 'domingo' ? 'Menos Detalhes' : 'Mais Detalhes'}
+                  {expandedDay === 'domingo' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
@@ -279,6 +373,11 @@ export const ExpoGoiabalPage: React.FC = () => {
                   </div>
                   <p className="text-sm text-zinc-400">Banda Savassy, Nilson Garcia.</p>
                 </div>
+                {expandedDay === 'domingo' && (
+                  <div className="md:col-span-2 bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30 animate-in fade-in slide-in-from-top-4 flex items-center justify-center">
+                    <p className="text-zinc-400 text-center">Fim das atividades com música ao vivo durante toda a tarde e encerramento da ExpoGoiabal 2026!</p>
+                  </div>
+                )}
               </div>
             </div>
 
