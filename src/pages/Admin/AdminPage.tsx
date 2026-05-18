@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText } from 'lucide-react';
+import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminPage: React.FC = () => {
@@ -10,6 +10,7 @@ export const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filtroModalidade, setFiltroModalidade] = useState<string>('Todos');
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInscricoes();
@@ -413,10 +414,9 @@ export const AdminPage: React.FC = () => {
                   <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                       <tr className="bg-zinc-950/50 border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
-                        <th className="p-4 font-semibold pl-6">Peão Mirim</th>
+                        <th className="p-4 font-semibold pl-6 w-10"></th>
+                        <th className="p-4 font-semibold">Peão Mirim</th>
                         <th className="p-4 font-semibold">Idade / Peso</th>
-                        <th className="p-4 font-semibold">Responsável</th>
-                        <th className="p-4 font-semibold">WhatsApp</th>
                         <th className="p-4 font-semibold">Vídeo</th>
                         <th className="p-4 font-semibold">Status</th>
                         <th className="p-4 font-semibold">Documento</th>
@@ -425,70 +425,117 @@ export const AdminPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
                       {mirins.map((inscricao) => (
-                        <tr key={inscricao.id} className="hover:bg-zinc-800/30 transition-colors group">
-                          <td className="p-4 pl-6">
-                            <div className="font-bold text-white flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-xs font-black text-orange-500">
-                                {inscricao.nome.charAt(0).toUpperCase()}
+                        <React.Fragment key={inscricao.id}>
+                          <tr 
+                            onClick={() => setExpandedRowId(expandedRowId === inscricao.id ? null : inscricao.id)}
+                            className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                          >
+                            <td className="p-4 pl-6 text-zinc-500 group-hover:text-white transition-colors">
+                              {expandedRowId === inscricao.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-white flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-xs font-black text-orange-500 shrink-0">
+                                  {inscricao.nome.charAt(0).toUpperCase()}
+                                </div>
+                                {inscricao.nome}
                               </div>
-                              {inscricao.nome}
-                            </div>
-                          </td>
-                          <td className="p-4 text-zinc-400 text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                              <span>{inscricao.idade ? `${inscricao.idade} anos` : '-'}</span>
-                              <span className="text-zinc-600">•</span>
-                              <span>{inscricao.peso ? `${inscricao.peso} kg` : '-'}</span>
-                            </div>
-                          </td>
-                          <td className="p-4 text-zinc-400 text-sm">
-                            {inscricao.responsavel || '-'}
-                          </td>
-                          <td className="p-4 text-zinc-400 text-sm">
-                            <a href={`https://wa.me/55${inscricao.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="hover:text-green-400 hover:underline transition-colors flex items-center gap-2">
-                              {inscricao.whatsapp}
-                            </a>
-                          </td>
-                          <td className="p-4">
-                            {inscricao.video_url ? (
-                              <a href={inscricao.video_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors text-sm font-semibold bg-orange-400/10 px-3 py-1.5 rounded-lg w-fit border border-orange-400/20 hover:bg-orange-400/20">
-                                <Video size={14} />
-                                Assistir
-                              </a>
-                            ) : (
-                              <span className="text-zinc-600 text-sm italic">Sem vídeo</span>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <button 
-                              onClick={() => handleUpdateStatus(inscricao.id, inscricao.status === 'Confirmado' ? 'Pendente' : 'Confirmado')}
-                              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors border ${
-                                inscricao.status === 'Confirmado' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                              }`}
-                            >
-                              {inscricao.status === 'Confirmado' ? 'Confirmado' : 'Pendente'}
-                            </button>
-                          </td>
-                          <td className="p-4">
-                            <label className="cursor-pointer text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 text-sm font-semibold bg-indigo-400/10 px-3 py-1.5 rounded-lg w-fit border border-indigo-400/20 hover:bg-indigo-400/20">
-                              <Upload size={14} />
-                              <span>{inscricao.documento_url ? 'Atualizar' : 'Upload'}</span>
-                              <input 
-                                type="file" 
-                                className="hidden" 
-                                onChange={(e) => handleUploadDocumento(inscricao.id, e.target.files?.[0])}
-                              />
-                            </label>
-                            {inscricao.documento_url && (
-                              <a href={inscricao.documento_url} target="_blank" rel="noreferrer" className="text-[11px] text-zinc-500 hover:text-indigo-300 underline mt-1.5 flex items-center gap-1 w-max">
-                                <FileText size={12} /> Ver documento
-                              </a>
-                            )}
-                          </td>
-                          <td className="p-4 text-right text-zinc-500 text-xs pr-6">
-                            {new Date(inscricao.created_at).toLocaleString('pt-BR')}
-                          </td>
-                        </tr>
+                            </td>
+                            <td className="p-4 text-zinc-400 text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <span>{inscricao.idade ? `${inscricao.idade} anos` : '-'}</span>
+                                <span className="text-zinc-600">•</span>
+                                <span>{inscricao.peso ? `${inscricao.peso} kg` : '-'}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              {inscricao.video_url ? (
+                                <a 
+                                  href={inscricao.video_url} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors text-sm font-semibold bg-orange-400/10 px-3 py-1.5 rounded-lg w-fit border border-orange-400/20 hover:bg-orange-400/20"
+                                >
+                                  <Video size={14} />
+                                  Assistir
+                                </a>
+                              ) : (
+                                <span className="text-zinc-600 text-sm italic">Sem vídeo</span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(inscricao.id, inscricao.status === 'Confirmado' ? 'Pendente' : 'Confirmado');
+                                }}
+                                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors border ${
+                                  inscricao.status === 'Confirmado' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                }`}
+                              >
+                                {inscricao.status === 'Confirmado' ? 'Confirmado' : 'Pendente'}
+                              </button>
+                            </td>
+                            <td className="p-4">
+                              <label 
+                                onClick={(e) => e.stopPropagation()}
+                                className="cursor-pointer text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 text-sm font-semibold bg-indigo-400/10 px-3 py-1.5 rounded-lg w-fit border border-indigo-400/20 hover:bg-indigo-400/20"
+                              >
+                                <Upload size={14} />
+                                <span>{inscricao.documento_url ? 'Atualizar' : 'Upload'}</span>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  onChange={(e) => handleUploadDocumento(inscricao.id, e.target.files?.[0])}
+                                />
+                              </label>
+                              {inscricao.documento_url && (
+                                <a 
+                                  href={inscricao.documento_url} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-[11px] text-zinc-500 hover:text-indigo-300 underline mt-1.5 flex items-center gap-1 w-max"
+                                >
+                                  <FileText size={12} /> Ver documento
+                                </a>
+                              )}
+                            </td>
+                            <td className="p-4 text-right text-zinc-500 text-xs pr-6">
+                              {new Date(inscricao.created_at).toLocaleString('pt-BR')}
+                            </td>
+                          </tr>
+                          
+                          {/* Expanded Details Row */}
+                          {expandedRowId === inscricao.id && (
+                            <tr className="bg-zinc-900/40 border-b border-zinc-800/50">
+                              <td colSpan={7} className="p-4 pl-16">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                  <div>
+                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">Responsável</span>
+                                    <span className="text-zinc-300 font-medium text-sm flex items-center gap-2">
+                                      <Users size={14} className="text-zinc-500" />
+                                      {inscricao.responsavel || '-'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">WhatsApp</span>
+                                    <a 
+                                      href={`https://wa.me/55${inscricao.whatsapp?.replace(/\D/g, '')}`} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm flex items-center gap-2"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                      {inscricao.whatsapp}
+                                    </a>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
