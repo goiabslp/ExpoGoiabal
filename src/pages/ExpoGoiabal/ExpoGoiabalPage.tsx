@@ -162,6 +162,137 @@ export const ExpoGoiabalPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Seção de Programação */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto mt-16 mb-24 flex flex-col items-center gap-16 px-4">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-cyan-200 to-cyan-500 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+              Programação
+            </h2>
+            <div className="w-24 h-1 bg-cyan-500 rounded-full drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
+          </div>
+
+          <div className="w-full flex flex-col gap-16">
+            
+            {/* Quinta */}
+            <div className="w-full bg-zinc-900/60 border border-zinc-700/50 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-b border-zinc-800 pb-6">
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-yellow-400 transition-colors">Quinta-Feira</h3>
+                  <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">04 de Junho</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Abertura do Rodeio</span>
+                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:00</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Apresentação dos Peões e Mirim em Carneiro.</p>
+                </div>
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Shows de Música</span>
+                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">22:30</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Edmilson do Forró e Celio Nonato.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sexta */}
+            <div className="w-full bg-zinc-900/60 border border-zinc-700/50 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-cyan-600"></div>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-b border-zinc-800 pb-6">
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Sexta-Feira</h3>
+                  <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">05 de Junho</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Prova 3 Tambores (Feminino)</span>
+                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">20:20</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Montaria Feminina em Cavalos.</p>
+                </div>
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Shows de Música</span>
+                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">22:30</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Andrey Ferraz, Naiara Azevedo, DJ Brinks.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sabado */}
+            <div className="w-full bg-zinc-900/60 border border-zinc-700/50 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-b border-zinc-800 pb-6">
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-yellow-400 transition-colors">Sábado</h3>
+                  <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">06 de Junho</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Prova 3 Tambores (Final)</span>
+                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">20:30</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Final da Competição.</p>
+                </div>
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Shows de Música</span>
+                    <span className="text-yellow-500 font-mono bg-yellow-500/10 px-3 py-1 rounded-lg">22:30</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Marconi e Diego, Althair e Alexandre, Banda Nova Face.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Domingo */}
+            <div className="w-full bg-zinc-900/60 border border-zinc-700/50 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-cyan-600"></div>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-b border-zinc-800 pb-6">
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-widest group-hover:text-cyan-400 transition-colors">Domingo</h3>
+                  <p className="text-zinc-400 mt-1 font-light tracking-wide text-lg">07 de Junho</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Concurso de Marcha</span>
+                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">10:00</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">37ª Cavalgada de São José do Goiabal - MG.</p>
+                </div>
+                <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-white text-lg">Shows de Música</span>
+                    <span className="text-cyan-400 font-mono bg-cyan-500/10 px-3 py-1 rounded-lg">13:00</span>
+                  </div>
+                  <p className="text-sm text-zinc-400">Banda Savassy, Nilson Garcia.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center mt-4">
+              <button 
+                onClick={() => navigate('/ExpoGoiabal/Programacao')}
+                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 px-10 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] transition-all duration-300 uppercase tracking-widest"
+              >
+                Ver Programação Completa
+              </button>
+            </div>
+
+          </div>
+        </div>
       </main>
     </div>
   );

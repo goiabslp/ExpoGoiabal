@@ -22,10 +22,10 @@ export const MirimInscricaoPage: React.FC = () => {
   const nextStep = () => {
     if (step === 2) {
       const pesoNum = parseFloat(formData.peso);
-      if (!isNaN(pesoNum) && pesoNum > 25) {
+      if (!isNaN(pesoNum) && pesoNum > 30) {
         setErrorModal({ 
           isOpen: true, 
-          message: 'O peso máximo permitido para a categoria Peão Mirim é de 25kg.' 
+          message: 'O peso máximo permitido para a categoria Peão Mirim é de 30kg.' 
         });
         return;
       }
@@ -226,7 +226,7 @@ export const MirimInscricaoPage: React.FC = () => {
                         onChange={handleInputChange}
                         placeholder="Ex: 20"
                         required
-                        max="25"
+                        max="30"
                         className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-lg"
                       />
                     </div>
