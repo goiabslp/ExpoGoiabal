@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby } from 'lucide-react';
+import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminPage: React.FC = () => {
@@ -9,6 +9,7 @@ export const AdminPage: React.FC = () => {
   const [inscricoes, setInscricoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroModalidade, setFiltroModalidade] = useState<string>('Todos');
+  const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
 
   useEffect(() => {
     fetchInscricoes();
@@ -27,6 +28,56 @@ export const AdminPage: React.FC = () => {
       setInscricoes(data || []);
     }
     setLoading(false);
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('inscricoes_expogoiabal')
+      .update({ status: newStatus })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Erro ao atualizar status:', error);
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao atualizar status.' });
+    } else {
+      fetchInscricoes();
+    }
+  };
+
+  const handleUploadDocumento = async (id: string, file: File | undefined) => {
+    if (!file) return;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${id}_${Date.now()}.${fileExt}`;
+    const filePath = `documentos/${fileName}`;
+
+    try {
+      setLoading(true);
+      const { error: uploadError } = await supabase.storage
+        .from('documentos_inscricao')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('documentos_inscricao')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('inscricoes_expogoiabal')
+        .update({ documento_url: publicUrlData.publicUrl })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+      
+      setFeedbackModal({ isOpen: true, type: 'success', message: 'Documento enviado com sucesso!' });
+      fetchInscricoes();
+    } catch (error) {
+      console.error('Erro no upload de documento:', error);
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao fazer upload do documento.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Listas filtradas globalmente
@@ -231,6 +282,8 @@ export const AdminPage: React.FC = () => {
                         <th className="p-4 font-semibold">Data Nasc.</th>
                         <th className="p-4 font-semibold">WhatsApp</th>
                         <th className="p-4 font-semibold">Vídeo</th>
+                        <th className="p-4 font-semibold">Status</th>
+                        <th className="p-4 font-semibold">Documento</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
                       </tr>
                     </thead>
@@ -270,6 +323,32 @@ export const AdminPage: React.FC = () => {
                               </a>
                             ) : (
                               <span className="text-zinc-600 text-sm italic">Sem vídeo</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <button 
+                              onClick={() => handleUpdateStatus(inscricao.id, inscricao.status === 'Confirmado' ? 'Pendente' : 'Confirmado')}
+                              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors border ${
+                                inscricao.status === 'Confirmado' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                              }`}
+                            >
+                              {inscricao.status === 'Confirmado' ? 'Confirmado' : 'Pendente'}
+                            </button>
+                          </td>
+                          <td className="p-4">
+                            <label className="cursor-pointer text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 text-sm font-semibold bg-indigo-400/10 px-3 py-1.5 rounded-lg w-fit border border-indigo-400/20 hover:bg-indigo-400/20">
+                              <Upload size={14} />
+                              <span>{inscricao.documento_url ? 'Atualizar' : 'Upload'}</span>
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                onChange={(e) => handleUploadDocumento(inscricao.id, e.target.files?.[0])}
+                              />
+                            </label>
+                            {inscricao.documento_url && (
+                              <a href={inscricao.documento_url} target="_blank" rel="noreferrer" className="text-[11px] text-zinc-500 hover:text-indigo-300 underline mt-1.5 flex items-center gap-1 w-max">
+                                <FileText size={12} /> Ver documento
+                              </a>
                             )}
                           </td>
                           <td className="p-4 text-right text-zinc-500 text-xs pr-6">
@@ -339,6 +418,8 @@ export const AdminPage: React.FC = () => {
                         <th className="p-4 font-semibold">Responsável</th>
                         <th className="p-4 font-semibold">WhatsApp</th>
                         <th className="p-4 font-semibold">Vídeo</th>
+                        <th className="p-4 font-semibold">Status</th>
+                        <th className="p-4 font-semibold">Documento</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
                       </tr>
                     </thead>
@@ -378,6 +459,32 @@ export const AdminPage: React.FC = () => {
                               <span className="text-zinc-600 text-sm italic">Sem vídeo</span>
                             )}
                           </td>
+                          <td className="p-4">
+                            <button 
+                              onClick={() => handleUpdateStatus(inscricao.id, inscricao.status === 'Confirmado' ? 'Pendente' : 'Confirmado')}
+                              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors border ${
+                                inscricao.status === 'Confirmado' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                              }`}
+                            >
+                              {inscricao.status === 'Confirmado' ? 'Confirmado' : 'Pendente'}
+                            </button>
+                          </td>
+                          <td className="p-4">
+                            <label className="cursor-pointer text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 text-sm font-semibold bg-indigo-400/10 px-3 py-1.5 rounded-lg w-fit border border-indigo-400/20 hover:bg-indigo-400/20">
+                              <Upload size={14} />
+                              <span>{inscricao.documento_url ? 'Atualizar' : 'Upload'}</span>
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                onChange={(e) => handleUploadDocumento(inscricao.id, e.target.files?.[0])}
+                              />
+                            </label>
+                            {inscricao.documento_url && (
+                              <a href={inscricao.documento_url} target="_blank" rel="noreferrer" className="text-[11px] text-zinc-500 hover:text-indigo-300 underline mt-1.5 flex items-center gap-1 w-max">
+                                <FileText size={12} /> Ver documento
+                              </a>
+                            )}
+                          </td>
                           <td className="p-4 text-right text-zinc-500 text-xs pr-6">
                             {new Date(inscricao.created_at).toLocaleString('pt-BR')}
                           </td>
@@ -392,6 +499,32 @@ export const AdminPage: React.FC = () => {
         )}
 
       </main>
+
+      {/* Modal de Feedback */}
+      {feedbackModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className={`bg-zinc-900 border ${feedbackModal.type === 'error' ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)]'} rounded-3xl w-full max-w-md flex flex-col overflow-hidden animate-in zoom-in-95 duration-300`}>
+            <div className="p-6 flex flex-col items-center text-center gap-4">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${feedbackModal.type === 'error' ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+                {feedbackModal.type === 'error' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ) : (
+                  <CheckCircle size={32} />
+                )}
+              </div>
+              <h3 className="text-xl font-bold text-white">{feedbackModal.type === 'error' ? 'Ops! Ocorreu um erro' : 'Sucesso'}</h3>
+              <p className="text-zinc-400">{feedbackModal.message}</p>
+              <button 
+                onClick={() => setFeedbackModal({ isOpen: false, type: 'success', message: '' })}
+                className="mt-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
