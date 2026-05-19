@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from '../../components/Header';
-import { User, Phone, Upload, ArrowRight, ArrowLeft, CheckCircle, Video, RefreshCcw, ShieldCheck, X, Activity, Users } from 'lucide-react';
+import { User, Phone, Upload, ArrowRight, ArrowLeft, CheckCircle, Video, RefreshCcw, ShieldCheck, X, Activity, Users, Info, ChevronDown } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const MirimInscricaoPage: React.FC = () => {
@@ -21,6 +21,12 @@ export const MirimInscricaoPage: React.FC = () => {
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [showMissingVideoModal, setShowMissingVideoModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFaqModal, setShowFaqModal] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(prev => prev === index ? null : index);
+  };
 
   const nextStep = () => {
     if (step === 2) {
@@ -141,6 +147,68 @@ export const MirimInscricaoPage: React.FC = () => {
     setStep(1);
   };
 
+  const faqs = [
+    {
+      pergunta: "Qual a idade e peso máximo?",
+      resposta: (
+        <div className="space-y-2">
+          <p>Não há limite de idade.</p>
+          <p>O peso máximo permitido é de <strong className="text-orange-500">30kg</strong>.</p>
+        </div>
+      )
+    },
+    {
+      pergunta: "Será fornecido equipamento de segurança?",
+      resposta: (
+        <div className="space-y-2">
+          <p>Sim. Serão fornecidos equipamentos de segurança, como:</p>
+          <ul className="list-disc ml-5 space-y-1 text-zinc-400">
+            <li>Capacete;</li>
+            <li>Colete;</li>
+            <li>Entre outros itens de proteção.</li>
+          </ul>
+        </div>
+      )
+    },
+    {
+      pergunta: "Quais serão os dias de apresentação?",
+      resposta: (
+        <div className="space-y-2">
+          <p>As apresentações acontecerão nos seguintes dias:</p>
+          <ul className="list-disc ml-5 space-y-1 text-zinc-400">
+            <li>Quinta-feira — 04/06/2026;</li>
+            <li>Sexta-feira — 05/06/2026;</li>
+            <li>Sábado — 06/06/2026.</li>
+          </ul>
+        </div>
+      )
+    },
+    {
+      pergunta: "Quais animais serão utilizados na montaria?",
+      resposta: (
+        <div className="space-y-2">
+          <p>Serão utilizadas:</p>
+          <ul className="list-disc ml-5 space-y-1 text-zinc-400">
+            <li>Ovelhas;</li>
+            <li>E/ou carneiros.</li>
+          </ul>
+        </div>
+      )
+    },
+    {
+      pergunta: "Haverá instrutor para acompanhamento?",
+      resposta: <p>Sim. Haverá instrutor responsável para auxiliar os competidores e seus responsáveis.</p>
+    },
+    {
+      pergunta: "O responsável poderá acompanhar o peão na arena?",
+      resposta: <p>Sim. Será permitida a entrada do responsável na arena para acompanhamento da criança.</p>
+    },
+    {
+      pergunta: "Haverá premiação?",
+      resposta: <p>Sim. Todos os participantes receberão uma <strong className="text-orange-500">surpresa especial</strong>.</p>
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-900">
       <Header />
@@ -161,10 +229,17 @@ export const MirimInscricaoPage: React.FC = () => {
               <h1 className="text-3xl font-black text-white uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                 Peão Mirim
               </h1>
-              <div className="mt-4 flex flex-col gap-1">
+              <div className="mt-4 flex flex-col items-center gap-1">
                 <p className="text-orange-500 tracking-widest uppercase text-sm font-bold drop-shadow-[0_0_10px_rgba(255,100,0,0.4)]">
                   Inscrições Abertas
                 </p>
+                <button
+                  onClick={() => setShowFaqModal(true)}
+                  className="mt-6 flex items-center justify-center gap-2 bg-zinc-900/80 hover:bg-orange-500/10 text-zinc-300 hover:text-orange-500 border border-zinc-700 hover:border-orange-500/50 rounded-xl px-6 py-3 font-semibold uppercase tracking-widest transition-all duration-300 w-full md:w-auto shadow-lg hover:shadow-[0_0_15px_rgba(255,100,0,0.2)]"
+                >
+                  <Info size={20} />
+                  Como Funciona
+                </button>
               </div>
             </div>
           </div>
@@ -646,6 +721,75 @@ export const MirimInscricaoPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Modal de Como Funciona (FAQ) */}
+      {showFaqModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-orange-500/30 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-[0_0_40px_rgba(255,100,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            
+            {/* Cabeçalho do Modal */}
+            <div className="flex justify-between items-center p-6 border-b border-zinc-800 bg-zinc-950/50 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500">
+                  <Info size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white uppercase tracking-widest">Como Funciona</h2>
+                  <p className="text-xs text-orange-500 uppercase tracking-widest font-semibold">Peão Mirim</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowFaqModal(false)}
+                className="text-zinc-500 hover:text-white transition-colors p-2 hover:bg-zinc-800 rounded-full"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Corpo do Modal - Lista de Perguntas (Accordion) */}
+            <div className="p-6 overflow-y-auto space-y-4">
+              {faqs.map((faq, index) => (
+                <div 
+                  key={index} 
+                  className={`border rounded-2xl overflow-hidden transition-all duration-300 ${openFaqIndex === index ? 'border-orange-500/50 bg-zinc-800/50 shadow-[0_0_15px_rgba(255,100,0,0.1)]' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}
+                >
+                  <button
+                    onClick={() => toggleFaq(index)}
+                    className="w-full flex items-center justify-between p-5 text-left focus:outline-none"
+                  >
+                    <span className={`font-semibold text-lg pr-4 ${openFaqIndex === index ? 'text-orange-400' : 'text-zinc-200'}`}>
+                      {faq.pergunta}
+                    </span>
+                    <ChevronDown 
+                      size={20} 
+                      className={`text-zinc-500 shrink-0 transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180 text-orange-500' : ''}`} 
+                    />
+                  </button>
+                  
+                  <div 
+                    className={`transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                  >
+                    <div className="p-5 pt-0 text-zinc-300 leading-relaxed border-t border-zinc-800/50 mt-1">
+                      {faq.resposta}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rodapé do Modal */}
+            <div className="p-6 border-t border-zinc-800 bg-zinc-950/50">
+              <button 
+                onClick={() => setShowFaqModal(false)}
+                className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold uppercase tracking-widest rounded-xl transition-all"
+              >
+                Entendi
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
