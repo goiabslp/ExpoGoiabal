@@ -18,15 +18,14 @@ export const MirimInscricaoPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [showVideoInfoModal, setShowVideoInfoModal] = useState(false);
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [showMissingVideoModal, setShowMissingVideoModal] = useState(false);
 
   const nextStep = () => {
     if (step === 2) {
       const pesoNum = parseFloat(formData.peso);
       if (!isNaN(pesoNum) && pesoNum > 30) {
-        setErrorModal({ 
-          isOpen: true, 
-          message: 'O peso máximo permitido para a categoria Peão Mirim é de 30kg.' 
-        });
+        setShowWeightModal(true);
         return;
       }
     }
@@ -66,6 +65,12 @@ export const MirimInscricaoPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (!formData.video) {
+      setShowMissingVideoModal(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -300,7 +305,7 @@ export const MirimInscricaoPage: React.FC = () => {
                       <Upload className="w-5 h-5 text-zinc-500 group-hover:text-orange-500 transition-colors" />
                       <p className="text-sm text-zinc-400"><span className="font-semibold text-white">Clique para enviar</span> ou arraste (Máx. 50MB)</p>
                     </div>
-                    <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} required />
+                    <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
                   </label>
 
                   {formData.video && (
@@ -463,6 +468,96 @@ export const MirimInscricaoPage: React.FC = () => {
         </div>
       )}
 
+      {/* Modal de Limite de Peso */}
+      {showWeightModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-orange-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(255,100,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-orange-500/20 to-transparent"></div>
+            
+            <button 
+              onClick={() => setShowWeightModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full backdrop-blur-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(255,100,0,0.4)]">
+                <ShieldCheck size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Aviso de Segurança
+                </h3>
+                <div className="h-1 w-16 bg-orange-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Poxa, o peso do peãozinho ultrapassou o limite de <strong className="text-orange-500">30kg</strong>.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                Por medidas de segurança tanto para o <strong className="text-white">participante</strong> quanto para o bem-estar dos <strong className="text-white">animais</strong>, não podemos permitir a inscrição com este peso. Agradecemos a compreensão!
+              </p>
+
+              <button 
+                onClick={() => setShowWeightModal(false)}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-[1.02] text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,100,0,0.3)]"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Vídeo Ausente */}
+      {showMissingVideoModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-orange-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(255,100,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-orange-500/20 to-transparent"></div>
+            
+            <button 
+              onClick={() => setShowMissingVideoModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full backdrop-blur-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(255,100,0,0.4)] animate-bounce">
+                <Video size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Faltou o Vídeo!
+                </h3>
+                <div className="h-1 w-16 bg-orange-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Opa! Parece que você esqueceu de anexar o <strong className="text-orange-500">vídeo de apresentação</strong> do peãozinho.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                O vídeo é essencial para confirmarmos a inscrição e vermos toda a animação dele para a <strong className="text-white">ExpoGoiabal 2026</strong>! Grave um vídeo rapidinho e anexe para continuar.
+              </p>
+
+              <button 
+                onClick={() => setShowMissingVideoModal(false)}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-[1.02] text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,100,0,0.3)]"
+              >
+                Anexar Vídeo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Erro */}
       {errorModal.isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -500,23 +595,23 @@ export const MirimInscricaoPage: React.FC = () => {
             </button>
 
             <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(255,100,0,0.4)] animate-pulse">
-                <ShieldCheck size={40} />
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(255,100,0,0.4)] animate-bounce">
+                <Video size={40} />
               </div>
               
               <div className="space-y-2">
                 <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-                  Atenção, Responsável!
+                  Prepara a Emoção!
                 </h3>
                 <div className="h-1 w-16 bg-orange-500 mx-auto rounded-full"></div>
               </div>
               
               <p className="text-zinc-300 leading-relaxed text-lg">
-                Fique tranquilo! O vídeo do menor <strong className="text-orange-500">não será divulgado</strong> ou postado em lugar nenhum.
+                Capriche na gravação! Esse vídeo <strong className="text-orange-500 inline-block animate-pulse text-xl">vai bombar</strong> entre os peões da arena! 🤠
               </p>
               
               <p className="text-zinc-400 text-sm">
-                Ele será utilizado exclusivamente pela nossa equipe interna apenas para <strong className="text-white">confirmar a inscrição</strong> e garantir a segurança do processo.
+                Mostre toda a energia do nosso futuro campeão! A galera da <strong className="text-white">ExpoGoiabal</strong> quer ver essa animação!
               </p>
 
               <button 
