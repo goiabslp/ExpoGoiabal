@@ -17,6 +17,7 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [showVideoInfoModal, setShowVideoInfoModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Calcula a data máxima (18 anos atrás a partir de hoje)
   const maxDate18YearsAgo = new Date();
@@ -106,7 +107,7 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
       }
 
       // Sucesso!
-      nextStep();
+      setShowSuccessModal(true);
     } catch (error: any) {
       console.error('Erro na submissão:', error);
       setErrorModal({ isOpen: true, message: error.message || 'Ocorreu um erro inesperado.' });
@@ -322,26 +323,6 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Step 6: Success */}
-              {step === 6 && (
-                <div className="flex flex-col items-center text-center gap-6 animate-in zoom-in fade-in py-8">
-                  <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-2">
-                    <CheckCircle size={40} className="text-green-500" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-white">Inscrição Enviada!</h2>
-                  <p className="text-zinc-400">Sua inscrição foi recebida com sucesso. Fique atenta ao seu WhatsApp para os próximos passos!</p>
-                  
-                  <button 
-                    type="button" 
-                    onClick={handleReset}
-                    className="mt-4 flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-zinc-800 hover:bg-zinc-700 transition-all"
-                  >
-                    <RefreshCcw size={20} />
-                    Nova Inscrição
-                  </button>
-                </div>
-              )}
-
               {/* Checkbox Termos Global (Sempre Visível após Modalidade e antes do Vídeo) */}
               {step > 1 && step < 5 && (
                 <div className="flex items-start gap-3 mt-8 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 animate-in fade-in">
@@ -410,7 +391,9 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                         </svg>
                         Enviando...
                       </span>
-                    ) : step === 5 ? 'Finalizar' : 'Próximo'}
+                    ) : (
+                      <span>{step === 5 ? 'Finalizar' : 'Próximo'}</span>
+                    )}
                     {!isSubmitting && step < 5 && <ArrowRight size={20} />}
                   </button>
                 </div>
@@ -474,6 +457,46 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors uppercase tracking-widest"
               >
                 Li e Aceito os Termos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-green-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(34,197,94,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-green-500/20 to-transparent"></div>
+            
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] animate-bounce">
+                <CheckCircle size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Inscrição Realizada com Sucesso!
+                </h3>
+                <div className="h-1 w-16 bg-green-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Tudo certo! Sua inscrição foi recebida.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                Fique atenta ao WhatsApp informado para acompanhar os próximos passos da nossa <strong className="text-white">ExpoGoiabal 2026</strong>.
+              </p>
+
+              <button 
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  handleReset();
+                }}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:scale-[1.02] text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+              >
+                Concluir
               </button>
             </div>
           </div>

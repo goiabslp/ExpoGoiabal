@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminPage: React.FC = () => {
@@ -11,6 +11,29 @@ export const AdminPage: React.FC = () => {
   const [filtroModalidade, setFiltroModalidade] = useState<string>('Todos');
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null }>({ isOpen: false, idToDelete: null });
+
+  const handleDelete = async () => {
+    if (!deleteConfirmModal.idToDelete) return;
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('inscricoes_expogoiabal')
+        .delete()
+        .eq('id', deleteConfirmModal.idToDelete);
+      
+      if (error) throw error;
+      
+      setFeedbackModal({ isOpen: true, type: 'success', message: 'Registro apagado com sucesso!' });
+      fetchInscricoes();
+    } catch (error) {
+      console.error('Erro ao apagar registro:', error);
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao apagar registro.' });
+    } finally {
+      setDeleteConfirmModal({ isOpen: false, idToDelete: null });
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchInscricoes();
@@ -286,6 +309,7 @@ export const AdminPage: React.FC = () => {
                         <th className="p-4 font-semibold">Status</th>
                         <th className="p-4 font-semibold">Documento</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
+                        <th className="p-4 font-semibold text-center pr-6">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
@@ -355,6 +379,15 @@ export const AdminPage: React.FC = () => {
                           <td className="p-4 text-right text-zinc-500 text-xs pr-6">
                             {new Date(inscricao.created_at).toLocaleString('pt-BR')}
                           </td>
+                          <td className="p-4 text-center pr-6">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id }); }}
+                              className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
+                              title="Apagar Registro"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -421,6 +454,7 @@ export const AdminPage: React.FC = () => {
                         <th className="p-4 font-semibold">Status</th>
                         <th className="p-4 font-semibold">Documento</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
+                        <th className="p-4 font-semibold text-center pr-6">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
@@ -505,12 +539,21 @@ export const AdminPage: React.FC = () => {
                             <td className="p-4 text-right text-zinc-500 text-xs pr-6">
                               {new Date(inscricao.created_at).toLocaleString('pt-BR')}
                             </td>
+                            <td className="p-4 text-center pr-6">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id }); }}
+                                className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
+                                title="Apagar Registro"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
                           </tr>
                           
                           {/* Expanded Details Row */}
                           {expandedRowId === inscricao.id && (
                             <tr className="bg-zinc-900/40 border-b border-zinc-800/50">
-                              <td colSpan={7} className="p-4 pl-16">
+                              <td colSpan={8} className="p-4 pl-16">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
                                   <div>
                                     <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">Responsável</span>
@@ -567,6 +610,51 @@ export const AdminPage: React.FC = () => {
               >
                 Fechar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {deleteConfirmModal.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-red-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(239,68,68,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-red-500/20 to-transparent"></div>
+            
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-pulse">
+                <Trash2 size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Apagar Registro?
+                </h3>
+                <div className="h-1 w-16 bg-red-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Tem certeza que deseja apagar esta inscrição permanentemente?
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                Esta ação <strong className="text-red-400">não pode ser desfeita</strong> e todos os dados serão perdidos.
+              </p>
+
+              <div className="flex gap-4 w-full mt-4">
+                <button 
+                  onClick={() => setDeleteConfirmModal({ isOpen: false, idToDelete: null })}
+                  className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  className="flex-1 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:scale-[1.02] text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                >
+                  Apagar
+                </button>
+              </div>
             </div>
           </div>
         </div>
