@@ -235,7 +235,7 @@ export const MirimInscricaoPage: React.FC = () => {
                 </p>
                 <button
                   onClick={() => setShowFaqModal(true)}
-                  className="mt-6 flex items-center justify-center gap-2 bg-zinc-900/80 hover:bg-orange-500/10 text-zinc-300 hover:text-orange-500 border border-zinc-700 hover:border-orange-500/50 rounded-xl px-6 py-3 font-semibold uppercase tracking-widest transition-all duration-300 w-full md:w-auto shadow-lg hover:shadow-[0_0_15px_rgba(255,100,0,0.2)]"
+                  className="mt-6 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-105 text-white rounded-xl px-6 py-3 font-black uppercase tracking-widest transition-all duration-300 w-full md:w-auto shadow-[0_0_20px_rgba(255,100,0,0.4)] hover:shadow-[0_0_30px_rgba(255,100,0,0.6)] animate-pulse"
                 >
                   <Info size={20} />
                   Como Funciona
