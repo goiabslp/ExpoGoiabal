@@ -32,6 +32,7 @@ export const Header: React.FC = () => {
     { label: 'Embaixadora', path: '/ExpoGoiabal/Embaixadora' },
     { label: 'Concurso de Marcha', path: '/ExpoGoiabal/Marcha' },
     { label: 'Inscrição', path: '/ExpoGoiabal/Inscricao' },
+    { label: 'Patrocinador', path: '/ExpoGoiabal/Patrocinador' },
   ];
 
   return (
