@@ -9,6 +9,7 @@ import { EmbaixadoraInscricaoPage } from '../pages/ExpoGoiabal/EmbaixadoraInscri
 import { TresTamboresPage } from '../pages/ExpoGoiabal/TresTamboresPage';
 import { MirimInscricaoPage } from '../pages/ExpoGoiabal/MirimInscricaoPage';
 import { AdminPage } from '../pages/Admin/AdminPage';
+import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
   {
     path: '/Admin',
     element: <AdminPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Patrocinador',
+    element: <PatrocinadorPage />,
   },
   {
     path: '/ExpoGoiabal',
