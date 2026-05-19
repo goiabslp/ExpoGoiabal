@@ -18,15 +18,32 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [showVideoInfoModal, setShowVideoInfoModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showAgeModal, setShowAgeModal] = useState(false);
+  const [showMissingVideoModal, setShowMissingVideoModal] = useState(false);
 
-  // Calcula a data máxima (18 anos atrás a partir de hoje)
-  const maxDate18YearsAgo = new Date();
-  maxDate18YearsAgo.setFullYear(maxDate18YearsAgo.getFullYear() - 18);
-  const maxDateString = maxDate18YearsAgo.toISOString().split('T')[0];
+  // Calcula a data máxima (hoje) para impedir datas futuras
+  const maxDateString = new Date().toISOString().split('T')[0];
 
   const nextStep = () => {
     // Validação passo 1
     if (step === 1 && !formData.modalidade) return;
+
+    // Validação passo 3 (Idade mínima de 18 anos)
+    if (step === 3 && formData.dataNascimento) {
+      const birthDate = new Date(formData.dataNascimento);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 18) {
+        setShowAgeModal(true);
+        return;
+      }
+    }
+
     const next = Math.min(step + 1, 6);
     if (next === 5 && step !== 5) {
       setShowVideoInfoModal(true);
@@ -62,6 +79,12 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (!formData.video) {
+      setShowMissingVideoModal(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -311,7 +334,7 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                       <Upload className="w-5 h-5 text-zinc-500 group-hover:text-yellow-500 transition-colors" />
                       <p className="text-sm text-zinc-400"><span className="font-semibold text-white">Clique para enviar</span> ou arraste (Máx. 50MB)</p>
                     </div>
-                    <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} required />
+                    <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
                   </label>
 
                   {formData.video && (
@@ -384,15 +407,17 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                     }`}
                   >
                     {isSubmitting ? (
-                      <span className="flex items-center gap-2">
+                      <span key="submitting" className="flex items-center gap-2">
                         <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Enviando...
                       </span>
+                    ) : step === 5 ? (
+                      <span key="finalizar">Finalizar</span>
                     ) : (
-                      <span>{step === 5 ? 'Finalizar' : 'Próximo'}</span>
+                      <span key="proximo">Próximo</span>
                     )}
                     {!isSubmitting && step < 5 && <ArrowRight size={20} />}
                   </button>
@@ -564,6 +589,95 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                 className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.02] text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
               >
                 Entendi, continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Idade Mínima */}
+      {showAgeModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-yellow-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(255,215,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-500/20 to-transparent"></div>
+            
+            <button 
+              onClick={() => setShowAgeModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full backdrop-blur-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,215,0,0.4)]">
+                <ShieldCheck size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Aviso de Idade
+                </h3>
+                <div className="h-1 w-16 bg-yellow-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Poxa, para participar da modalidade <strong className="text-yellow-500">{formData.modalidade || 'Embaixadora/Madrinha'}</strong> é necessário ter pelo menos <strong className="text-white">18 anos</strong> de idade.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                Agradecemos muito o seu interesse e esperamos te ver na nossa <strong className="text-white">ExpoGoiabal 2026</strong>!
+              </p>
+
+              <button 
+                onClick={() => setShowAgeModal(false)}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.02] text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Vídeo Ausente */}
+      {showMissingVideoModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-yellow-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(255,215,0,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-500/20 to-transparent"></div>
+            
+            <button 
+              onClick={() => setShowMissingVideoModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors z-10 bg-black/20 hover:bg-black/40 p-2 rounded-full backdrop-blur-sm"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,215,0,0.4)] animate-bounce">
+                <Video size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
+                  Faltou o Vídeo!
+                </h3>
+                <div className="h-1 w-16 bg-yellow-500 mx-auto rounded-full"></div>
+              </div>
+              
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                Opa! Parece que você esqueceu de anexar o <strong className="text-yellow-500">vídeo de apresentação</strong>.
+              </p>
+              
+              <p className="text-zinc-400 text-sm">
+                O vídeo é essencial para confirmarmos a inscrição para a <strong className="text-white">ExpoGoiabal 2026</strong>! Grave um vídeo rapidinho e anexe para continuar.
+              </p>
+
+              <button 
+                onClick={() => setShowMissingVideoModal(false)}
+                className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.02] text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+              >
+                Anexar Vídeo
               </button>
             </div>
           </div>
