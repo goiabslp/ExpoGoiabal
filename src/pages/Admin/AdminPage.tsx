@@ -16,16 +16,24 @@ export const AdminPage: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteConfirmModal.idToDelete) return;
     try {
-      setLoading(true);
-      const { error } = await supabase
+      // Remover imediatamente da tela (Optimistic Update)
+      setInscricoes(prev => prev.filter(i => i.id !== deleteConfirmModal.idToDelete));
+
+      const { data, error } = await supabase
         .from('inscricoes_expogoiabal')
         .delete()
-        .eq('id', deleteConfirmModal.idToDelete);
+        .eq('id', deleteConfirmModal.idToDelete)
+        .select();
       
       if (error) throw error;
       
+      if (!data || data.length === 0) {
+        // Se a exclusão falhar silenciosamente (ex: bloqueio de RLS), recarregamos
+        fetchInscricoes();
+        throw new Error('A exclusão foi bloqueada pelo banco de dados (RLS).');
+      }
+      
       setFeedbackModal({ isOpen: true, type: 'success', message: 'Registro apagado com sucesso!' });
-      fetchInscricoes();
     } catch (error) {
       console.error('Erro ao apagar registro:', error);
       setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao apagar registro.' });
