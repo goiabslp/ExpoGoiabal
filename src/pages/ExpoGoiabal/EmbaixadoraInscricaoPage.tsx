@@ -185,10 +185,10 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
               </h1>
               <div className="mt-4 flex flex-col gap-1">
                 <p className="text-yellow-500 tracking-widest uppercase text-sm font-bold drop-shadow-[0_0_10px_rgba(255,215,0,0.4)]">
-                  Inscrições Abertas até 20/05/2026
+                  Inscrições Abertas até 24/05/2026
                 </p>
                 <p className="text-zinc-400 uppercase text-xs font-semibold">
-                  Resultado dia 23/05/2026
+                  Resultado dia 25/05/2026
                 </p>
               </div>
             </div>
