@@ -138,7 +138,7 @@ export const ExpoGoiabalPage: React.FC = () => {
 
             {/* Card 2: 3 Tambores */}
             <div 
-              onClick={() => navigate('/ExpoGoiabal/3tambores')}
+              onClick={() => navigate('/ExpoGoiabal/3tambores/inscricao')}
               className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
             >
               <div className="relative">
