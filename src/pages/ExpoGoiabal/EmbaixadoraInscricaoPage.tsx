@@ -11,9 +11,12 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
     dataNascimento: '',
     whatsapp: '',
     video: null as File | null,
-    termoAceito: false
+    termoAceito: false,
+    isMenor: false,
+    termoResponsavelAceito: false
   });
   const [isTermosOpen, setIsTermosOpen] = useState(false);
+  const [hasSeenAgeWarning, setHasSeenAgeWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [showVideoInfoModal, setShowVideoInfoModal] = useState(false);
@@ -38,7 +41,13 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
         age--;
       }
       
-      if (age < 18) {
+      const isMenor = age < 18;
+      
+      if (isMenor !== formData.isMenor) {
+        setFormData(prev => ({ ...prev, isMenor }));
+      }
+      
+      if (isMenor && !hasSeenAgeWarning) {
         setShowAgeModal(true);
         return;
       }
@@ -146,8 +155,11 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
       dataNascimento: '',
       whatsapp: '',
       video: null,
-      termoAceito: false
+      termoAceito: false,
+      isMenor: false,
+      termoResponsavelAceito: false
     });
+    setHasSeenAgeWarning(false);
     setStep(1);
   };
 
@@ -323,10 +335,23 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
                     </button>
                   </div>
                   <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-2 shadow-inner">
-                    <p className="text-zinc-300 text-sm md:text-base text-center">Grave um breve vídeo dizendo a seguinte frase:</p>
-                    <p className="text-yellow-500 font-bold text-lg md:text-xl text-center mt-2 italic drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">
-                      "Eu quero ser a {formData.modalidade || 'Embaixadora'} da ExpoGoiabal 2026"
-                    </p>
+                    {formData.isMenor ? (
+                      <>
+                        <p className="text-zinc-300 text-sm md:text-base text-center">
+                          Como a candidata é menor, o <strong className="text-white">responsável legal</strong> deve gravar o vídeo com a candidata e dizer a seguinte frase:
+                        </p>
+                        <p className="text-yellow-500 font-bold text-lg md:text-xl text-center mt-2 italic drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">
+                          "Eu, [Nome Completo do Responsável], autorizo a [Nome Completo da Menor] a participar para ser a {formData.modalidade || 'Embaixadora'} da ExpoGoiabal 2026"
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-zinc-300 text-sm md:text-base text-center">Grave um breve vídeo dizendo a seguinte frase:</p>
+                        <p className="text-yellow-500 font-bold text-lg md:text-xl text-center mt-2 italic drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">
+                          "Eu quero ser a {formData.modalidade || 'Embaixadora'} da ExpoGoiabal 2026"
+                        </p>
+                      </>
+                    )}
                   </div>
                   
                   <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-zinc-700 border-dashed rounded-xl cursor-pointer hover:bg-zinc-800/50 hover:border-yellow-500 transition-all group">
@@ -348,26 +373,45 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
 
               {/* Checkbox Termos Global (Sempre Visível após Modalidade e antes do Vídeo) */}
               {step > 1 && step < 5 && (
-                <div className="flex items-start gap-3 mt-8 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 animate-in fade-in">
-                  <input 
-                    type="checkbox" 
-                    id="termo"
-                    name="termoAceito"
-                    checked={formData.termoAceito}
-                    onChange={(e) => setFormData(prev => ({...prev, termoAceito: e.target.checked}))}
-                    className="mt-1 w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
-                    required
-                  />
-                  <label htmlFor="termo" className="text-sm text-zinc-300">
-                    Li e concordo com o{' '}
-                    <button 
-                      type="button" 
-                      onClick={() => setIsTermosOpen(true)}
-                      className="text-yellow-500 hover:text-yellow-400 font-bold underline outline-none"
-                    >
-                      Termo de Responsabilidade e Uso de Imagem
-                    </button>.
-                  </label>
+                <div className="flex flex-col gap-3 mt-8 animate-in fade-in">
+                  <div className="flex items-start gap-3 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                    <input 
+                      type="checkbox" 
+                      id="termo"
+                      name="termoAceito"
+                      checked={formData.termoAceito}
+                      onChange={(e) => setFormData(prev => ({...prev, termoAceito: e.target.checked}))}
+                      className="mt-1 w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
+                      required
+                    />
+                    <label htmlFor="termo" className="text-sm text-zinc-300">
+                      Li e concordo com o{' '}
+                      <button 
+                        type="button" 
+                        onClick={() => setIsTermosOpen(true)}
+                        className="text-yellow-500 hover:text-yellow-400 font-bold underline outline-none"
+                      >
+                        Termo de Responsabilidade e Uso de Imagem
+                      </button>.
+                    </label>
+                  </div>
+
+                  {formData.isMenor && (
+                    <div className="flex items-start gap-3 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                      <input 
+                        type="checkbox" 
+                        id="termoResponsavel"
+                        name="termoResponsavelAceito"
+                        checked={formData.termoResponsavelAceito}
+                        onChange={(e) => setFormData(prev => ({...prev, termoResponsavelAceito: e.target.checked}))}
+                        className="mt-1 w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
+                        required
+                      />
+                      <label htmlFor="termoResponsavel" className="text-sm text-zinc-300">
+                        Sou o <strong className="text-white">responsável legal</strong> e autorizo a inscrição e participação da menor.
+                      </label>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -399,9 +443,9 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
 
                   <button 
                     type="submit"
-                    disabled={(step === 1 && !formData.modalidade) || isSubmitting}
+                    disabled={(step === 1 && !formData.modalidade) || (step > 1 && step < 5 && formData.isMenor && !formData.termoResponsavelAceito) || isSubmitting}
                     className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-black uppercase tracking-wide transition-all ${
-                      (step === 1 && !formData.modalidade) || isSubmitting
+                      (step === 1 && !formData.modalidade) || (step > 1 && step < 5 && formData.isMenor && !formData.termoResponsavelAceito) || isSubmitting
                         ? 'bg-zinc-600 text-zinc-400 cursor-not-allowed' 
                         : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-105 shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                     }`}
@@ -621,18 +665,22 @@ export const EmbaixadoraInscricaoPage: React.FC = () => {
               </div>
               
               <p className="text-zinc-300 leading-relaxed text-lg">
-                Poxa, para participar da modalidade <strong className="text-yellow-500">{formData.modalidade || 'Embaixadora/Madrinha'}</strong> é necessário ter pelo menos <strong className="text-white">18 anos</strong> de idade.
+                Como você é menor de idade, será necessária a <strong className="text-yellow-500">autorização do seu responsável legal</strong> para participar como <strong className="text-white">{formData.modalidade || 'Embaixadora'}</strong>.
               </p>
               
               <p className="text-zinc-400 text-sm">
-                Agradecemos muito o seu interesse e esperamos te ver na nossa <strong className="text-white">ExpoGoiabal 2026</strong>!
+                O seu responsável precisará concordar com um termo e gravar o vídeo de apresentação por você nas próximas etapas.
               </p>
 
               <button 
-                onClick={() => setShowAgeModal(false)}
+                onClick={() => {
+                  setShowAgeModal(false);
+                  setHasSeenAgeWarning(true);
+                  setStep(4);
+                }}
                 className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.02] text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
               >
-                Entendi
+                Entendi, continuar
               </button>
             </div>
           </div>
