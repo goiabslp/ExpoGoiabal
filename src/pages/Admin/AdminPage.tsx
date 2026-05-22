@@ -7,20 +7,28 @@ export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<'menu' | 'embaixadora' | 'tambores' | 'mirim'>('menu');
   const [inscricoes, setInscricoes] = useState<any[]>([]);
+  const [inscricoesTambores, setInscricoesTambores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroModalidade, setFiltroModalidade] = useState<string>('Todos');
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null }>({ isOpen: false, idToDelete: null });
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null; table: 'expogoiabal' | '3tambores' }>({ isOpen: false, idToDelete: null, table: 'expogoiabal' });
 
   const handleDelete = async () => {
     if (!deleteConfirmModal.idToDelete) return;
     try {
+      setLoading(true);
+      const tableName = deleteConfirmModal.table === '3tambores' ? 'inscricoes_3tambores' : 'inscricoes_expogoiabal';
+
       // Remover imediatamente da tela (Optimistic Update)
-      setInscricoes(prev => prev.filter(i => i.id !== deleteConfirmModal.idToDelete));
+      if (deleteConfirmModal.table === '3tambores') {
+        setInscricoesTambores(prev => prev.filter(i => i.id !== deleteConfirmModal.idToDelete));
+      } else {
+        setInscricoes(prev => prev.filter(i => i.id !== deleteConfirmModal.idToDelete));
+      }
 
       const { data, error } = await supabase
-        .from('inscricoes_expogoiabal')
+        .from(tableName)
         .delete()
         .eq('id', deleteConfirmModal.idToDelete)
         .select();
@@ -29,7 +37,11 @@ export const AdminPage: React.FC = () => {
       
       if (!data || data.length === 0) {
         // Se a exclusão falhar silenciosamente (ex: bloqueio de RLS), recarregamos
-        fetchInscricoes();
+        if (deleteConfirmModal.table === '3tambores') {
+          fetchInscricoesTambores();
+        } else {
+          fetchInscricoes();
+        }
         throw new Error('A exclusão foi bloqueada pelo banco de dados (RLS).');
       }
       
@@ -38,13 +50,14 @@ export const AdminPage: React.FC = () => {
       console.error('Erro ao apagar registro:', error);
       setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao apagar registro.' });
     } finally {
-      setDeleteConfirmModal({ isOpen: false, idToDelete: null });
+      setDeleteConfirmModal({ isOpen: false, idToDelete: null, table: 'expogoiabal' });
       setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInscricoes();
+    fetchInscricoesTambores();
   }, []);
 
   const fetchInscricoes = async () => {
@@ -60,6 +73,19 @@ export const AdminPage: React.FC = () => {
       setInscricoes(data || []);
     }
     setLoading(false);
+  };
+
+  const fetchInscricoesTambores = async () => {
+    const { data, error } = await supabase
+      .from('inscricoes_3tambores')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar inscrições 3 Tambores:', error);
+    } else {
+      setInscricoesTambores(data || []);
+    }
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -212,19 +238,128 @@ export const AdminPage: React.FC = () => {
         )}
 
         {view === 'tambores' && (
-          <div className="flex flex-col items-center justify-center flex-1 gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/20">
-              <Shield size={48} className="text-cyan-500" />
+          <>
+            <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4">
+              <button 
+                onClick={() => setView('menu')}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 uppercase tracking-widest text-xs"
+              >
+                <ArrowLeft size={14} /> Voltar
+              </button>
+              <h2 className="text-2xl font-black text-white uppercase tracking-widest">Métricas: 3 Tambores</h2>
             </div>
-            <h2 className="text-3xl font-black text-white uppercase tracking-widest text-center">Em Breve</h2>
-            <p className="text-zinc-400 text-center max-w-md">O módulo de administração das inscrições de 3 Tambores ainda não possui registros.</p>
-            <button 
-              onClick={() => setView('menu')}
-              className="mt-4 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 uppercase tracking-widest text-sm"
-            >
-              <ArrowLeft size={16} /> Voltar ao Menu
-            </button>
-          </div>
+        
+            {/* Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-2 relative overflow-hidden group shadow-lg hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-shadow">
+                <div className="absolute -right-6 -top-6 text-cyan-500/10 group-hover:scale-110 transition-transform duration-500">
+                  <Shield size={120} />
+                </div>
+                <p className="text-cyan-500 font-semibold uppercase text-xs tracking-widest z-10">Total Inscrições</p>
+                <h2 className="text-4xl font-black text-white z-10">{inscricoesTambores.length}</h2>
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col flex-1 mt-2">
+              <div className="p-6 border-b border-zinc-800 bg-zinc-900/50">
+                <h3 className="text-lg font-bold uppercase tracking-widest">Registros 3 Tambores</h3>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                {loading ? (
+                  <div className="p-12 flex flex-col items-center justify-center gap-4 text-zinc-500">
+                    <svg className="animate-spin h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p>Carregando inscrições...</p>
+                  </div>
+                ) : inscricoesTambores.length === 0 ? (
+                  <div className="p-12 flex flex-col items-center justify-center gap-4 text-zinc-500 animate-in fade-in">
+                    <Shield size={48} className="opacity-20" />
+                    <p>Nenhuma inscrição encontrada.</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                      <tr className="bg-zinc-950/50 border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
+                        <th className="p-4 font-semibold pl-6 w-10"></th>
+                        <th className="p-4 font-semibold">Competidor(a)</th>
+                        <th className="p-4 font-semibold">Idade</th>
+                        <th className="p-4 font-semibold">Cidade</th>
+                        <th className="p-4 font-semibold text-right pr-6">Registro</th>
+                        <th className="p-4 font-semibold text-center pr-6">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800/50">
+                      {inscricoesTambores.map((inscricao) => (
+                        <React.Fragment key={inscricao.id}>
+                          <tr 
+                            onClick={() => setExpandedRowId(expandedRowId === inscricao.id ? null : inscricao.id)}
+                            className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                          >
+                            <td className="p-4 pl-6 text-zinc-500 group-hover:text-white transition-colors">
+                              {expandedRowId === inscricao.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-white flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-black text-cyan-500 shrink-0">
+                                  {inscricao.nome.charAt(0).toUpperCase()}
+                                </div>
+                                {inscricao.nome}
+                              </div>
+                            </td>
+                            <td className="p-4 text-zinc-400 text-sm font-medium">
+                              {inscricao.idade ? `${inscricao.idade} anos` : '-'}
+                            </td>
+                            <td className="p-4 text-zinc-400 text-sm font-medium">
+                              {inscricao.cidade || '-'}
+                            </td>
+                            <td className="p-4 text-right text-zinc-500 text-xs pr-6">
+                              {new Date(inscricao.created_at).toLocaleString('pt-BR')}
+                            </td>
+                            <td className="p-4 text-center pr-6">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id, table: '3tambores' }); }}
+                                className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
+                                title="Apagar Registro"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                          
+                          {/* Expanded Details Row */}
+                          {expandedRowId === inscricao.id && (
+                            <tr className="bg-zinc-900/40 border-b border-zinc-800/50">
+                              <td colSpan={6} className="p-4 pl-16">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                  <div>
+                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">WhatsApp</span>
+                                    <a 
+                                      href={`https://wa.me/55${inscricao.whatsapp?.replace(/\D/g, '')}`} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm flex items-center gap-2"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                      {inscricao.whatsapp}
+                                    </a>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* --- VIEW: CORTE REAL (EMBAIXADORA E MADRINHA) --- */}
@@ -389,7 +524,7 @@ export const AdminPage: React.FC = () => {
                           </td>
                           <td className="p-4 text-center pr-6">
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id }); }}
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id, table: 'expogoiabal' }); }}
                               className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
                               title="Apagar Registro"
                             >
@@ -549,7 +684,7 @@ export const AdminPage: React.FC = () => {
                             </td>
                             <td className="p-4 text-center pr-6">
                               <button 
-                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id }); }}
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id, table: 'expogoiabal' }); }}
                                 className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
                                 title="Apagar Registro"
                               >
@@ -651,7 +786,7 @@ export const AdminPage: React.FC = () => {
 
               <div className="flex gap-4 w-full mt-4">
                 <button 
-                  onClick={() => setDeleteConfirmModal({ isOpen: false, idToDelete: null })}
+                  onClick={() => setDeleteConfirmModal({ isOpen: false, idToDelete: null, table: 'expogoiabal' })}
                   className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest rounded-xl transition-all"
                 >
                   Cancelar
