@@ -197,7 +197,7 @@ export const ExpoGoiabalPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(expandedDay === 'quinta' ? [
-                  { title: "Recepção aos Cavaleiros", time: "18:00", desc: "Apresentação dos Cavaleiros e Churrasco." },
+                  { title: "Recepção aos Cavaleiros", time: "13:00", desc: "Apresentação dos Cavaleiros e Churrasco." },
                   { title: "Abertura do Rodeio", time: "20:00", desc: "Apresentação dos Peões e Mirim em Carneiro." },
                   { title: "Show de Rodeio", time: "20:40", desc: "Montarias em bois e cavalos." },
                   { title: "Edmilson do Forró", time: "22:30", desc: "Show de Música no palco principal." },

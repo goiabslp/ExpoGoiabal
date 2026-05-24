@@ -17,18 +17,7 @@ export const InscricaoPage: React.FC = () => {
             Inscrições
           </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full px-4">
-            {/* Card 1: Embaixadora */}
-            <div 
-              onClick={() => navigate('/ExpoGoiabal/Embaixadora/inscricao')}
-              className="cursor-pointer group flex items-center justify-center transition-all duration-500 hover:scale-105"
-            >
-              <img 
-                src="/Embaixadora.png" 
-                alt="Inscrição Embaixadora" 
-                className="w-3/4 md:w-full max-w-[320px] h-auto rounded-3xl drop-shadow-[0_0_15px_rgba(255,215,0,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(255,215,0,0.6)] transition-all duration-500"
-              />
-            </div>
+          <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-16 w-full px-4">
 
             {/* Card 2: 3 Tambores */}
             <div 
