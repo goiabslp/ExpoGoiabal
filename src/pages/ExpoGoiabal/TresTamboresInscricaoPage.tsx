@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { User, Calendar, MapPin, Phone, ArrowRight, ArrowLeft, CheckCircle, RefreshCcw } from 'lucide-react';
+import { User, Calendar, MapPin, Phone, ArrowRight, ArrowLeft, CheckCircle, RefreshCcw, Star } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const TresTamboresInscricaoPage: React.FC = () => {
@@ -10,6 +10,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     nome: '',
     idade: '',
     cidade: '',
+    nomeCavalo: '',
     whatsapp: '',
     termoAceito: false
   });
@@ -25,8 +26,9 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     if (step === 1 && !formData.nome) return;
     if (step === 2 && !formData.idade) return;
     if (step === 3 && !formData.cidade) return;
+    if (step === 4 && !formData.nomeCavalo) return;
     
-    setStep(prev => Math.min(prev + 1, 5));
+    setStep(prev => Math.min(prev + 1, 6));
   };
   
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
@@ -68,12 +70,14 @@ export const TresTamboresInscricaoPage: React.FC = () => {
           nome: formData.nome,
           idade: parseInt(formData.idade),
           cidade: formData.cidade,
+          nome_cavalo: formData.nomeCavalo,
           whatsapp: formData.whatsapp,
           termo_aceito: formData.termoAceito
         });
 
       if (insertError) {
-        throw new Error('Erro ao salvar inscrição. Verifique os dados e tente novamente.');
+        console.error("SUPABASE ERROR:", insertError);
+        throw new Error(`Erro Supabase: ${insertError.message}`);
       }
 
       // Sucesso!
@@ -91,6 +95,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
       nome: '',
       idade: '',
       cidade: '',
+      nomeCavalo: '',
       whatsapp: '',
       termoAceito: false
     });
@@ -130,15 +135,15 @@ export const TresTamboresInscricaoPage: React.FC = () => {
             <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             
             {/* Progress Bar */}
-            {step < 5 && (
+            {step < 6 && (
               <div className="flex gap-2 mb-8">
-                {[1, 2, 3, 4].map(s => (
+                {[1, 2, 3, 4, 5].map(s => (
                   <div key={s} className={`h-2 flex-1 rounded-full transition-all duration-500 ${s <= step ? 'bg-yellow-500 shadow-[0_0_10px_rgba(255,215,0,0.5)]' : 'bg-zinc-800'}`} />
                 ))}
               </div>
             )}
 
-            <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+            <form onSubmit={step === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
               
               {/* Step 1: Nome Completo */}
               {step === 1 && (
@@ -199,8 +204,27 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Step 4: WhatsApp */}
+              {/* Step 4: Nome do Cavalo */}
               {step === 4 && (
+                <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
+                  <div className="flex items-center gap-3 text-yellow-500 mb-2">
+                    <Star size={28} />
+                    <h2 className="text-2xl font-bold text-white">Nome do Cavalo</h2>
+                  </div>
+                  <input 
+                    type="text" 
+                    name="nomeCavalo"
+                    value={formData.nomeCavalo}
+                    onChange={handleInputChange}
+                    placeholder="Digite o nome do cavalo"
+                    required
+                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
+                  />
+                </div>
+              )}
+
+              {/* Step 5: WhatsApp */}
+              {step === 5 && (
                 <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
                   <div className="flex items-center gap-3 text-yellow-500 mb-2">
                     <Phone size={28} />
@@ -221,7 +245,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               )}
 
               {/* Checkbox Termos Global */}
-              {step > 1 && step <= 4 && (
+              {step > 1 && step <= 5 && (
                 <div className="flex items-start gap-3 mt-8 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 animate-in fade-in">
                   <input 
                     type="checkbox" 
@@ -246,7 +270,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               )}
 
               {/* Navigation Buttons */}
-              {step <= 4 && (
+              {step <= 5 && (
                 <div className="flex justify-between items-center mt-10 gap-4">
                   <div className="flex gap-4">
                     <button 
@@ -273,9 +297,9 @@ export const TresTamboresInscricaoPage: React.FC = () => {
 
                   <button 
                     type="submit"
-                    disabled={(step === 1 && !formData.nome) || (step === 4 && !formData.termoAceito) || isSubmitting}
+                    disabled={(step === 1 && !formData.nome) || (step === 5 && !formData.termoAceito) || isSubmitting}
                     className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-black uppercase tracking-wide transition-all ${
-                      (step === 1 && !formData.nome) || (step === 4 && !formData.termoAceito) || isSubmitting
+                      (step === 1 && !formData.nome) || (step === 5 && !formData.termoAceito) || isSubmitting
                         ? 'bg-zinc-600 text-zinc-400 cursor-not-allowed' 
                         : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-105 shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                     }`}
@@ -288,12 +312,12 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                         </svg>
                         Enviando...
                       </span>
-                    ) : step === 4 ? (
+                    ) : step === 5 ? (
                       <span key="finalizar">Finalizar</span>
                     ) : (
                       <span key="proximo">Próximo</span>
                     )}
-                    {!isSubmitting && step < 4 && <ArrowRight size={20} />}
+                    {!isSubmitting && step < 5 && <ArrowRight size={20} />}
                   </button>
                 </div>
               )}

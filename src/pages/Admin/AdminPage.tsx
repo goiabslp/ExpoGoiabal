@@ -337,6 +337,12 @@ export const AdminPage: React.FC = () => {
                               <td colSpan={6} className="p-4 pl-16">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
                                   <div>
+                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">Nome do Cavalo</span>
+                                    <span className="text-zinc-300 font-medium text-sm flex items-center gap-2">
+                                      {inscricao.nome_cavalo || '-'}
+                                    </span>
+                                  </div>
+                                  <div>
                                     <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">WhatsApp</span>
                                     <a 
                                       href={`https://wa.me/55${inscricao.whatsapp?.replace(/\D/g, '')}`} 
