@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { trackPageView } from '../lib/analytics';
 import { ExpoGoiabalPage } from '../pages/ExpoGoiabal/ExpoGoiabalPage';
 import { ProgramacaoPage } from '../pages/ExpoGoiabal/ProgramacaoPage';
 import { CamarotePage } from '../pages/ExpoGoiabal/CamarotePage';
@@ -75,3 +76,7 @@ export const router = createBrowserRouter([
     element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   }
 ]);
+
+router.subscribe((state) => {
+  trackPageView(state.location.pathname + state.location.search);
+});
