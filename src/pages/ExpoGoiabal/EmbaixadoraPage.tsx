@@ -31,7 +31,23 @@ export const EmbaixadoraPage: React.FC = () => {
       setHasVoted(true);
     }
     fetchCandidates();
-    return () => clearInterval(timer);
+
+    // Inscreve no Supabase Realtime para receber inserções de votos
+    const channel = supabase
+      .channel('votos_corte_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'votos_corte' },
+        () => {
+          fetchCandidates(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(timer);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const isBeforeStart = now < VOTING_START;
@@ -51,32 +67,28 @@ export const EmbaixadoraPage: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
   };
 
-  const fetchCandidates = async () => {
+  const fetchCandidates = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       
-      const [candResult, votosResult] = await Promise.all([
-        supabase.from('inscricoes_expogoiabal').select('*').in('modalidade', ['Embaixadora', 'Madrinha']).order('nome', { ascending: true }),
-        supabase.from('votos_corte').select('candidata_id')
-      ]);
+      const { data, error } = await supabase
+        .from('inscricoes_expogoiabal')
+        .select('*, votos_corte(count)')
+        .in('modalidade', ['Embaixadora', 'Madrinha'])
+        .order('nome', { ascending: true });
 
-      if (candResult.error) throw candResult.error;
-      
-      const votosMap: Record<string, number> = {};
-      if (votosResult.data) {
-        votosResult.data.forEach(voto => {
-          votosMap[voto.candidata_id] = (votosMap[voto.candidata_id] || 0) + 1;
-        });
-      }
+      if (error) throw error;
 
       const embs: Candidate[] = [];
       const mads: Candidate[] = [];
 
-      (candResult.data || []).forEach((c) => {
+      (data || []).forEach((c) => {
+        const voteCount = (c.votos_corte as any)?.[0]?.count || 0;
+        
         const candidateData = {
           id: c.id,
           name: c.nome,
-          votes: votosMap[c.id] || 0
+          votes: voteCount
         };
 
         if (c.modalidade === 'Embaixadora') {
@@ -91,7 +103,7 @@ export const EmbaixadoraPage: React.FC = () => {
     } catch (err) {
       console.error('Error fetching candidates:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -266,9 +278,18 @@ export const EmbaixadoraPage: React.FC = () => {
                   <p className="text-zinc-400 text-lg max-w-2xl">
                     Escolha a sua candidata favorita para <span className="text-yellow-500 font-semibold">Embaixadora</span> e <span className="text-yellow-500 font-semibold">Madrinha</span> da ExpoGoiabal 2026. Você só pode votar uma vez.
                   </p>
-                  <div className="inline-flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-5 py-3 rounded-xl shadow-lg">
-                    <Clock className="w-5 h-5 shrink-0 animate-pulse" />
-                    <span className="font-bold uppercase tracking-wider text-sm">Tempo restante para votar: {getRemainingTime()}</span>
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                    <div className="inline-flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-5 py-3 rounded-xl shadow-lg">
+                      <Clock className="w-5 h-5 shrink-0 animate-pulse" />
+                      <span className="font-bold uppercase tracking-wider text-sm">Tempo restante para votar: {getRemainingTime()}</span>
+                    </div>
+                    
+                    <div className="inline-flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 px-5 py-3 rounded-xl shadow-lg animate-in fade-in duration-500">
+                      <Vote className="w-5 h-5 shrink-0 animate-bounce" />
+                      <span className="font-bold uppercase tracking-wider text-sm">
+                        Total de Votos: <span className="text-white bg-yellow-600/30 px-2 py-0.5 rounded-md font-black tabular-nums">{totalEmbaixadorasVotes}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
