@@ -123,7 +123,7 @@ export const ExpoGoiabalPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 w-full px-8 mt-8">
             {/* Card 1: Embaixadora */}
             <div 
-              onClick={() => navigate('/ExpoGoiabal/Embaixadora/inscricao')}
+              onClick={() => navigate('/ExpoGoiabal/Embaixadora')}
               className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
             >
               <div className="relative">
