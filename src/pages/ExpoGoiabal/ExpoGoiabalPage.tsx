@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Music, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Music, Trophy, ChevronDown, ChevronUp, X, Vote } from 'lucide-react';
 
 export const ExpoGoiabalPage: React.FC = () => {
   const navigate = useNavigate();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(true);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const VOTING_START = new Date('2026-05-25T18:00:00-03:00');
+  const isBeforeStart = now < VOTING_START;
 
   const toggleDay = (day: string) => {
     setExpandedDay(prev => prev === day ? null : day);
@@ -15,6 +25,70 @@ export const ExpoGoiabalPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-zinc-900">
       <Header />
       
+      {showPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-300">
+          <div className="bg-black/90 border border-yellow-500/40 rounded-[2rem] p-8 max-w-md w-full relative shadow-[0_20px_70px_-10px_rgba(234,179,8,0.5)] animate-in zoom-in-95 duration-500 overflow-hidden group">
+            
+            {/* Background Image of Rodeo inside Card */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-40 transition-transform duration-1000 group-hover:scale-105" 
+              style={{ backgroundImage: 'url(/background.png)' }} 
+            />
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-0" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent z-0" />
+
+            {/* Glowing Orbs */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/20 rounded-full blur-[80px] animate-pulse z-0" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/20 rounded-full blur-[80px] animate-pulse z-0" style={{ animationDelay: '1s' }} />
+
+            <button 
+              onClick={() => setShowPopup(false)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white hover:bg-white/10 transition-all hover:rotate-90 z-20 rounded-full p-2"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex flex-col items-center text-center gap-6 relative z-10 pt-2">
+              <div className="relative group/icon cursor-pointer">
+                <div className="absolute inset-0 bg-yellow-500 rounded-full blur-xl animate-pulse opacity-50 group-hover/icon:opacity-80 transition-opacity" />
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 flex items-center justify-center text-black shadow-[0_0_40px_rgba(234,179,8,0.6)] transform transition-transform duration-500 group-hover/icon:scale-110 group-hover/icon:rotate-12">
+                  <Vote size={48} strokeWidth={2} />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-600 uppercase tracking-widest drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)]">
+                  Votação
+                  <br />
+                  <span className="text-2xl text-white drop-shadow-md">Oficial</span>
+                </h3>
+                {isBeforeStart ? (
+                  <p className="text-zinc-200 text-lg leading-relaxed font-medium">
+                    Está <strong className="text-yellow-400 text-xl inline-block px-1 animate-pulse drop-shadow-md">quase na hora</strong> de eleger sua Embaixadora e Madrinha favorita da ExpoGoiabal 2026.
+                  </p>
+                ) : (
+                  <p className="text-zinc-200 text-lg leading-relaxed font-medium">
+                    <strong className="text-yellow-400 text-2xl block mb-2 animate-pulse drop-shadow-md">A VOTAÇÃO COMEÇOU!</strong> 
+                    Chame seus amigos e venha escolher as representantes da nossa festa.
+                  </p>
+                )}
+              </div>
+              
+              <button 
+                onClick={() => {
+                  setShowPopup(false);
+                  navigate('/ExpoGoiabal/Embaixadora');
+                }}
+                className="w-full mt-4 bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 text-black font-black text-xl py-4 rounded-full shadow-[0_0_30px_rgba(234,179,8,0.5)] hover:shadow-[0_0_50px_rgba(234,179,8,0.8)] hover:-translate-y-1 hover:scale-[1.02] active:scale-95 transition-all duration-300 uppercase tracking-widest"
+              >
+                {isBeforeStart ? 'Ver Candidatas' : 'Quero Votar Agora'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content with Background Image */}
       <main className="flex-1 relative flex flex-col items-center justify-center p-4">
         {/* Background Image Layer (Mobile) */}
