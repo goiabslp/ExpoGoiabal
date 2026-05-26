@@ -23,6 +23,38 @@ export const EmbaixadoraPage: React.FC = () => {
   const [selectedEmbaixadora, setSelectedEmbaixadora] = useState<string | number | null>(null);
   const [selectedMadrinha, setSelectedMadrinha] = useState<string | number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+ 
+  // 10 minutes countdown state
+  const [countdownSeconds, setCountdownSeconds] = useState(600);
+
+  useEffect(() => {
+    const targetKey = '@ExpoGoiabal:retaFinalEnd';
+    let targetTime = sessionStorage.getItem(targetKey);
+    
+    if (!targetTime) {
+      const newTarget = Date.now() + 10 * 60 * 1000;
+      sessionStorage.setItem(targetKey, newTarget.toString());
+      targetTime = newTarget.toString();
+    }
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((parseInt(targetTime!) - Date.now()) / 1000));
+      setCountdownSeconds(remaining);
+      if (remaining === 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatCountdown = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const isCountdownUrgent = countdownSeconds < 60;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -426,7 +458,17 @@ export const EmbaixadoraPage: React.FC = () => {
 
               {/* Embaixadora Partial */}
               <div className="space-y-6 mb-10">
-                <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Embaixadoras</h4>
+                <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center justify-between">
+                  <span>Embaixadoras</span>
+                  <span className={`font-mono text-xs font-black tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all duration-500 border ${
+                    isCountdownUrgent 
+                      ? 'text-red-500 bg-red-500/10 border-red-500/30 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
+                      : 'text-yellow-500 bg-yellow-500/5 border-yellow-500/10'
+                  }`}>
+                    <Clock className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: isCountdownUrgent ? '2s' : '10s' }} />
+                    {formatCountdown(countdownSeconds)}
+                  </span>
+                </h4>
                 <div className="space-y-4">
                   {[...embaixadoras].sort((a, b) => b.votes - a.votes).map((candidate, idx) => {
                     const percent = totalEmbaixadorasVotes === 0 ? '0.00' : ((candidate.votes / totalEmbaixadorasVotes) * 100).toFixed(2);
