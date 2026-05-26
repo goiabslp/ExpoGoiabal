@@ -412,7 +412,7 @@ export const EmbaixadoraPage: React.FC = () => {
                 <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Embaixadoras</h4>
                 <div className="space-y-4">
                   {[...embaixadoras].sort((a, b) => b.votes - a.votes).map((candidate) => {
-                    const percent = totalEmbaixadorasVotes === 0 ? 0 : Math.round((candidate.votes / totalEmbaixadorasVotes) * 100);
+                    const percent = totalEmbaixadorasVotes === 0 ? '0.00' : ((candidate.votes / totalEmbaixadorasVotes) * 100).toFixed(2);
                     return (
                       <div key={candidate.id} className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -436,7 +436,7 @@ export const EmbaixadoraPage: React.FC = () => {
                 <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Madrinhas</h4>
                 <div className="space-y-4">
                   {[...madrinhas].sort((a, b) => b.votes - a.votes).map((candidate) => {
-                    const percent = totalMadrinhasVotes === 0 ? 0 : Math.round((candidate.votes / totalMadrinhasVotes) * 100);
+                    const percent = totalMadrinhasVotes === 0 ? '0.00' : ((candidate.votes / totalMadrinhasVotes) * 100).toFixed(2);
                     return (
                       <div key={candidate.id} className="space-y-2">
                         <div className="flex justify-between text-sm">
