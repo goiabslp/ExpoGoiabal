@@ -251,6 +251,99 @@ export const EmbaixadoraPage: React.FC = () => {
                 </div>
               )}
             </div>
+            {/* General Results / Classification Section */}
+            <div className="w-full max-w-5xl mx-auto pt-16 border-t border-zinc-800 space-y-12 animate-in fade-in duration-1000 delay-700">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <h3 className="text-3xl font-black uppercase tracking-widest text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.05)]">
+                  Classificação Geral
+                </h3>
+                <div className="h-1 w-20 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.5)]"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
+                
+                {/* Embaixadoras General Results */}
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500"></div>
+                  <h4 className="text-xl font-bold uppercase tracking-widest text-yellow-500 flex items-center justify-between">
+                    <span>Embaixadoras</span>
+                    <span className="text-xs text-zinc-500 font-mono font-bold">
+                      Total: {embaixadoras.reduce((sum, c) => sum + c.votes, 0)} votos
+                    </span>
+                  </h4>
+                  
+                  <div className="flex flex-col gap-4">
+                    {[...embaixadoras]
+                      .sort((a, b) => b.votes - a.votes)
+                      .map((candidate, idx) => {
+                        const totalVotes = embaixadoras.reduce((sum, c) => sum + c.votes, 0) || 1;
+                        const pct = ((candidate.votes / totalVotes) * 100).toFixed(1);
+                        return (
+                          <div key={candidate.id} className="flex items-center gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/40 group hover:border-yellow-500/20 transition-all">
+                            <span className="w-8 text-center font-mono font-black text-zinc-500 text-sm group-hover:text-yellow-500 transition-colors">
+                              {idx + 1}º
+                            </span>
+                            <img src={candidate.image} alt={candidate.name} className="w-12 h-12 rounded-full object-cover border border-zinc-800 shadow-md shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-bold text-white text-sm truncate">{candidate.name}</span>
+                                <span className="font-mono font-black text-yellow-500 text-xs shrink-0">{candidate.votes} votos</span>
+                              </div>
+                              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden flex shadow-inner">
+                                <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 h-full rounded-full" style={{ width: `${pct}%` }}></div>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono">
+                                <span>{pct}% do total</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Madrinhas General Results */}
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+                  <h4 className="text-xl font-bold uppercase tracking-widest text-red-500 flex items-center justify-between">
+                    <span>Madrinhas</span>
+                    <span className="text-xs text-zinc-500 font-mono font-bold">
+                      Total: {madrinhas.reduce((sum, c) => sum + c.votes, 0)} votos
+                    </span>
+                  </h4>
+                  
+                  <div className="flex flex-col gap-4">
+                    {[...madrinhas]
+                      .sort((a, b) => b.votes - a.votes)
+                      .map((candidate, idx) => {
+                        const totalVotes = madrinhas.reduce((sum, c) => sum + c.votes, 0) || 1;
+                        const pct = ((candidate.votes / totalVotes) * 100).toFixed(1);
+                        return (
+                          <div key={candidate.id} className="flex items-center gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/40 group hover:border-red-500/20 transition-all">
+                            <span className="w-8 text-center font-mono font-black text-zinc-500 text-sm group-hover:text-red-500 transition-colors">
+                              {idx + 1}º
+                            </span>
+                            <img src={candidate.image} alt={candidate.name} className="w-12 h-12 rounded-full object-cover border border-zinc-800 shadow-md shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-bold text-white text-sm truncate">{candidate.name}</span>
+                                <span className="font-mono font-black text-red-500 text-xs shrink-0">{candidate.votes} votos</span>
+                              </div>
+                              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden flex shadow-inner">
+                                <div className="bg-gradient-to-r from-red-600 to-red-500 h-full rounded-full" style={{ width: `${pct}%` }}></div>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono">
+                                <span>{pct}% do total</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+              </div>
+            </div>
             
             <div className="pt-12 animate-in fade-in duration-1000 delay-1000">
               <p className="text-zinc-500 text-lg">
