@@ -24,33 +24,28 @@ export const EmbaixadoraPage: React.FC = () => {
   const [selectedMadrinha, setSelectedMadrinha] = useState<string | number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
  
-  // 10 minutes countdown state
-  const [countdownSeconds, setCountdownSeconds] = useState(600);
+  // Remaining time until VOTING_END state
+  const [countdownSeconds, setCountdownSeconds] = useState(0);
 
   useEffect(() => {
-    const targetKey = '@ExpoGoiabal:retaFinalEnd';
-    let targetTime = sessionStorage.getItem(targetKey);
-    
-    if (!targetTime) {
-      const newTarget = Date.now() + 10 * 60 * 1000;
-      sessionStorage.setItem(targetKey, newTarget.toString());
-      targetTime = newTarget.toString();
-    }
+    const updateCountdown = () => {
+      const diff = VOTING_END.getTime() - Date.now();
+      setCountdownSeconds(Math.max(0, Math.floor(diff / 1000)));
+    };
 
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((parseInt(targetTime!) - Date.now()) / 1000));
-      setCountdownSeconds(remaining);
-      if (remaining === 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const formatCountdown = (totalSeconds: number) => {
-    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
