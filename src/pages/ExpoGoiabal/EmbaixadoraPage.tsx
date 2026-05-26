@@ -5,7 +5,7 @@ import { supabase } from '../../services/supabase';
 
 const VOTING_START = new Date('2026-05-25T18:00:00-03:00');
 const VOTING_END = new Date('2026-05-26T18:00:00-03:00');
-const RESULTS_START = new Date('2026-05-26T18:30:00-03:00');
+const RESULTS_START = new Date('2026-05-26T18:00:30-03:00');
 
 type Candidate = {
   id: string | number;
@@ -184,7 +184,7 @@ export const EmbaixadoraPage: React.FC = () => {
           </h1>
           <p className="text-zinc-400 text-lg md:text-2xl max-w-2xl leading-relaxed">
             A votação foi um sucesso absoluto! Obrigado a todos que participaram.<br/><br/>
-            Estamos apurando os resultados finais e em breve <strong className="text-emerald-500">(às 18:30)</strong> revelaremos quem são as grandes campeãs.
+            Estamos apurando os resultados finais e em breve <strong className="text-emerald-500">(às 18:00:30)</strong> revelaremos quem são as grandes campeãs.
           </p>
         </div>
       </div>
