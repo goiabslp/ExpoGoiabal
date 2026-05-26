@@ -236,8 +236,20 @@ export const EmbaixadoraPage: React.FC = () => {
     );
   }
 
+  const isRetaFinal = now >= new Date('2026-05-26T16:15:00-03:00');
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-950 text-white font-sans selection:bg-yellow-500/30">
+      <style>{`
+        @keyframes progress-shimmer {
+          0% { background-position: 0 0; }
+          100% { background-position: 1rem 0; }
+        }
+        .shimmer-bar {
+          background-size: 1rem 1rem !important;
+          animation: progress-shimmer 1s linear infinite !important;
+        }
+      `}</style>
       <Header />
       
       <main className="flex-1 pt-24 px-4 md:px-8 relative pb-32 max-w-7xl mx-auto w-full">
@@ -394,36 +406,125 @@ export const EmbaixadoraPage: React.FC = () => {
                 })}
               </div>
             </div>
-            
           </div>
-
-          {/* Sidebar - Partials */}
+           {/* Sidebar - Partials */}
           <div className="lg:col-span-4 mt-8 lg:mt-0 lg:sticky lg:top-28">
             <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/2" />
               
-              <div className="flex items-center gap-3 mb-8">
-                <Vote className="w-6 h-6 text-yellow-500" />
-                <h3 className="text-xl font-bold uppercase tracking-wider text-white">Parcial da Votação</h3>
+              <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                <div className="flex items-center gap-3">
+                  <Vote className="w-6 h-6 text-yellow-500" />
+                  <h3 className="text-xl font-bold uppercase tracking-wider text-white">Parcial da Votação</h3>
+                </div>
+                {isRetaFinal && (
+                  <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                    ⚡ RETA FINAL ⚡
+                  </span>
+                )}
               </div>
 
               {/* Embaixadora Partial */}
               <div className="space-y-6 mb-10">
                 <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Embaixadoras</h4>
                 <div className="space-y-4">
-                  {[...embaixadoras].sort((a, b) => b.votes - a.votes).map((candidate) => {
+                  {[...embaixadoras].sort((a, b) => b.votes - a.votes).map((candidate, idx) => {
                     const percent = totalEmbaixadorasVotes === 0 ? '0.00' : ((candidate.votes / totalEmbaixadorasVotes) * 100).toFixed(2);
+                    const isFirst = idx === 0;
+                    const isSecond = idx === 1;
+
                     return (
-                      <div key={candidate.id} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium text-zinc-200">{candidate.name}</span>
-                          <span className="font-bold text-yellow-500">{percent}%</span>
+                      <div 
+                        key={candidate.id} 
+                        className={`p-3 rounded-2xl transition-all duration-500 flex flex-col gap-3 relative ${
+                          isFirst 
+                            ? 'bg-yellow-500/5 border border-yellow-500/20 shadow-[0_0_20px_rgba(234,179,8,0.05)]' 
+                            : isSecond 
+                              ? 'bg-zinc-100/5 border border-zinc-100/10 shadow-[0_0_15px_rgba(255,255,255,0.02)]' 
+                              : 'bg-transparent border border-transparent'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center px-1">
+                          <span className={`font-bold tracking-wide transition-all ${
+                            isFirst 
+                              ? 'text-yellow-400 text-base' 
+                              : isSecond 
+                                ? 'text-zinc-200 text-sm' 
+                                : 'text-zinc-400 text-xs font-semibold'
+                          }`}>
+                            {candidate.name}
+                          </span>
+                          <span className={`font-black tracking-wider ${
+                            isFirst 
+                              ? 'text-yellow-400 text-base drop-shadow-[0_0_10px_rgba(234,179,8,0.3)] animate-pulse' 
+                              : isSecond 
+                                ? 'text-zinc-200 text-sm' 
+                                : 'text-zinc-500 text-xs'
+                          }`}>
+                            {percent}%
+                          </span>
                         </div>
-                        <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: `${percent}%` }}
-                          />
+
+                        {/* Unified Bar Container with Photo Embedded at the Start */}
+                        <div className="relative flex items-center mt-1 h-12">
+                          {/* Progress Bar Track */}
+                          <div className={`absolute ${
+                            isFirst ? 'left-6' : isSecond ? 'left-5' : 'left-4'
+                          } right-0 bg-zinc-950 rounded-r-full overflow-hidden transition-all duration-300 ${
+                            isFirst 
+                              ? 'h-8 ring-1 ring-yellow-500/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]' 
+                              : isSecond 
+                                ? 'h-7 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]' 
+                                : 'h-6'
+                          }`}>
+                            <div 
+                              className={`h-full rounded-r-full transition-all duration-1000 ease-out relative ${
+                                isFirst 
+                                  ? 'bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-500 shimmer-bar' 
+                                  : isSecond 
+                                    ? 'bg-gradient-to-r from-zinc-500 to-zinc-300' 
+                                    : 'bg-gradient-to-r from-zinc-800 to-zinc-600'
+                              }`}
+                              style={{ 
+                                width: `${percent}%`,
+                                backgroundImage: isFirst ? 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)' : undefined
+                              }}
+                            >
+                              {/* Spark glow effect at the leading edge of progress */}
+                              {parseFloat(percent) > 0 && (
+                                <div className={`absolute top-0 bottom-0 right-0 w-1 bg-white shadow-[0_0_12px_#fff] ${
+                                  isFirst ? 'shadow-[0_0_15px_#eab308]' : isSecond ? 'shadow-[0_0_10px_#cbd5e1]' : ''
+                                }`} />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Avatar Overlapping at the Start (Left) of the Bar */}
+                          <div className="absolute left-0 z-10 shrink-0 select-none">
+                            <div className="relative">
+                              <img 
+                                src={candidate.image} 
+                                alt={candidate.name} 
+                                className={`rounded-full object-cover transition-all duration-500 hover:scale-110 ${
+                                  isFirst 
+                                    ? 'w-12 h-12 ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]' 
+                                    : isSecond 
+                                      ? 'w-10 h-10 ring-2 ring-zinc-400 shadow-[0_0_10px_rgba(255,255,255,0.2)]' 
+                                      : 'w-8 h-8 ring-1 ring-zinc-700'
+                                }`}
+                              />
+                              {isFirst && (
+                                <span className="absolute -top-1 -left-1 bg-yellow-500 text-black text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md border border-yellow-300 animate-pulse">
+                                  1º
+                                </span>
+                              )}
+                              {isSecond && (
+                                <span className="absolute -top-1 -left-1 bg-zinc-400 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md border border-zinc-300">
+                                  2º
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -435,19 +536,103 @@ export const EmbaixadoraPage: React.FC = () => {
               <div className="space-y-6">
                 <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">Madrinhas</h4>
                 <div className="space-y-4">
-                  {[...madrinhas].sort((a, b) => b.votes - a.votes).map((candidate) => {
+                  {[...madrinhas].sort((a, b) => b.votes - a.votes).map((candidate, idx) => {
                     const percent = totalMadrinhasVotes === 0 ? '0.00' : ((candidate.votes / totalMadrinhasVotes) * 100).toFixed(2);
+                    const isFirst = idx === 0;
+                    const isSecond = idx === 1;
+
                     return (
-                      <div key={candidate.id} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium text-zinc-200">{candidate.name}</span>
-                          <span className="font-bold text-red-500">{percent}%</span>
+                      <div 
+                        key={candidate.id} 
+                        className={`p-3 rounded-2xl transition-all duration-500 flex flex-col gap-3 relative ${
+                          isFirst 
+                            ? 'bg-red-500/5 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.05)]' 
+                            : isSecond 
+                              ? 'bg-zinc-100/5 border border-zinc-100/10 shadow-[0_0_15px_rgba(255,255,255,0.02)]' 
+                              : 'bg-transparent border border-transparent'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center px-1">
+                          <span className={`font-bold tracking-wide transition-all ${
+                            isFirst 
+                              ? 'text-red-400 text-base' 
+                              : isSecond 
+                                ? 'text-zinc-200 text-sm' 
+                                : 'text-zinc-400 text-xs font-semibold'
+                          }`}>
+                            {candidate.name}
+                          </span>
+                          <span className={`font-black tracking-wider ${
+                            isFirst 
+                              ? 'text-red-400 text-base drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse' 
+                              : isSecond 
+                                ? 'text-zinc-200 text-sm' 
+                                : 'text-zinc-500 text-xs'
+                          }`}>
+                            {percent}%
+                          </span>
                         </div>
-                        <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: `${percent}%` }}
-                          />
+
+                        {/* Unified Bar Container with Photo Embedded at the Start */}
+                        <div className="relative flex items-center mt-1 h-12">
+                          {/* Progress Bar Track */}
+                          <div className={`absolute ${
+                            isFirst ? 'left-6' : isSecond ? 'left-5' : 'left-4'
+                          } right-0 bg-zinc-950 rounded-r-full overflow-hidden transition-all duration-300 ${
+                            isFirst 
+                              ? 'h-8 ring-1 ring-red-500/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]' 
+                              : isSecond 
+                                ? 'h-7 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]' 
+                                : 'h-6'
+                          }`}>
+                            <div 
+                              className={`h-full rounded-r-full transition-all duration-1000 ease-out relative ${
+                                isFirst 
+                                  ? 'bg-gradient-to-r from-red-600 via-red-400 to-red-500 shimmer-bar' 
+                                  : isSecond 
+                                    ? 'bg-gradient-to-r from-zinc-500 to-zinc-300' 
+                                    : 'bg-gradient-to-r from-zinc-800 to-zinc-600'
+                              }`}
+                              style={{ 
+                                width: `${percent}%`,
+                                backgroundImage: isFirst ? 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)' : undefined
+                              }}
+                            >
+                              {/* Spark glow effect at the leading edge of progress */}
+                              {parseFloat(percent) > 0 && (
+                                <div className={`absolute top-0 bottom-0 right-0 w-1 bg-white shadow-[0_0_12px_#fff] ${
+                                  isFirst ? 'shadow-[0_0_15px_#ef4444]' : isSecond ? 'shadow-[0_0_10px_#cbd5e1]' : ''
+                                }`} />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Avatar Overlapping at the Start (Left) of the Bar */}
+                          <div className="absolute left-0 z-10 shrink-0 select-none">
+                            <div className="relative">
+                              <img 
+                                src={candidate.image} 
+                                alt={candidate.name} 
+                                className={`rounded-full object-cover transition-all duration-500 hover:scale-110 ${
+                                  isFirst 
+                                    ? 'w-12 h-12 ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
+                                    : isSecond 
+                                      ? 'w-10 h-10 ring-2 ring-zinc-400 shadow-[0_0_10px_rgba(255,255,255,0.2)]' 
+                                      : 'w-8 h-8 ring-1 ring-zinc-700'
+                                }`}
+                              />
+                              {isFirst && (
+                                <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md border border-red-300 animate-pulse">
+                                  1º
+                                </span>
+                              )}
+                              {isSecond && (
+                                <span className="absolute -top-1 -left-1 bg-zinc-400 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md border border-zinc-300">
+                                  2º
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -457,7 +642,6 @@ export const EmbaixadoraPage: React.FC = () => {
 
             </div>
           </div>
-
         </div>
       </main>
 
