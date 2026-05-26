@@ -18,8 +18,294 @@ export const TresTamboresInscricaoPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [registrationId, setRegistrationId] = useState('');
 
   const navigate = useNavigate();
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText('62.378.994/0001-31');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadReceipt = () => {
+    // Create a programmatical canvas element
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 800;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 1. Background Fill (Premium Deep Charcoal / Gold border)
+    ctx.fillStyle = '#18181b'; // zinc-900 background
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Decorative Gold Border
+    ctx.strokeStyle = '#eab308'; // yellow-500 gold
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+    // Inner subtle border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+    // 2. Load the Logo Image
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.onload = () => {
+      // Draw Logo
+      const logoWidth = 140;
+      const logoHeight = 140 * (logoImg.height / logoImg.width);
+      const logoX = (canvas.width - logoWidth) / 2;
+      const logoY = 40;
+      ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+
+      const contentYStart = logoY + logoHeight + 25;
+
+      // 3. Header Texts
+      ctx.textAlign = 'center';
+      
+      // Receipt Title
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308'; // Gold Title
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa'; // zinc-400
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      // Gold Divider Line
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 4. Data Card Background Box
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b'; // zinc-950 background inside the box
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      // Banner ID Único Grande
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(registrationId, canvas.width / 2, bannerY + 48);
+
+      // Write Data Rows
+      ctx.textAlign = 'left';
+      const items = [
+        { label: 'COMPETIDORA', value: formData.nome.toUpperCase() },
+        { label: 'IDADE', value: `${formData.idade} anos` },
+        { label: 'CIDADE', value: formData.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: formData.nomeCavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: formData.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: 'AGUARDANDO VALIDAÇÃO', color: '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a'; // zinc-500
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65; // move down after each row of 2 columns
+        }
+      });
+
+      // 5. Confirmation Footer inside Card
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date().toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      // 6. Organization Footer text outside Card
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      // 7. Trigger the PNG Download
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${formData.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    logoImg.onerror = () => {
+      console.error("Erro ao carregar logo.png para canvas");
+      // Fallback in case image loading fails (e.g. no network or blocked path)
+      ctx.textAlign = 'center';
+      ctx.font = '900 24px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('EXPO GOIABAL 2026', canvas.width / 2, 80);
+      
+      const contentYStart = 120;
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b';
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      // Banner ID Único Grande (Fallback)
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(registrationId, canvas.width / 2, bannerY + 48);
+
+      ctx.textAlign = 'left';
+      const items = [
+        { label: 'COMPETIDORA', value: formData.nome.toUpperCase() },
+        { label: 'IDADE', value: `${formData.idade} anos` },
+        { label: 'CIDADE', value: formData.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: formData.nomeCavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: formData.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: 'AGUARDANDO VALIDAÇÃO', color: '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a';
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65;
+        }
+      });
+
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date().toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${formData.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    logoImg.src = window.location.origin + '/logo.png';
+  };
 
   const nextStep = () => {
     // Validações
@@ -27,6 +313,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     if (step === 2 && !formData.idade) return;
     if (step === 3 && !formData.cidade) return;
     if (step === 4 && !formData.nomeCavalo) return;
+    if (step === 5 && !formData.whatsapp) return;
     
     setStep(prev => Math.min(prev + 1, 6));
   };
@@ -63,8 +350,8 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Inserir dados no banco
-      const { error: insertError } = await supabase
+      // Inserir dados no banco e obter o ID gerado
+      const { data, error: insertError } = await supabase
         .from('inscricoes_3tambores')
         .insert({
           nome: formData.nome,
@@ -73,12 +360,33 @@ export const TresTamboresInscricaoPage: React.FC = () => {
           nome_cavalo: formData.nomeCavalo,
           whatsapp: formData.whatsapp,
           termo_aceito: formData.termoAceito
-        });
+        })
+        .select('id')
+        .single();
 
       if (insertError) {
         console.error("SUPABASE ERROR:", insertError);
         throw new Error(`Erro Supabase: ${insertError.message}`);
       }
+
+      // Formatar o ID único da inscrição
+      let finalId = '';
+      if (data && data.id) {
+        const idStr = String(data.id);
+        if (idStr.includes('-')) {
+          // UUID: pega a primeira seção para ficar limpo
+          finalId = `EG3T-${idStr.split('-')[0].toUpperCase()}`;
+        } else {
+          // Serial ID: formata com zeros à esquerda
+          finalId = `EG3T-${idStr.padStart(5, '0')}`;
+        }
+      } else {
+        // Fallback robusto baseado em data/hora + número aleatório
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        finalId = `EG3T-F${rand}`;
+      }
+      
+      setRegistrationId(finalId);
 
       // Sucesso!
       setShowSuccessModal(true);
@@ -135,15 +443,15 @@ export const TresTamboresInscricaoPage: React.FC = () => {
             <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             
             {/* Progress Bar */}
-            {step < 6 && (
+            {step < 7 && (
               <div className="flex gap-2 mb-8">
-                {[1, 2, 3, 4, 5].map(s => (
+                {[1, 2, 3, 4, 5, 6].map(s => (
                   <div key={s} className={`h-2 flex-1 rounded-full transition-all duration-500 ${s <= step ? 'bg-yellow-500 shadow-[0_0_10px_rgba(255,215,0,0.5)]' : 'bg-zinc-800'}`} />
                 ))}
               </div>
             )}
 
-            <form onSubmit={step === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+            <form onSubmit={step === 6 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
               
               {/* Step 1: Nome Completo */}
               {step === 1 && (
@@ -244,6 +552,49 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Step 6: Pagamento */}
+              {step === 6 && (
+                <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
+                  <div className="flex items-center gap-3 text-yellow-500 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <h2 className="text-2xl font-bold text-white">Pagamento da Inscrição</h2>
+                  </div>
+                  
+                  <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4 text-zinc-300">
+                    <p className="text-sm">
+                      Para confirmar sua participação na Prova de 3 Tambores, realize o pagamento da taxa via PIX:
+                    </p>
+                    
+                    <div className="bg-black/40 rounded-lg p-4 border border-zinc-800 flex flex-col gap-2 relative">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[10px] font-black text-left">Chave PIX CNPJ</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-white font-mono font-bold text-base select-all">62.378.994/0001-31</span>
+                        <button
+                          type="button"
+                          onClick={handleCopyPix}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                            copied 
+                              ? 'bg-green-500/20 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.15)]' 
+                              : 'bg-zinc-800 hover:bg-zinc-700 text-yellow-500 border border-zinc-700'
+                          }`}
+                        >
+                          {copied ? 'Copiado!' : 'Copiar'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1 bg-black/20 p-3 rounded-lg border border-zinc-800/40 text-xs">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-black text-left">Nome do Recebedor</span>
+                      <span className="text-white font-bold text-left">BeP Eventos Cronometrados</span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-500 italic text-left">
+                      * Após realizar a transferência em seu aplicativo bancário, clique no botão "Confirmar Pagamento" abaixo para registrar a sua inscrição.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Checkbox Termos Global */}
               {step > 1 && step <= 5 && (
                 <div className="flex items-start gap-3 mt-8 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 animate-in fade-in">
@@ -270,7 +621,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               )}
 
               {/* Navigation Buttons */}
-              {step <= 5 && (
+              {step <= 6 && (
                 <div className="flex justify-between items-center mt-10 gap-4">
                   <div className="flex gap-4">
                     <button 
@@ -310,14 +661,14 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Enviando...
+                        Processando...
                       </span>
-                    ) : step === 5 ? (
-                      <span key="finalizar">Finalizar</span>
+                    ) : step === 6 ? (
+                      <span key="finalizar">Confirmar Pagamento</span>
                     ) : (
                       <span key="proximo">Próximo</span>
                     )}
-                    {!isSubmitting && step < 5 && <ArrowRight size={20} />}
+                    {!isSubmitting && step < 6 && <ArrowRight size={20} />}
                   </button>
                 </div>
               )}
@@ -352,7 +703,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               <p>O participante declara estar ciente das regras da competição e de que sua participação é voluntária.</p>
 
               <h3 className="font-bold text-yellow-500 mt-4">2. DA RESPONSABILIDADE</h3>
-              <p>O participante assume inteira responsabilidade por sua conduta e a de seu animal durante o evento, bem como pelos riscos inerentes ao esporte equestre, isentando a Prefeitura Municipal de São José do Goiabal e a organização do evento de qualquer responsabilidade civil ou criminal por acidentes, danos físicos, materiais ou morais.</p>
+              <p>O participante assume inteira responsabilidade por sua conduta e a de seu animal durante o evento, bem como pelos risks inerentes ao esporte equestre, isentando a Prefeitura Municipal de São José do Goiabal e a organização do evento de qualquer responsabilidade civil ou criminal por acidentes, danos físicos, materiais ou morais.</p>
 
               <h3 className="font-bold text-yellow-500 mt-4">3. DA AUTORIZAÇÃO DE USO DE IMAGEM</h3>
               <p>O participante autoriza, de forma gratuita e por prazo indeterminado, o uso de sua imagem para fins de divulgação do evento.</p>
@@ -375,39 +726,96 @@ export const TresTamboresInscricaoPage: React.FC = () => {
 
       {/* Modal de Sucesso */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-zinc-900 border border-green-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(34,197,94,0.15)] overflow-hidden animate-in zoom-in-95 duration-300 relative">
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-green-500/20 to-transparent"></div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-green-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(34,197,94,0.25)] overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-green-500/15 to-transparent pointer-events-none"></div>
             
-            <div className="p-8 flex flex-col items-center text-center gap-6 relative z-10">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] animate-bounce">
-                <CheckCircle size={40} />
-              </div>
+            <div className="p-4 sm:p-6 flex flex-col items-center text-center gap-3.5 sm:gap-4 relative z-10">
               
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-                  Inscrição Realizada com Sucesso!
+              {/* Modern compact success ribbon */}
+              <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/25 px-4 py-2.5 rounded-2xl w-full justify-center">
+                <CheckCircle size={18} className="text-green-400 shrink-0" />
+                <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                  Inscrição Realizada!
                 </h3>
-                <div className="h-1 w-16 bg-green-500 mx-auto rounded-full"></div>
               </div>
               
-              <p className="text-zinc-300 leading-relaxed text-lg">
-                Tudo certo! Sua inscrição para os <strong className="text-white">3 Tambores</strong> foi recebida.
-              </p>
-              
-              <p className="text-zinc-400 text-sm">
-                Fique atento ao WhatsApp informado para acompanhar os próximos passos da <strong className="text-white">ExpoGoiabal 2026</strong>.
+              <p className="text-zinc-300 leading-normal text-[11px] sm:text-xs drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
+                A organização da <strong className="text-green-400">ExpoGoiabal</strong> entrará em contato para confirmar o pagamento.
               </p>
 
-              <button 
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  navigate('/ExpoGoiabal/Inicio');
-                }}
-                className="mt-4 w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:scale-[1.02] text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-              >
-                Concluir
-              </button>
+              {/* Comprovante Visual Container (Unified Digital Receipt Card) */}
+              <div className="w-full bg-zinc-950/80 rounded-2xl p-4 sm:p-5 border border-zinc-800 flex flex-col gap-3.5 text-left font-sans text-xs relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+                {/* Gold accent vertical line on the left side */}
+                <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500"></div>
+
+                <div className="flex justify-between items-center pb-2.5 border-b border-zinc-800/80">
+                  <img src="/logo.png" alt="Logo ExpoGoiabal" className="h-7 sm:h-9 object-contain drop-shadow-[0_0_6px_rgba(255,215,0,0.2)]" />
+                  <div className="text-right">
+                    <span className="block font-black uppercase text-[8px] sm:text-[9px] tracking-widest text-yellow-500">
+                      3 Tambores
+                    </span>
+                    <span className="block text-[7px] uppercase tracking-wider text-zinc-400">
+                      ExpoGoiabal 2026
+                    </span>
+                  </div>
+                </div>
+
+                {/* Highly visible unique Registration ID section */}
+                <div className="bg-black/60 px-3 py-2.5 rounded-xl border border-yellow-500/20 flex flex-col items-center gap-0.5 text-center">
+                  <span className="text-[8px] uppercase tracking-widest text-zinc-400 font-bold">
+                    Código de Inscrição (ID)
+                  </span>
+                  <span className="text-xl sm:text-2xl font-black text-yellow-500 font-mono tracking-wider drop-shadow-[0_0_8px_rgba(255,215,0,0.25)]">
+                    {registrationId}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 pt-0.5">
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Competidora</span>
+                    <span className="text-white font-bold truncate text-[10px] sm:text-xs">{formData.nome}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cavalo</span>
+                    <span className="text-white font-bold truncate text-[10px] sm:text-xs">{formData.nomeCavalo}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cidade</span>
+                    <span className="text-white font-semibold truncate text-[10px] sm:text-xs">{formData.cidade}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Status</span>
+                    <span className="text-yellow-500 font-black text-[10px] sm:text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Aguardando Validação</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800/80 flex justify-between items-center text-[8px] sm:text-[9px] text-zinc-400 font-medium">
+                  <span>Confirmação: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-yellow-500/80 font-bold uppercase tracking-wider text-[7px]">Oficial</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 w-full mt-0.5">
+                <button 
+                  type="button"
+                  onClick={handleDownloadReceipt}
+                  className="flex-1 py-2 sm:py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider rounded-xl transition-all border border-zinc-700 flex items-center justify-center gap-1.5 text-[10px] sm:text-xs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Baixar PNG
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    navigate('/ExpoGoiabal/Inicio');
+                  }}
+                  className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:scale-[1.01] text-white font-bold uppercase tracking-wider rounded-xl transition-all shadow-[0_0_12px_rgba(34,197,94,0.3)] text-[10px] sm:text-xs"
+                >
+                  Concluir
+                </button>
+              </div>
             </div>
           </div>
         </div>
