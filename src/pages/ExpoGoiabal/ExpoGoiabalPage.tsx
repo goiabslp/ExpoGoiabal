@@ -138,7 +138,7 @@ export const ExpoGoiabalPage: React.FC = () => {
             </h2>
             <div className="w-24 h-1 bg-yellow-500 rounded-full drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"></div>
           </div>
-          <div className={`grid grid-cols-1 ${mirimCount < 28 ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-8 md:gap-10 w-full max-w-4xl px-8 mt-8 justify-items-center`}>
+          <div className={`grid grid-cols-1 ${mirimCount < 25 ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-8 md:gap-10 w-full max-w-4xl px-8 mt-8 justify-items-center`}>
             {/* Card 1: 3 Tambores */}
             <div 
               onClick={() => navigate('/ExpoGoiabal/3tambores/inscricao')}
@@ -155,7 +155,7 @@ export const ExpoGoiabalPage: React.FC = () => {
             </div>
 
             {/* Card 2: Peão Mirim */}
-            {mirimCount < 28 && (
+            {mirimCount < 25 && (
               <div 
                 onClick={() => navigate('/ExpoGoiabal/Mirim/inscricao')}
                 className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
