@@ -269,8 +269,8 @@ export const MirimInscricaoPage: React.FC = () => {
                 Peão Mirim
               </h1>
               <div className="mt-4 flex flex-col items-center gap-1">
-                <p className={`${!loadingData && totalRegistrations >= 30 ? 'text-zinc-500 drop-shadow-[0_0_10px_rgba(100,100,100,0.4)]' : 'text-orange-500 drop-shadow-[0_0_10px_rgba(255,100,0,0.4)]'} tracking-widest uppercase text-sm font-bold`}>
-                  {!loadingData && totalRegistrations >= 30 ? 'Inscrições Encerradas' : 'Inscrições Abertas'}
+                <p className={`${!loadingData && totalRegistrations >= 28 ? 'text-zinc-500 drop-shadow-[0_0_10px_rgba(100,100,100,0.4)]' : 'text-orange-500 drop-shadow-[0_0_10px_rgba(255,100,0,0.4)]'} tracking-widest uppercase text-sm font-bold`}>
+                  {!loadingData && totalRegistrations >= 28 ? 'Inscrições Encerradas' : 'Inscrições Abertas'}
                 </p>
                 <button
                   onClick={() => setShowFaqModal(true)}
@@ -293,7 +293,7 @@ export const MirimInscricaoPage: React.FC = () => {
                 </svg>
                 <p className="text-zinc-400 font-semibold">Carregando informações...</p>
               </div>
-            ) : totalRegistrations >= 30 ? (
+            ) : totalRegistrations >= 28 ? (
               <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col gap-8 animate-in fade-in duration-500">
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
@@ -303,9 +303,6 @@ export const MirimInscricaoPage: React.FC = () => {
                     Inscrições Encerradas!
                   </h2>
                   <div className="h-1 w-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full"></div>
-                  <p className="text-zinc-200 text-lg leading-relaxed font-semibold">
-                    O limite máximo de <strong className="text-orange-500">30 inscrições</strong> foi atingido e o período de inscrição foi encerrado.
-                  </p>
                   <p className="text-zinc-400 text-sm leading-relaxed">
                     Os pequenos grandes peões que irão competir montados em ovelhas e carneiros na ExpoGoiabal 2026 já estão definidos!
                   </p>
