@@ -26,6 +26,30 @@ export const ExpoGoiabalPage: React.FC = () => {
     fetchMirimCount();
   }, []);
 
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+
+  useEffect(() => {
+    const targetDate = new Date('2026-06-04T00:00:00-03:00');
+    
+    const calculateTimeLeft = () => {
+      const difference = +targetDate - +new Date();
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      } else {
+        setTimeLeft(null);
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleDay = (day: string) => {
     setExpandedDay(prev => prev === day ? null : day);
   };
@@ -67,6 +91,57 @@ export const ExpoGoiabalPage: React.FC = () => {
               className="w-full max-w-2xl drop-shadow-[0_10px_35px_rgba(255,100,0,0.6)] transition-all duration-500 absolute inset-0 opacity-0 scale-105 group-hover:opacity-100 group-hover:scale-100"
             />
           </div>
+
+          {/* Dynamic & Interactive Countdown Section */}
+          {timeLeft ? (
+            <div className="animate-in fade-in zoom-in-95 duration-1000 flex flex-col items-center gap-3">
+              <span className="text-zinc-400 text-xs md:text-sm font-bold uppercase tracking-widest bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.1)] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-ping"></span>
+                Contagem Regressiva Oficial
+              </span>
+              <div className="flex gap-4 items-center justify-center bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 px-6 md:px-8 shadow-2xl hover:border-yellow-500/30 transition-all duration-500 group">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-md tracking-wider">
+                    {String(timeLeft.days).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Dias</span>
+                </div>
+                <span className="text-2xl font-black text-yellow-500/60 pb-4">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-black text-white drop-shadow-md">
+                    {String(timeLeft.hours).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Horas</span>
+                </div>
+                <span className="text-2xl font-black text-zinc-700 pb-4">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-black text-white drop-shadow-md">
+                    {String(timeLeft.minutes).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Minutos</span>
+                </div>
+                <span className="text-2xl font-black text-zinc-700 pb-4">:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-black text-orange-500 drop-shadow-md animate-pulse">
+                    {String(timeLeft.seconds).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Segundos</span>
+                </div>
+              </div>
+              <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mt-1 animate-pulse">
+                Faltam {String(timeLeft.days).padStart(2, '0')} dias!
+              </p>
+            </div>
+          ) : (
+            <div className="animate-in fade-in duration-1000 flex flex-col items-center gap-3">
+              <span className="text-white text-xs md:text-sm font-black uppercase tracking-widest bg-gradient-to-r from-yellow-500 to-orange-500 border border-yellow-500/20 px-6 py-2 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center gap-2 animate-bounce">
+                🤠 A Festa Começou!
+              </span>
+              <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest text-center max-w-md drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mt-1">
+                A ExpoGoiabal 2026 já começou!
+              </p>
+            </div>
+          )}
 
           {/* Event Info Cards (Desktop) */}
           <div className="hidden md:grid grid-cols-3 gap-6 w-full animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-300 mt-24">
