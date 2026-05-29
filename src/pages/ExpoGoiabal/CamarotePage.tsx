@@ -1,6 +1,6 @@
 import React from 'react';
 import { Header } from '../../components/Header';
-import { Ticket, QrCode, Sparkles, Calendar, ShieldCheck, Gem, Coins, ArrowRight } from 'lucide-react';
+import { Ticket, QrCode, Sparkles, Calendar, ShieldCheck, Gem, Coins, ArrowRight, Clock } from 'lucide-react';
 
 export const CamarotePage: React.FC = () => {
   const ticketUrl = "https://www.ingressonacional.com.br/evento/34244/camarote-expo-goiabal";
@@ -101,6 +101,14 @@ export const CamarotePage: React.FC = () => {
             <p className="text-zinc-300 text-base md:text-lg font-medium leading-relaxed">
               Viva a melhor experiência da ExpoGoiabal 2026 com conforto, vista privilegiada, bares exclusivos e a vibração única do melhor lugar da festa!
             </p>
+
+            {/* Informações Gerais do Evento */}
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-2 text-zinc-300 font-bold uppercase tracking-widest text-xs md:text-sm">
+              <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 px-5 py-2.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                <Clock className="shrink-0 animate-pulse text-yellow-500" size={16} />
+                Abertura dos Portões às 18:00 Horas
+              </div>
+            </div>
           </div>
 
           {/* Ticket Grid Section */}
@@ -227,7 +235,7 @@ export const CamarotePage: React.FC = () => {
           <div className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 px-6 py-4 rounded-2xl max-w-xl text-center">
             <Sparkles size={20} className="text-yellow-500 shrink-0" />
             <p className="text-zinc-400 font-medium text-xs md:text-sm">
-              *Ingressos de 1º lote são limitados. Sujeito a alteração de preços sem aviso prévio. Proibida a entrada de menores de 18 anos desacompanhados.
+              *Abertura dos portões às 18:00 horas. Ingressos de 1º lote são limitados. Sujeito a alteração de preços sem aviso prévio. Proibida a entrada de menores de 18 anos desacompanhados.
             </p>
           </div>
 
