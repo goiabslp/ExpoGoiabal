@@ -108,6 +108,14 @@ export const ExpoGoiabalPage: React.FC = () => {
             />
           </div>
 
+          {/* Badge Entrada Grátis */}
+          <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-200 flex flex-col items-center">
+            <span className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs md:text-sm uppercase tracking-widest px-6 py-2.5 rounded-full shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] transition-all duration-300 border border-emerald-400/30 flex items-center gap-2">
+              <Gem size={14} className="text-yellow-300 animate-pulse" />
+              Entrada Grátis Todos os Dias de Evento
+            </span>
+          </div>
+
           {/* Dynamic & Interactive Countdown Section */}
           {timeLeft ? (
             <div className="animate-in fade-in zoom-in-95 duration-1000 flex flex-col items-center gap-3">
