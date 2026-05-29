@@ -17,6 +17,7 @@ export const CamarotePage: React.FC = () => {
       features: [
         "Acesso à área VIP (05 e 06 de Junho) Sexta e Sábado",
         "Vista privilegiada da arena de rodeio e do palco principal",
+        "Show exclusivo com DJ no camarote todos os dias",
         "Banheiros e bares exclusivos com atendimento diferenciado",
         "Conforto premium e segurança reforçada",
       ],
@@ -32,6 +33,7 @@ export const CamarotePage: React.FC = () => {
       features: [
         "Acesso exclusivo na noite de Sexta-Feira (05 de Junho)",
         "Vista privilegiada do rodeio oficial e shows nacionais",
+        "Show exclusivo com DJ no camarote",
         "Acesso aos bares e banheiros exclusivos do Camarote VIP",
         "Entrada diferenciada sem filas",
       ],
@@ -47,6 +49,7 @@ export const CamarotePage: React.FC = () => {
       features: [
         "Acesso exclusivo na noite de Sábado (06 de Junho)",
         "Vista VIP para a grande final do rodeio e shows da noite",
+        "Show exclusivo com DJ no camarote",
         "Acesso aos bares e banheiros exclusivos do Camarote VIP",
         "Entrada diferenciada sem filas",
       ],

@@ -557,6 +557,10 @@ export const ExpoGoiabalPage: React.FC = () => {
                 <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
                 <span>Conforto, segurança e entrada sem filas</span>
               </div>
+              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
+                <span>Show exclusivo com DJ todos os dias no camarote</span>
+              </div>
             </div>
 
             {/* Modal Actions */}
