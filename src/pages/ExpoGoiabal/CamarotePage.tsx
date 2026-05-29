@@ -15,7 +15,7 @@ export const CamarotePage: React.FC = () => {
       lote: "Lote 1",
       badge: "Válido para todos os dias",
       features: [
-        "Acesso à área VIP em todas as noites do evento (04 a 07/06)",
+        "Acesso à área VIP (05 e 06 de Junho) Sexta e Sábado",
         "Vista privilegiada da arena de rodeio e do palco principal",
         "Banheiros e bares exclusivos com atendimento diferenciado",
         "Conforto premium e segurança reforçada",
