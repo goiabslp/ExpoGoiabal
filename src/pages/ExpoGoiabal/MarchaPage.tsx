@@ -14,7 +14,6 @@ export const MarchaPage: React.FC = () => {
     "CAVALO COMUM",
     "ÉGUA COMUM",
     "CAVALO PAMPA / ÉGUA PAMPA",
-    "SEM RAÇA DEFINIDA",
     "CASTRADO",
     "ÉGUA REGISTRADA (MM)",
     "CAVALO REGISTRADO (MM)",
