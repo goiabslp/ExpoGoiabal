@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Music, Trophy, ChevronDown, ChevronUp, Gem, Ticket } from 'lucide-react';
+import { Music, Trophy, ChevronDown, ChevronUp, Gem, Ticket, X, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const ExpoGoiabalPage: React.FC = () => {
   const navigate = useNavigate();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [mirimCount, setMirimCount] = useState<number>(0);
+  const [showCamaroteModal, setShowCamaroteModal] = useState(false);
+
+  useEffect(() => {
+    const hasSeenModal = sessionStorage.getItem('hasSeenCamaroteModal');
+    if (!hasSeenModal) {
+      const timer = setTimeout(() => {
+        setShowCamaroteModal(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const closeCamaroteModal = () => {
+    setShowCamaroteModal(false);
+    sessionStorage.setItem('hasSeenCamaroteModal', 'true');
+  };
 
   useEffect(() => {
     const fetchMirimCount = async () => {
@@ -467,6 +483,99 @@ export const ExpoGoiabalPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Modal de Destaque do Camarote VIP */}
+      {showCamaroteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-transparent animate-in fade-in duration-300">
+          <div className="relative bg-zinc-950 border-2 border-yellow-500/30 rounded-3xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(245,158,11,0.25)] animate-in zoom-in-95 duration-300 mx-auto overflow-hidden">
+            
+            <style>{`
+              @keyframes vip-modal-pulse {
+                0%, 100% {
+                  transform: scale(1);
+                  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+                }
+                50% {
+                  transform: scale(1.03);
+                  box-shadow: 0 0 35px rgba(245, 158, 11, 0.7), 0 0 15px rgba(245, 158, 11, 0.3);
+                }
+              }
+              .animate-vip-modal-pulse {
+                animation: vip-modal-pulse 2s infinite ease-in-out;
+              }
+            `}</style>
+
+            {/* Elegant luxury visual backgrounds inside modal */}
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600"></div>
+
+            {/* Close Button */}
+            <button 
+              onClick={closeCamaroteModal}
+              className="absolute top-5 right-5 text-zinc-400 hover:text-white transition-colors z-20 bg-zinc-900/80 p-2 rounded-full border border-zinc-800"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header Content */}
+            <div className="flex flex-col items-center text-center gap-4 mt-2">
+              <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
+                <Gem size={12} className="text-yellow-500" />
+                Destaque Oficial
+              </span>
+              
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-wider text-white mt-1">
+                Camarote <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  ExpoGoiabal 2026
+                </span>
+              </h2>
+
+              <p className="text-zinc-400 font-medium text-sm md:text-base px-2">
+                As vendas do <strong className="text-yellow-500 font-bold">1º Lote</strong> estão oficialmente abertas! Garanta seu lugar no melhor e mais exclusivo espaço da festa.
+              </p>
+            </div>
+
+            {/* Features Highlight */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 my-6 flex flex-col gap-3.5 relative z-10 text-left">
+              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
+                <span>Vista privilegiada da arena e dos shows</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
+                <span>Bares e banheiros exclusivos (VIP)</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
+                <span>Conforto, segurança e entrada sem filas</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col items-center gap-4 mt-2">
+              <button 
+                onClick={() => {
+                  closeCamaroteModal();
+                  window.scrollTo(0, 0);
+                  navigate('/ExpoGoiabal/Camarote');
+                }}
+                className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base py-4 rounded-full shadow-[0_0_30px_rgba(245,158,11,0.35)] hover:shadow-[0_0_40px_rgba(245,158,11,0.55)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans animate-vip-modal-pulse"
+              >
+                <Ticket size={20} className="shrink-0 animate-bounce" />
+                Garantir Ingresso VIP
+              </button>
+              
+              <button 
+                onClick={closeCamaroteModal}
+                className="text-xs text-zinc-500 hover:text-zinc-400 font-bold uppercase tracking-wider transition-colors"
+              >
+                Continuar para o site
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
