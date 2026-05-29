@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Music, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Music, Trophy, ChevronDown, ChevronUp, Gem, Ticket } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const ExpoGoiabalPage: React.FC = () => {
@@ -245,6 +245,44 @@ export const ExpoGoiabalPage: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Chamada para o Camarote VIP */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto mt-16 mb-20 px-4">
+          <div 
+            onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Camarote'); }}
+            className="cursor-pointer group relative overflow-hidden bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-yellow-500/30 rounded-3xl p-6 md:p-10 shadow-2xl hover:shadow-[0_0_40px_rgba(245,158,11,0.2)] hover:border-yellow-500/50 transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-8"
+          >
+            {/* Subtle glow background layer */}
+            <div className="absolute inset-0 bg-yellow-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"></div>
+            
+            {/* Left Content */}
+            <div className="flex flex-col gap-4 text-center md:text-left relative z-10 max-w-xl">
+              <span className="self-center md:self-start bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
+                <Gem size={12} />
+                Área VIP Exclusiva
+              </span>
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-wider text-white">
+                Camarote <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">ExpoGoiabal 2026</span>
+              </h2>
+              <p className="text-zinc-400 font-medium text-sm md:text-base leading-relaxed">
+                As vendas do <strong className="text-yellow-500 font-bold">1º Lote</strong> estão liberadas! Garanta já o seu lugar no espaço mais cobiçado da festa, com vista privilegiada da arena e shows, bares e banheiros exclusivos.
+              </p>
+            </div>
+
+            {/* Right Action Button/Visual */}
+            <div className="shrink-0 relative z-10 flex flex-col items-center gap-3">
+              <div
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 group-hover:from-yellow-400 group-hover:to-amber-500 text-black font-black text-sm md:text-base py-4 px-8 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] group-hover:scale-105 transition-all duration-300 uppercase tracking-widest font-sans"
+              >
+                <Ticket size={18} className="shrink-0 animate-bounce" />
+                Garantir Ingresso VIP
+              </div>
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                1º Lote Limitado 🎟️
+              </span>
+            </div>
           </div>
         </div>
 

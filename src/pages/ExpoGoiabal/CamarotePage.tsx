@@ -56,6 +56,21 @@ export const CamarotePage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-950 font-sans text-white">
+      <style>{`
+        @keyframes vip-pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+          }
+          50% {
+            transform: scale(1.04);
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), 0 0 15px rgba(245, 158, 11, 0.4);
+          }
+        }
+        .animate-vip-pulse {
+          animation: vip-pulse 2s infinite ease-in-out;
+        }
+      `}</style>
       <Header />
       <main className="flex-1 pt-28 pb-20 px-4 relative flex justify-center">
         {/* Background Layer (Mobile) */}
@@ -184,9 +199,9 @@ export const CamarotePage: React.FC = () => {
                   href={ticketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base py-4 px-10 rounded-full shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] hover:scale-105 transition-all duration-300 uppercase tracking-widest"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base py-4 px-10 rounded-full transition-all duration-300 uppercase tracking-widest animate-vip-pulse"
                 >
-                  <Ticket size={20} className="shrink-0 animate-pulse" />
+                  <Ticket size={20} className="shrink-0 animate-bounce" />
                   Ir para Vendas Camarote
                   <ArrowRight size={18} className="shrink-0" />
                 </a>
