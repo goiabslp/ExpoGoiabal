@@ -50,6 +50,14 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
+        {/* Texto Entrada Grátis (Mobile Only) */}
+        <div className="lg:hidden flex items-center justify-center text-center px-1">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-400/30 rounded-full px-4 py-1.5 shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span>
+            Entrada Grátis todos os dias de evento
+          </span>
+        </div>
+
         {/* Menu Centralizado (Desktop) */}
         <nav className="hidden lg:flex items-center justify-center gap-4 xl:gap-6 shrink-0 z-10">
           {navItems.map((item) => (

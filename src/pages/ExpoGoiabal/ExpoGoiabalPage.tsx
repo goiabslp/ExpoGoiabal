@@ -9,16 +9,36 @@ export const ExpoGoiabalPage: React.FC = () => {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [mirimCount, setMirimCount] = useState<number>(0);
   const [showCamaroteModal, setShowCamaroteModal] = useState(false);
+  const [showGratisModal, setShowGratisModal] = useState(false);
 
   useEffect(() => {
-    const hasSeenModal = sessionStorage.getItem('hasSeenCamaroteModal');
-    if (!hasSeenModal) {
+    const timer = setTimeout(() => {
+      setShowGratisModal(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const hasSeenGratis = sessionStorage.getItem('hasSeenGratisModal');
+    const hasSeenCamarote = sessionStorage.getItem('hasSeenCamaroteModal');
+    if (hasSeenGratis && !hasSeenCamarote) {
       const timer = setTimeout(() => {
         setShowCamaroteModal(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
   }, []);
+
+  const closeGratisModal = () => {
+    setShowGratisModal(false);
+    sessionStorage.setItem('hasSeenGratisModal', 'true');
+    const hasSeenCamarote = sessionStorage.getItem('hasSeenCamaroteModal');
+    if (!hasSeenCamarote) {
+      setTimeout(() => {
+        setShowCamaroteModal(true);
+      }, 800);
+    }
+  };
 
   const closeCamaroteModal = () => {
     setShowCamaroteModal(false);
@@ -582,6 +602,74 @@ export const ExpoGoiabalPage: React.FC = () => {
                 className="text-xs text-zinc-500 hover:text-zinc-400 font-bold uppercase tracking-wider transition-colors"
               >
                 Continuar para o site
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Festa é TOTALMENTE GRÁTIS */}
+      {showGratisModal && (
+        <div 
+          onClick={closeGratisModal}
+          className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/75 backdrop-blur-none animate-in fade-in duration-300 cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-zinc-950 border-2 border-emerald-500/30 rounded-3xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(16,185,129,0.25)] animate-in zoom-in-95 duration-300 mx-auto overflow-hidden cursor-default"
+          >
+            
+            {/* Top gradient strip */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-yellow-500 to-emerald-600"></div>
+
+            {/* Top Icon */}
+            <div className="flex flex-col items-center gap-4 text-center mt-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shadow-[0_0_25px_rgba(16,185,129,0.4)] animate-bounce">
+                <Trophy size={32} className="text-yellow-300" />
+              </div>
+              
+              <h2 className="text-3xl font-black uppercase tracking-wider text-white">
+                Atenção Galera! 🤠
+              </h2>
+              <div className="h-1 w-16 bg-emerald-500 rounded-full"></div>
+            </div>
+
+            {/* Content Message */}
+            <div className="text-center space-y-5 my-6">
+              <p className="text-zinc-300 font-medium text-base md:text-lg leading-relaxed">
+                A gente sabe que a programação está tão sensacional que parece...
+              </p>
+              
+              <div className="py-2.5 px-6 bg-red-500/10 border border-red-500/20 rounded-2xl inline-block transform hover:scale-105 transition-transform duration-300 shadow-inner">
+                <span className="text-red-400 font-black text-lg md:text-xl uppercase tracking-widest block animate-pulse">
+                  SABOR DE COBRADO
+                </span>
+              </div>
+              
+              <p className="text-zinc-300 font-medium text-base md:text-lg leading-relaxed">
+                Mas acalme o coração, porque a entrada é...
+              </p>
+              
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xl md:text-2xl uppercase tracking-widest px-8 py-3 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-emerald-400/30 inline-block transform rotate-1 hover:rotate-0 transition-transform duration-300">
+                TOTALMENTE GRÁTIS! 🎉
+              </div>
+            </div>
+
+            {/* Disclaimer block */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 text-left">
+              <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+                ⚠️ <strong className="text-yellow-500">Nota:</strong> Apenas o <strong className="text-white">camarote</strong> terá comercialização de entrada. A arena de rodeio, a praça de alimentação e a pista de shows têm acesso 100% gratuito todos os dias!
+              </p>
+            </div>
+
+            {/* Action button */}
+            <div className="flex flex-col items-center mt-6">
+              <button 
+                onClick={closeGratisModal}
+                className="w-full py-4 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base rounded-full shadow-[0_0_25px_rgba(245,158,11,0.3)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans"
+              >
+                Bora Curtir! 🐴
               </button>
             </div>
 
