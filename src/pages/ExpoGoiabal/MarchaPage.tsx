@@ -1,9 +1,169 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '../../components/Header';
 import { Trophy, Calendar, MapPin, Award, AlertTriangle, Stethoscope, Mic, User, Ticket } from 'lucide-react';
 
+export interface DistributionResult {
+  totalPot: number;
+  reservadoCampeaoShare: number;
+  completionAllocated: number;
+  surplus: number;
+  regional2Share: number;
+  regional3Share: number;
+  placements4to15Share: number;
+  reservadoCampeaoTotal: number;
+  regional2Total: number;
+  regional3Total: number;
+  placementsPrizes: number[];
+  maxUnlockedIndex: number;
+}
+
+export const calculateDistribution = (totalPot: number): DistributionResult => {
+  // 1. Reservado Campeão first share (10%) - capped at R$ 2.000,00
+  let reservadoCampeaoShare = 0.10 * totalPot;
+  if (reservadoCampeaoShare > 2000.00) {
+    reservadoCampeaoShare = 2000.00;
+  }
+
+  const remainingAfterRC = totalPot - reservadoCampeaoShare;
+
+  // 2. Ladder Completion to 15th place (base budget up to R$ 2.400,00, total 12 places: 4th to 15th)
+  // Placements unlock step-by-step for each R$ 200 accumulated in this budget.
+  const completionNeeded = 2400.00;
+  const completionAllocated = Math.min(remainingAfterRC, completionNeeded);
+  const remainingAfterCompletion = remainingAfterRC - completionAllocated;
+
+  // Initialize placements 4 to 15 array (size 12)
+  const placementsPrizes = Array(12).fill(0);
+  
+  // Calculate how many placements are unlocked
+  let numUnlocked = 0;
+  if (completionAllocated > 0) {
+    numUnlocked = Math.min(12, Math.floor(completionAllocated / 200));
+    if (numUnlocked === 0) numUnlocked = 1; // Unlocks at least the 4th place if there is any allocation
+  }
+  let maxUnlockedIndex = numUnlocked - 1;
+
+  let surplus = 0;
+  let regional2Share = 0;
+  let regional3Share = 0;
+  let placements4to15Share = 0;
+
+  if (remainingAfterCompletion > 0) {
+    surplus = remainingAfterCompletion;
+
+    if (reservadoCampeaoShare >= 2000.00) {
+      // Quando o Reservado Campeão já atingiu o limite de R$ 2.000,00:
+      // 10% para o Reservado Campeão (somado à cota anterior)
+      // 20% para o Regional 2º Lugar
+      // 10% para o Regional 3º Lugar
+      // 60% divididos proporcionalmente entre 4º e 15º Lugar Geral
+      reservadoCampeaoShare += 0.10 * surplus;
+      regional2Share = 0.20 * surplus;
+      regional3Share = 0.10 * surplus;
+      placements4to15Share = 0.60 * surplus;
+    } else {
+      // Se o Reservado Campeão AINDA NÃO atingiu o limite de R$ 2.000,00:
+      // 15% para o Reservado Campeão (somado à cota anterior e respeitando o limite geral de R$ 2.000)
+      // 20% para o Regional 2º Lugar
+      // 10% para o Regional 3º Lugar
+      // 55% divididos proporcionalmente entre 4º e 15º Lugar Geral
+      const amountToReachLimit = 2000.00 - reservadoCampeaoShare;
+      const surplusUsedToReachLimit = amountToReachLimit / 0.15;
+
+      if (surplus <= surplusUsedToReachLimit) {
+        reservadoCampeaoShare += 0.15 * surplus;
+        regional2Share = 0.20 * surplus;
+        regional3Share = 0.10 * surplus;
+        placements4to15Share = 0.55 * surplus;
+      } else {
+        // Reservado Campeão atinge o limite de R$ 2.000,00 e o restante do excedente
+        // transiciona para as porcentagens de quando ele atingiu o limite.
+        reservadoCampeaoShare = 2000.00;
+        const remainingSurplus = surplus - surplusUsedToReachLimit;
+        
+        reservadoCampeaoShare += 0.10 * remainingSurplus;
+        regional2Share = 0.20 * surplus;
+        regional3Share = 0.10 * surplus;
+        placements4to15Share = (0.55 * surplusUsedToReachLimit) + (0.60 * remainingSurplus);
+      }
+    }
+  }
+
+  // Descending fair proportional weights for index 0 to 11 (4º to 15º Lugar Geral)
+  // Higher places get a larger portion of the total allocated pool.
+  const totalForPlacements = completionAllocated + placements4to15Share;
+  const weights = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
+
+  if (numUnlocked > 0 && totalForPlacements > 0) {
+    // Sum of active weights for currently unlocked placements
+    let activeWeightsSum = 0;
+    for (let i = 0; i < numUnlocked; i++) {
+      activeWeightsSum += weights[i];
+    }
+
+    // Distribute the total pool proportionally using the active weights
+    for (let i = 0; i < numUnlocked; i++) {
+      placementsPrizes[i] = (weights[i] / activeWeightsSum) * totalForPlacements;
+    }
+  }
+
+  // Calculate final totals
+  const reservadoCampeaoTotal = 500.00 + reservadoCampeaoShare;
+  const regional2Total = 250.00 + regional2Share;
+  const regional3Total = 250.00 + regional3Share;
+
+  return {
+    totalPot,
+    reservadoCampeaoShare,
+    completionAllocated,
+    surplus,
+    regional2Share,
+    regional3Share,
+    placements4to15Share,
+    
+    reservadoCampeaoTotal,
+    regional2Total,
+    regional3Total,
+    placementsPrizes,
+    maxUnlockedIndex
+  };
+};
+
 export const MarchaPage: React.FC = () => {
-  const [showMotoModal, setShowMotoModal] = React.useState(false);
+  const [showMotoModal, setShowMotoModal] = useState(false);
+  const [poteValue, setPoteValue] = useState<number>(() => {
+    const saved = localStorage.getItem('pote_premiado_value');
+    return saved ? parseFloat(saved) : 0;
+  });
+
+  // Listen to storage changes to update values in real-time
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('pote_premiado_value');
+      if (saved) {
+        setPoteValue(parseFloat(saved));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    // Interval check for updates within same session/tab
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const dist = calculateDistribution(poteValue);
+
+  // Formata o valor monetário
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(val);
+  };
 
   const categorias = [
     "PIQUIRA (M/F) ALTURA MÁXIMA 1,30",
@@ -109,6 +269,24 @@ export const MarchaPage: React.FC = () => {
                       <span className="font-bold text-zinc-300 text-lg">3º LUGAR</span>
                       <span className="font-black text-yellow-500 text-xl">R$ 300,00</span>
                     </div>
+                    
+                    {dist.maxUnlockedIndex >= 0 && (
+                      <div className="mt-2 pt-3 border-t border-zinc-800/60 flex flex-col gap-2">
+                        <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Premiações do Pote Premiado (Desbloqueadas)</span>
+                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                          {dist.placementsPrizes.map((prize, idx) => {
+                            if (prize === 0) return null;
+                            const placeNum = idx + 4;
+                            return (
+                              <div key={placeNum} className="flex justify-between items-center bg-zinc-950/80 px-4 py-2.5 rounded-xl border border-yellow-500/10 shadow-sm animate-in fade-in duration-300">
+                                <span className="font-bold text-zinc-300 text-xs">{placeNum}º LUGAR GERAL</span>
+                                <span className="font-black text-yellow-500 text-sm">{formatCurrency(prize)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Especiais */}
@@ -121,27 +299,43 @@ export const MarchaPage: React.FC = () => {
                       <span className="text-xs font-black uppercase tracking-widest text-yellow-500">Campeão dos Campeões</span>
                       <span className="text-2xl font-black text-white">01 MOTO ZERO KM</span>
                     </div>
-                    <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 p-5 rounded-2xl border border-zinc-700 text-center flex flex-col justify-center gap-2">
+                    <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 p-5 rounded-2xl border border-zinc-700 text-center flex flex-col justify-center gap-2 relative overflow-hidden">
+                      {dist.reservadoCampeaoShare > 0 && (
+                        <div className="absolute top-0 left-0 w-full h-0.5 bg-yellow-500" />
+                      )}
                       <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Reservado Campeão</span>
-                      <span className="text-2xl font-black text-white">R$ 500,00</span>
+                      <span className="text-2xl font-black text-white">{formatCurrency(dist.reservadoCampeaoTotal)}</span>
+                      {dist.reservadoCampeaoShare > 0 && (
+                        <span className="text-[10px] text-yellow-500 font-bold tracking-wider">+ {formatCurrency(dist.reservadoCampeaoShare)} do Pote</span>
+                      )}
                     </div>
                   </div>
 
                   {/* Regional */}
                   <div className="bg-zinc-950/80 rounded-2xl p-6 border border-zinc-800">
                     <h3 className="text-center font-black uppercase tracking-widest text-yellow-500 mb-4 border-b border-zinc-800 pb-2">Regional</h3>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-zinc-400">1º LUGAR</span>
                         <span className="font-bold text-white">01 POTRO</span>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center bg-zinc-900/30 p-2.5 rounded-lg border border-zinc-800/40">
                         <span className="font-bold text-zinc-400">2º LUGAR</span>
-                        <span className="font-bold text-white">R$ 250,00</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-bold text-white">{formatCurrency(dist.regional2Total)}</span>
+                          {dist.regional2Share > 0 && (
+                            <span className="text-[9px] text-yellow-500 font-bold tracking-wide">+ {formatCurrency(dist.regional2Share)} do Pote</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center bg-zinc-900/30 p-2.5 rounded-lg border border-zinc-800/40">
                         <span className="font-bold text-zinc-400">3º LUGAR</span>
-                        <span className="font-bold text-white">R$ 250,00</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-bold text-white">{formatCurrency(dist.regional3Total)}</span>
+                          {dist.regional3Share > 0 && (
+                            <span className="text-[9px] text-yellow-500 font-bold tracking-wide">+ {formatCurrency(dist.regional3Share)} do Pote</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
