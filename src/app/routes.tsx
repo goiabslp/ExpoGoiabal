@@ -12,6 +12,7 @@ import { TresTamboresInscricaoPage } from '../pages/ExpoGoiabal/TresTamboresInsc
 import { MirimInscricaoPage } from '../pages/ExpoGoiabal/MirimInscricaoPage';
 import { AdminPage } from '../pages/Admin/AdminPage';
 import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
+import { PotePremiadoPage } from '../pages/ExpoGoiabal/PotePremiadoPage';
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/Camarote',
     element: <CamarotePage />,
+  },
+  {
+    path: '/ExpoGoiabal/pote-premiado',
+    element: <PotePremiadoPage />,
   },
   {
     path: '/ExpoGoiabal/Embaixadora',
