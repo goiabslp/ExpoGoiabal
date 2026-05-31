@@ -56,7 +56,7 @@ export const MarchaPage: React.FC = () => {
                 Código do Evento:
               </span>
               <span className="font-black text-yellow-500 tracking-widest text-sm md:text-base">
-                EM BREVE
+                96779
               </span>
             </div>
           </div>
@@ -178,7 +178,7 @@ export const MarchaPage: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-purple-400">Juiz</span>
-                Wilian do Corte
+                Wilian da Corte
               </div>
             </div>
           </div>

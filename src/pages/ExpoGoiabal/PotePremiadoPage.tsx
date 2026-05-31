@@ -11,8 +11,8 @@ interface CoinParticle {
 }
 
 export const PotePremiadoPage: React.FC = () => {
-  const [targetValue, setTargetValue] = useState<number>(15450); // Valor alvo em Reais
-  const [displayValue, setDisplayValue] = useState<number>(15450); // Valor animado exibido
+  const [targetValue, setTargetValue] = useState<number>(0); // Valor alvo em Reais
+  const [displayValue, setDisplayValue] = useState<number>(0); // Valor animado exibido
   const [inputVal, setInputVal] = useState<string>(''); // Input para novo lançamento
   const [isAnimating, setIsAnimating] = useState<boolean>(false); // Controla animações do pote
   const [coins, setCoins] = useState<CoinParticle[]>([]); // Moedas voadoras
