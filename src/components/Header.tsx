@@ -49,12 +49,10 @@ export const Header: React.FC = () => {
             />
           </div>
         </div>
-
-        {/* Texto Entrada Grátis (Mobile Only) */}
-        <div className="lg:hidden flex items-center justify-center text-center px-1">
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-400/30 rounded-full px-4 py-1.5 shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span>
-            Entrada Grátis todos os dias de evento
+        {/* Texto RODEIO SHOW (Mobile Only) */}
+        <div className="lg:hidden flex items-center justify-center text-center px-1 translate-x-4">
+          <span className="text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">
+            RODEIO SHOW
           </span>
         </div>
 
@@ -110,7 +108,7 @@ export const Header: React.FC = () => {
           >
             {isMobileMenuOpen ? <X size={28} className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" /> : <Menu size={28} className="hover:text-cyan-400 transition-colors" />}
           </button>
-        </div>
+      </div>
 
       </div>
 

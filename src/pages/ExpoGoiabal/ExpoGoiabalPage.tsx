@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Music, Trophy, ChevronDown, ChevronUp, Gem, Ticket, X, ShieldCheck } from 'lucide-react';
+import { Music, Trophy, ChevronDown, ChevronUp, Gem, Ticket, X } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const ExpoGoiabalPage: React.FC = () => {
   const navigate = useNavigate();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [mirimCount, setMirimCount] = useState<number>(0);
-  const [showCamaroteModal, setShowCamaroteModal] = useState(false);
   const [showGratisModal, setShowGratisModal] = useState(false);
 
   useEffect(() => {
@@ -18,31 +17,9 @@ export const ExpoGoiabalPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const hasSeenGratis = sessionStorage.getItem('hasSeenGratisModal');
-    const hasSeenCamarote = sessionStorage.getItem('hasSeenCamaroteModal');
-    if (hasSeenGratis && !hasSeenCamarote) {
-      const timer = setTimeout(() => {
-        setShowCamaroteModal(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   const closeGratisModal = () => {
     setShowGratisModal(false);
     sessionStorage.setItem('hasSeenGratisModal', 'true');
-    const hasSeenCamarote = sessionStorage.getItem('hasSeenCamaroteModal');
-    if (!hasSeenCamarote) {
-      setTimeout(() => {
-        setShowCamaroteModal(true);
-      }, 800);
-    }
-  };
-
-  const closeCamaroteModal = () => {
-    setShowCamaroteModal(false);
-    sessionStorage.setItem('hasSeenCamaroteModal', 'true');
   };
 
   useEffect(() => {
@@ -113,7 +90,14 @@ export const ExpoGoiabalPage: React.FC = () => {
         </div>
 
         {/* Content Layer */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-12 pt-32 pb-16">
+        <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-8 md:gap-12 pt-[84px] md:pt-32 pb-16">
+          {/* Data da Festa (Mobile Only - Glued below Header) */}
+          <div className="md:hidden animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-75">
+            <span className="text-yellow-500 text-xs font-black uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md border border-yellow-500/30 px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.15)] flex items-center justify-center animate-pulse">
+              04, 05, 06 E 07 DE JUNHO
+            </span>
+          </div>
+
           {/* Main Logo in Page with Hover Effect */}
           <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 relative group cursor-pointer">
             <img 
@@ -127,6 +111,15 @@ export const ExpoGoiabalPage: React.FC = () => {
               className="w-full max-w-2xl drop-shadow-[0_10px_35px_rgba(255,100,0,0.6)] transition-all duration-500 absolute inset-0 opacity-0 scale-105 group-hover:opacity-100 group-hover:scale-100"
             />
           </div>
+
+          {/* Texto Dinâmico de Dias Restantes (Above Entrada Grátis Badge) */}
+          {timeLeft && (
+            <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 -mt-18 md:-mt-20">
+              <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mb-[-0.25rem] animate-pulse text-center">
+                Faltam {String(timeLeft.days).padStart(2, '0')} dias!
+              </p>
+            </div>
+          )}
 
           {/* Badge Entrada Grátis */}
           <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-200 flex flex-col items-center">
@@ -172,9 +165,6 @@ export const ExpoGoiabalPage: React.FC = () => {
                   <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Segundos</span>
                 </div>
               </div>
-              <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mt-1 animate-pulse">
-                Faltam {String(timeLeft.days).padStart(2, '0')} dias!
-              </p>
             </div>
           ) : (
             <div className="animate-in fade-in duration-1000 flex flex-col items-center gap-3">
@@ -512,162 +502,75 @@ export const ExpoGoiabalPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Modal de Destaque do Camarote VIP */}
-      {showCamaroteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-transparent animate-in fade-in duration-300">
-          <div className="relative bg-zinc-950 border-2 border-yellow-500/30 rounded-3xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(245,158,11,0.25)] animate-in zoom-in-95 duration-300 mx-auto overflow-hidden">
-            
-            <style>{`
-              @keyframes vip-modal-pulse {
-                0%, 100% {
-                  transform: scale(1);
-                  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
-                }
-                50% {
-                  transform: scale(1.03);
-                  box-shadow: 0 0 35px rgba(245, 158, 11, 0.7), 0 0 15px rgba(245, 158, 11, 0.3);
-                }
-              }
-              .animate-vip-modal-pulse {
-                animation: vip-modal-pulse 2s infinite ease-in-out;
-              }
-            `}</style>
-
-            {/* Elegant luxury visual backgrounds inside modal */}
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600"></div>
-
-            {/* Close Button */}
-            <button 
-              onClick={closeCamaroteModal}
-              className="absolute top-5 right-5 text-zinc-400 hover:text-white transition-colors z-20 bg-zinc-900/80 p-2 rounded-full border border-zinc-800"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Header Content */}
-            <div className="flex flex-col items-center text-center gap-4 mt-2">
-              <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
-                <Gem size={12} className="text-yellow-500" />
-                Destaque Oficial
-              </span>
-              
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-wider text-white mt-1">
-                Camarote <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                  ExpoGoiabal 2026
-                </span>
-              </h2>
-
-              <p className="text-zinc-400 font-medium text-sm md:text-base px-2">
-                As vendas do <strong className="text-yellow-500 font-bold">1º Lote</strong> estão oficialmente abertas! Garanta seu lugar no melhor e mais exclusivo espaço da festa.
-              </p>
-            </div>
-
-            {/* Features Highlight */}
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 my-6 flex flex-col gap-3.5 relative z-10 text-left">
-              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
-                <span>Vista privilegiada da arena e dos shows</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
-                <span>Bares e banheiros exclusivos (VIP)</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
-                <span>Conforto, segurança e entrada sem filas</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ShieldCheck size={18} className="text-yellow-500 shrink-0" />
-                <span>Show exclusivo com DJ todos os dias no camarote</span>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex flex-col items-center gap-4 mt-2">
-              <button 
-                onClick={() => {
-                  closeCamaroteModal();
-                  window.scrollTo(0, 0);
-                  navigate('/ExpoGoiabal/Camarote');
-                }}
-                className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base py-4 rounded-full shadow-[0_0_30px_rgba(245,158,11,0.35)] hover:shadow-[0_0_40px_rgba(245,158,11,0.55)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans animate-vip-modal-pulse"
-              >
-                <Ticket size={20} className="shrink-0 animate-bounce" />
-                Garantir Ingresso VIP
-              </button>
-              
-              <button 
-                onClick={closeCamaroteModal}
-                className="text-xs text-zinc-500 hover:text-zinc-400 font-bold uppercase tracking-wider transition-colors"
-              >
-                Continuar para o site
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* Modal: Festa é TOTALMENTE GRÁTIS */}
       {showGratisModal && (
         <div 
           onClick={closeGratisModal}
-          className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/75 backdrop-blur-none animate-in fade-in duration-300 cursor-pointer"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-none animate-in fade-in duration-300 cursor-pointer overflow-hidden"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-zinc-950 border-2 border-emerald-500/30 rounded-3xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(16,185,129,0.25)] animate-in zoom-in-95 duration-300 mx-auto overflow-hidden cursor-default"
+            className="relative bg-zinc-950 border-2 border-emerald-500/30 rounded-3xl w-full max-w-sm md:max-w-md p-4 md:p-5 shadow-[0_0_50px_rgba(16,185,129,0.25)] animate-in zoom-in-95 duration-300 my-auto max-h-[92vh] flex flex-col justify-between overflow-y-auto cursor-default scrollbar-thin scrollbar-thumb-zinc-800"
           >
             
+            {/* Botão Fechar (White Close Button) */}
+            <button 
+              onClick={closeGratisModal}
+              className="absolute top-3 right-3 text-white hover:text-zinc-300 transition-colors cursor-pointer focus:outline-none p-1.5 rounded-full hover:bg-white/10 z-20"
+              aria-label="Fechar"
+            >
+              <X size={18} />
+            </button>
+
             {/* Top gradient strip */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-yellow-500 to-emerald-600"></div>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 via-yellow-500 to-emerald-600"></div>
 
             {/* Top Icon */}
-            <div className="flex flex-col items-center gap-4 text-center mt-2">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shadow-[0_0_25px_rgba(16,185,129,0.4)] animate-bounce">
-                <Trophy size={32} className="text-yellow-300" />
+            <div className="flex flex-col items-center gap-1.5 md:gap-2 text-center mt-1">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-bounce">
+                <Trophy size={20} className="text-yellow-300 md:w-5 md:h-5" />
               </div>
               
-              <h2 className="text-3xl font-black uppercase tracking-wider text-white">
+              <h2 className="text-lg md:text-xl font-black uppercase tracking-wider text-white">
                 Atenção Galera! 🤠
               </h2>
-              <div className="h-1 w-16 bg-emerald-500 rounded-full"></div>
+              <div className="h-0.5 w-10 bg-emerald-500 rounded-full"></div>
             </div>
 
             {/* Content Message */}
-            <div className="text-center space-y-5 my-6">
-              <p className="text-zinc-300 font-medium text-base md:text-lg leading-relaxed">
+            <div className="text-center space-y-2.5 md:space-y-3.5 my-3 md:my-4">
+              <p className="text-zinc-300 font-medium text-xs md:text-sm leading-relaxed">
                 A gente sabe que a programação está tão sensacional que parece...
               </p>
               
-              <div className="py-2.5 px-6 bg-red-500/10 border border-red-500/20 rounded-2xl inline-block transform hover:scale-105 transition-transform duration-300 shadow-inner">
-                <span className="text-red-400 font-black text-lg md:text-xl uppercase tracking-widest block animate-pulse">
-                  SABOR DE COBRADO
+              <div className="py-1 px-3 md:py-1.5 md:px-4 bg-red-500/10 border border-red-500/20 rounded-2xl inline-block transform hover:scale-105 transition-transform duration-300 shadow-inner">
+                <span className="text-red-400 font-black text-xs md:text-sm uppercase tracking-widest block animate-pulse">
+                  SABOOORR... COBRADO
                 </span>
               </div>
               
-              <p className="text-zinc-300 font-medium text-base md:text-lg leading-relaxed">
+              <p className="text-zinc-300 font-medium text-xs md:text-sm leading-relaxed">
                 Mas acalme o coração, porque a entrada é...
               </p>
               
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xl md:text-2xl uppercase tracking-widest px-8 py-3 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-emerald-400/30 inline-block transform rotate-1 hover:rotate-0 transition-transform duration-300">
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm md:text-base uppercase tracking-widest px-4 py-1.5 md:px-5 md:py-2 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-400/30 inline-block transform rotate-1 hover:rotate-0 transition-transform duration-300">
                 TOTALMENTE GRÁTIS! 🎉
               </div>
             </div>
 
             {/* Disclaimer block */}
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 text-left">
-              <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-2.5 md:p-3 text-left">
+              <p className="text-zinc-400 text-[10px] md:text-xs leading-relaxed">
                 ⚠️ <strong className="text-yellow-500">Nota:</strong> Apenas o <strong className="text-white">camarote</strong> terá comercialização de entrada. A arena de rodeio, a praça de alimentação e a pista de shows têm acesso 100% gratuito todos os dias!
               </p>
             </div>
 
             {/* Action button */}
-            <div className="flex flex-col items-center mt-6">
+            <div className="flex flex-col items-center mt-4">
               <button 
                 onClick={closeGratisModal}
-                className="w-full py-4 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-base rounded-full shadow-[0_0_25px_rgba(245,158,11,0.3)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans"
+                className="w-full py-2.5 md:py-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-xs md:text-sm rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans cursor-pointer"
               >
                 Bora Curtir! 🐴
               </button>
