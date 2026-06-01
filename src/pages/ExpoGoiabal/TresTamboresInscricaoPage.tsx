@@ -22,6 +22,20 @@ export const TresTamboresInscricaoPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [registrationId, setRegistrationId] = useState('');
 
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [searchId, setSearchId] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<any | null>(null);
+  const [searchError, setSearchError] = useState('');
+
+  const getRegistrationId = (id: string) => {
+    const idStr = String(id);
+    if (idStr.includes('-')) {
+      return `EG3T-${idStr.split('-')[0].toUpperCase()}`;
+    }
+    return `EG3T-${idStr.padStart(5, '0')}`;
+  };
+
   const navigate = useNavigate();
 
   const handleCopyPix = () => {
@@ -310,6 +324,302 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     logoImg.src = window.location.origin + '/logo.png';
   };
 
+  const handleSearchStatus = async () => {
+    const cleanId = searchId.trim().toUpperCase().replace('EG3T-', '');
+    if (!cleanId) return;
+
+    setSearchLoading(true);
+    setSearchResult(null);
+    setSearchError('');
+
+    try {
+      const { data, error } = await supabase
+        .from('inscricoes_3tambores')
+        .select('*');
+      
+      if (error) throw error;
+
+      const match = data?.find(i => {
+        const idStr = String(i.id);
+        const firstPart = idStr.includes('-') ? idStr.split('-')[0].toUpperCase() : idStr.padStart(5, '0');
+        return firstPart === cleanId || idStr === cleanId;
+      });
+
+      if (!match) {
+        setSearchError('Inscrição não encontrada. Verifique o código e tente novamente.');
+      } else {
+        setSearchResult(match);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setSearchError('Erro ao consultar status. Tente novamente.');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleDownloadSpecificReceipt = (inscricao: any) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 800;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#eab308';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.onload = () => {
+      const logoWidth = 140;
+      const logoHeight = 140 * (logoImg.height / logoImg.width);
+      const logoX = (canvas.width - logoWidth) / 2;
+      const logoY = 40;
+      ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+
+      const contentYStart = logoY + logoHeight + 25;
+      ctx.textAlign = 'center';
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b';
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(getRegistrationId(inscricao.id), canvas.width / 2, bannerY + 48);
+
+      ctx.textAlign = 'left';
+      const isConfirmed = inscricao.status === 'Confirmado';
+      const items = [
+        { label: 'COMPETIDORA', value: inscricao.nome.toUpperCase() },
+        { label: 'IDADE', value: `${inscricao.idade} anos` },
+        ...(inscricao.responsavel ? [{ label: 'RESPONSÁVEL', value: inscricao.responsavel.toUpperCase() }] : []),
+        { label: 'CIDADE', value: inscricao.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: inscricao.nome_cavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: inscricao.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: isConfirmed ? 'CONFIRMADO & LIBERADO' : 'AGUARDANDO VALIDAÇÃO', color: isConfirmed ? '#22c55e' : '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a';
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65;
+        }
+      });
+
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date(inscricao.created_at).toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText(isConfirmed ? 'Inscrição Liberada Oficialmente.' : 'A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${inscricao.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    logoImg.onerror = () => {
+      ctx.textAlign = 'center';
+      ctx.font = '900 24px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('EXPO GOIABAL 2026', canvas.width / 2, 80);
+      
+      const contentYStart = 120;
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b';
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(getRegistrationId(inscricao.id), canvas.width / 2, bannerY + 48);
+
+      ctx.textAlign = 'left';
+      const isConfirmed = inscricao.status === 'Confirmado';
+      const items = [
+        { label: 'COMPETIDORA', value: inscricao.nome.toUpperCase() },
+        { label: 'IDADE', value: `${inscricao.idade} anos` },
+        ...(inscricao.responsavel ? [{ label: 'RESPONSÁVEL', value: inscricao.responsavel.toUpperCase() }] : []),
+        { label: 'CIDADE', value: inscricao.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: inscricao.nome_cavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: inscricao.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: isConfirmed ? 'CONFIRMADO & LIBERADO' : 'AGUARDANDO VALIDAÇÃO', color: isConfirmed ? '#22c55e' : '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a';
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65;
+        }
+      });
+
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date(inscricao.created_at).toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText(isConfirmed ? 'Inscrição Liberada Oficialmente.' : 'A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${inscricao.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    logoImg.src = window.location.origin + '/logo.png';
+  };
+
   const nextStep = () => {
     // Validações
     if (step === 1 && !formData.nome) return;
@@ -438,10 +748,23 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               <h1 className="text-3xl font-black text-white uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                 3 Tambores
               </h1>
-              <div className="mt-4 flex flex-col gap-1">
+              <div className="mt-4 flex flex-col gap-3 items-center">
                 <p className="text-yellow-500 tracking-widest uppercase text-sm font-bold drop-shadow-[0_0_10px_rgba(255,215,0,0.4)]">
                   Inscrições Abertas
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchId('');
+                    setSearchResult(null);
+                    setSearchError('');
+                    setIsStatusModalOpen(true);
+                  }}
+                  className="mt-2 px-5 py-2.5 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/60 hover:border-yellow-500/50 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-md flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-500 shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Consultar Status da Inscrição
+                </button>
               </div>
             </div>
           </div>
@@ -829,6 +1152,22 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                   <span className="text-yellow-500/80 font-bold uppercase tracking-wider text-[7px]">Oficial</span>
                 </div>
               </div>
+
+              {/* Bloco de Envio para WhatsApp */}
+              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex flex-col gap-3.5 w-full text-center">
+                <p className="text-zinc-300 text-[11px] sm:text-xs leading-relaxed font-semibold">
+                  ⚠️ <strong className="text-white">ATENÇÃO:</strong> Para confirmar e liberar sua participação na prova, você deve enviar o <strong className="text-emerald-400">comprovante de pagamento (PIX)</strong> e o <strong className="text-emerald-400">comprovante de inscrição</strong> gerado abaixo.
+                </p>
+                <a 
+                  href={`https://wa.me/5531983446102?text=Olá! Segue o comprovante de pagamento e o comprovante de inscrição 3 Tambores (ID: ${registrationId}) para realizar a liberação.`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="w-full py-3 bg-[#25D366] hover:bg-[#20ba5a] text-black font-black uppercase tracking-wider text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(37,211,102,0.25)] flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.733-1.455L0 24zm6.292-4.147c1.8.196 3.11.1 4.7.1 5.3 0 9.6-4.3 9.6-9.6s-4.3-9.6-9.6-9.6-9.6 4.3-9.6 9.6c0 1.9.5 3.7 1.4 5.3l.1.2-1 3.7 3.8-1zm10.708-7.853c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.2-.2.3-.8 1-.9 1.1-.1.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.6-1.6-1.8-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4-.1-.5-.1-.2-.7-1.7-.9-2.2-.3-.6-.6-.5-.9-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.5 5.5 4.9.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/></svg>
+                  Enviar para o WhatsApp
+                </a>
+              </div>
               
               <div className="flex gap-3 w-full mt-0.5">
                 <button 
@@ -871,6 +1210,138 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               >
                 Tentar Novamente
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Consulta de Status */}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900">
+              <h2 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Status da Inscrição
+              </h2>
+              <button 
+                onClick={() => setIsStatusModalOpen(false)}
+                className="text-zinc-400 hover:text-white transition-colors text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Código da Inscrição (ID)</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={searchId}
+                    onChange={(e) => setSearchId(e.target.value)}
+                    placeholder="EG3T-00001 ou C8E645A9"
+                    className="flex-1 bg-zinc-950 border border-zinc-800 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 rounded-xl px-4 py-3 text-white placeholder-zinc-550 focus:outline-none transition-all text-sm font-semibold font-mono"
+                  />
+                  <button
+                    onClick={handleSearchStatus}
+                    disabled={searchLoading || !searchId.trim()}
+                    className="px-5 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-black uppercase tracking-wider text-xs rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  >
+                    {searchLoading ? 'Buscando...' : 'Buscar'}
+                  </button>
+                </div>
+              </div>
+
+              {searchError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-3.5 text-xs text-center font-medium animate-in fade-in">
+                  {searchError}
+                </div>
+              )}
+
+              {searchResult && (
+                <div className="flex flex-col gap-4 animate-in slide-in-from-top-4 duration-300">
+                  <div className={`p-4 rounded-2xl border text-center flex flex-col gap-2.5 ${
+                    searchResult.status === 'Confirmado'
+                      ? 'bg-green-500/5 border-green-500/20 text-green-400'
+                      : 'bg-yellow-500/5 border-yellow-500/20 text-yellow-500'
+                  }`}>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Status do Pagamento</span>
+                    <div className="flex items-center justify-center gap-2 text-base font-black uppercase tracking-wider">
+                      {searchResult.status === 'Confirmado' ? (
+                        <>
+                          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping animate-duration-1000"></span>
+                          <span>Inscrição Confirmada!</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                          <span>Pagamento Pendente</span>
+                        </>
+                      )}
+                    </div>
+                    {searchResult.status !== 'Confirmado' && (
+                      <p className="text-[11px] text-zinc-500 leading-normal font-semibold max-w-xs mx-auto">
+                        ⚠️ Envie seu comprovante de pagamento Pix e de inscrição para nosso WhatsApp (+55 31 98344-6102) para realizar a liberação imediata.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Detalhes Compactos do Registro */}
+                  <div className="bg-zinc-950/80 border border-zinc-800 rounded-2xl p-4.5 flex flex-col gap-2.5 text-xs relative overflow-hidden">
+                    <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500"></div>
+                    <div className="flex justify-between items-center pb-2 border-b border-zinc-800/80">
+                      <span className="font-mono text-[10px] text-yellow-500 font-bold">{getRegistrationId(searchResult.id)}</span>
+                      <span className="text-[8px] text-zinc-500 uppercase tracking-widest font-bold">Oficial</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 pt-1 font-sans">
+                      <div className="flex flex-col col-span-2">
+                        <span className="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Competidora</span>
+                        <span className="text-white font-bold truncate">{searchResult.nome}</span>
+                      </div>
+                      {searchResult.responsavel && (
+                        <div className="flex flex-col col-span-2">
+                          <span className="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Responsável</span>
+                          <span className="text-white font-bold truncate">{searchResult.responsavel}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Cavalo</span>
+                        <span className="text-white font-bold truncate">{searchResult.nome_cavalo}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Cidade</span>
+                        <span className="text-white font-semibold truncate">{searchResult.cidade}</span>
+                      </div>
+                      <div className="flex flex-col col-span-2">
+                        <span className="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Confirmado em</span>
+                        <span className="text-white font-semibold truncate">{searchResult.created_at ? new Date(searchResult.created_at).toLocaleDateString('pt-BR') : '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Baixar Comprovante apenas se Confirmado */}
+                  {searchResult.status === 'Confirmado' ? (
+                    <button
+                      onClick={() => handleDownloadSpecificReceipt(searchResult)}
+                      className="w-full py-3.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-black uppercase tracking-wider text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Baixar Comprovante Liberado (PNG)
+                    </button>
+                  ) : (
+                    <a 
+                      href={`https://wa.me/5531983446102?text=Olá! Gostaria de confirmar o pagamento da minha inscrição 3 Tambores (ID: ${getRegistrationId(searchResult.id)}).`}
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-black font-black uppercase tracking-wider text-xs rounded-xl transition-all shadow-[0_0_12px_rgba(37,211,102,0.2)] flex items-center justify-center gap-2 cursor-pointer text-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" className="shrink-0"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.733-1.455L0 24zm6.292-4.147c1.8.196 3.11.1 4.7.1 5.3 0 9.6-4.3 9.6-9.6s-4.3-9.6-9.6-9.6-9.6 4.3-9.6 9.6c0 1.9.5 3.7 1.4 5.3l.1.2-1 3.7 3.8-1zm10.708-7.853c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.2-.2.3-.8 1-.9 1.1-.1.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.6-1.6-1.8-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4-.1-.5-.1-.2-.7-1.7-.9-2.2-.3-.6-.6-.5-.9-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.5 5.5 4.9.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/></svg>
+                      Enviar Comprovante de Pagamento
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

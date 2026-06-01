@@ -373,6 +373,20 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handleUpdateStatusTambores = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('inscricoes_3tambores')
+      .update({ status: newStatus })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Erro ao atualizar status:', error);
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao atualizar status.' });
+    } else {
+      fetchInscricoesTambores();
+    }
+  };
+
   const handleUploadDocumento = async (id: string, file: File | undefined) => {
     if (!file) return;
     
@@ -561,6 +575,7 @@ export const AdminPage: React.FC = () => {
                         <th className="p-4 font-semibold">Cidade</th>
                         <th className="p-4 font-semibold">Nome do Cavalo</th>
                         <th className="p-4 font-semibold">WhatsApp</th>
+                        <th className="p-4 font-semibold">Status</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
                         <th className="p-4 font-semibold text-center pr-6">Ações</th>
                       </tr>
@@ -605,6 +620,16 @@ export const AdminPage: React.FC = () => {
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                               {inscricao.whatsapp}
                             </a>
+                          </td>
+                          <td className="p-4">
+                            <button 
+                              onClick={() => handleUpdateStatusTambores(inscricao.id, inscricao.status === 'Confirmado' ? 'Pendente' : 'Confirmado')}
+                              className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors border ${
+                                inscricao.status === 'Confirmado' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                              }`}
+                            >
+                              {inscricao.status === 'Confirmado' ? 'Confirmado' : 'Pendente'}
+                            </button>
                           </td>
                           <td className="p-4 text-right text-zinc-500 text-xs pr-6">
                             {new Date(inscricao.created_at).toLocaleString('pt-BR')}
