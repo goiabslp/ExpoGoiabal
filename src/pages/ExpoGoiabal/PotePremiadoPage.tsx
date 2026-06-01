@@ -163,6 +163,20 @@ export const PotePremiadoPage: React.FC = () => {
   const [showAumentoAlert, setShowAumentoAlert] = useState<boolean>(false); // Banner "O POTE AUMENTOU!"
   const [alertAmount, setAlertAmount] = useState<number>(0); // Quantidade do aumento
   const [showInfoModal, setShowInfoModal] = useState<boolean>(false); // Modal explicativo das divisões
+  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false); // Painel administrativo oculto por padrão
+
+  // Ouvinte de teclado para atalho secreto Ctrl+Alt+A
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'a') {
+        setShowAdminPanel((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Estados para o Avatar de Presságio "Trovão de Ouro"
   const [isAnticipating, setIsAnticipating] = useState<boolean>(false);
@@ -694,7 +708,11 @@ export const PotePremiadoPage: React.FC = () => {
             <Sparkles size={14} className="animate-spin duration-3000 text-yellow-500" />
             Grande Atração ExpoGoiabal
           </span>
-          <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 uppercase tracking-widest drop-shadow-[0_0_25px_rgba(245,158,11,0.35)]">
+          <h1
+            onDoubleClick={() => setShowAdminPanel((prev) => !prev)}
+            className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 uppercase tracking-widest drop-shadow-[0_0_25px_rgba(245,158,11,0.35)] cursor-pointer select-none"
+            title="Dê duplo clique para alternar painel admin"
+          >
             Pote Premiado 💰
           </h1>
           <p className="text-zinc-400 text-xs md:text-sm font-medium leading-relaxed max-w-lg">
@@ -991,8 +1009,8 @@ export const PotePremiadoPage: React.FC = () => {
                   return (
                     <tr key={placeNum}>
                       <td className="py-3.5 px-2 font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                        Geral {placeNum}º Lugar
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Regional {placeNum}º Lugar
                       </td>
                       <td className="py-3.5 px-2 text-right text-zinc-500">R$ 0</td>
                       <td className="py-3.5 px-2 text-right text-yellow-500/90">+ {formatCurrency(prize)}</td>
@@ -1004,7 +1022,7 @@ export const PotePremiadoPage: React.FC = () => {
                   <tr>
                     <td className="py-3 px-2 font-medium text-zinc-500 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-zinc-800" />
-                      4º ao 15º Lugar Geral
+                      4º ao 15º Lugar Regional
                     </td>
                     <td className="py-3 px-2 text-right text-zinc-600">R$ 0</td>
                     <td className="py-3 px-2 text-right text-zinc-600">Aguardando Saldo</td>
@@ -1015,85 +1033,91 @@ export const PotePremiadoPage: React.FC = () => {
             </table>
           </div>
 
-          {/* Audit Calculations Steps */}
-          <div className="bg-zinc-950/40 border border-zinc-800/80 rounded-2xl p-4 flex flex-col gap-3">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Breakdown dos Cálculos de Distribuição (Auditoria)
-            </h4>
-            <div className="flex flex-col gap-2 text-[10px] text-zinc-400 font-medium">
-              <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
-                <span>1. Retirada de 10% para o Reservado Campeão (limite transição R$ 2.000):</span>
-                <span className="font-bold text-white">{formatCurrency(dist.reservadoCampeaoShare)} / R$ 2.000+</span>
-              </div>
-              <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
-                <span>2. Alocação Fracionada 4º ao 15º (Liberando cota de R$ 200 cada):</span>
-                <span className="font-bold text-white">Alocado: {formatCurrency(dist.completionAllocated)} / R$ 2.400</span>
-              </div>
-              <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
-                <span>3. Quantidade de Colocações Desbloqueadas (4º ao 15º):</span>
-                <span className="font-bold text-green-500">{dist.maxUnlockedIndex >= 0 ? `${dist.maxUnlockedIndex + 1} de 12` : '0 de 12'}</span>
-              </div>
-              <div className="flex justify-between items-start gap-4">
-                <span>4. Excedente Restante Redistribuído Proporcionalmente:</span>
-                <span className="font-bold text-yellow-500">{formatCurrency(dist.surplus)}</span>
+          {/* Audit Calculations Steps - Visible only to Admins */}
+          {showAdminPanel && (
+            <div className="bg-zinc-950/40 border border-zinc-800/80 rounded-2xl p-4 flex flex-col gap-3 mt-4">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Breakdown dos Cálculos de Distribuição (Auditoria)
+              </h4>
+              <div className="flex flex-col gap-2 text-[10px] text-zinc-400 font-medium">
+                <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
+                  <span>1. Retirada de 10% para o Reservado Campeão (limite transição R$ 2.000):</span>
+                  <span className="font-bold text-white">{formatCurrency(dist.reservadoCampeaoShare)} / R$ 2.000+</span>
+                </div>
+                <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
+                  <span>2. Alocação Fracionada 4º ao 15º (Liberando cota de R$ 200 cada):</span>
+                  <span className="font-bold text-white">Alocado: {formatCurrency(dist.completionAllocated)} / R$ 2.400</span>
+                </div>
+                <div className="flex justify-between items-start gap-4 border-b border-zinc-800/50 pb-2">
+                  <span>3. Quantidade de Colocações Desbloqueadas (4º ao 15º):</span>
+                  <span className="font-bold text-green-500">{dist.maxUnlockedIndex >= 0 ? `${dist.maxUnlockedIndex + 1} de 12` : '0 de 12'}</span>
+                </div>
+                <div className="flex justify-between items-start gap-4">
+                  <span>4. Excedente Restante Redistribuído Proporcionalmente:</span>
+                  <span className="font-bold text-yellow-500">{formatCurrency(dist.surplus)}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Admin launch panel simulation (Destaque & Interativo) */}
-        <div className="w-full max-w-md bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 mt-4 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-500 to-amber-500" />
+        {/* Admin launch panel simulation (Destaque & Interativo) - Visible only to Admins */}
+        {showAdminPanel && (
+          <div className="w-full max-w-md bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 mt-4 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-500 to-amber-500" />
 
-          <div className="flex flex-col gap-1 text-center">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center justify-center gap-2">
-              🚀 Lançar Novo Valor no Pote
-            </h3>
-            <p className="text-[10px] text-zinc-500">
-              Simule a adição de novos valores de premiação para ver a grandiosa chuva de moedas e a contagem progressiva em ação.
+            <div className="flex flex-col gap-1 text-center">
+              <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center justify-center gap-2">
+                🚀 Lançar Novo Valor no Pote
+              </h3>
+              <p className="text-[10px] text-zinc-500">
+                Simule a adição de novos valores de premiação para ver a grandiosa chuva de moedas e a contagem progressiva em ação.
+              </p>
+            </div>
+
+            <form onSubmit={handleLaunchValue} className="flex flex-col gap-2.5">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black text-sm select-none">R$</span>
+                  <input
+                    type="number"
+                    value={inputVal}
+                    onChange={(e) => setInputVal(e.target.value)}
+                    placeholder="1500"
+                    required
+                    min="1"
+                    className="w-full bg-zinc-950/60 border border-zinc-800 focus:border-yellow-500 focus:outline-none text-white text-sm font-bold pl-12 pr-4 py-3.5 rounded-2xl transition-all"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-xs px-6 py-3.5 rounded-2xl transition-all duration-300 uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.02] cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  <Plus size={16} />
+                  Lançar
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleZeroPot}
+                className="w-full bg-zinc-950 hover:bg-zinc-900 border border-red-500/20 hover:border-red-500/40 text-red-500 hover:text-red-400 font-black text-[10px] py-2.5 rounded-xl transition-all uppercase tracking-widest cursor-pointer text-center"
+              >
+                Zerar Pote Premiado
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Additional Help Info Card - Visible only to Admins */}
+        {showAdminPanel && (
+          <div className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 px-6 py-4 rounded-2xl max-w-xl text-center">
+            <HelpCircle size={18} className="text-yellow-500 shrink-0" />
+            <p className="text-zinc-500 font-medium text-[11px] leading-relaxed">
+              O Pote Premiado é updated conforme novos patrocinadores, repasses ou arrecadações são computados. O valor final acumulado será destinado às premiações das categorias do Concurso de Marcha da ExpoGoiabal!
             </p>
           </div>
-
-          <form onSubmit={handleLaunchValue} className="flex flex-col gap-2.5">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-black text-sm select-none">R$</span>
-                <input
-                  type="number"
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  placeholder="1500"
-                  required
-                  min="1"
-                  className="w-full bg-zinc-950/60 border border-zinc-800 focus:border-yellow-500 focus:outline-none text-white text-sm font-bold pl-12 pr-4 py-3.5 rounded-2xl transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-xs px-6 py-3.5 rounded-2xl transition-all duration-300 uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.02] cursor-pointer flex items-center gap-1.5 shrink-0"
-              >
-                <Plus size={16} />
-                Lançar
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleZeroPot}
-              className="w-full bg-zinc-950 hover:bg-zinc-900 border border-red-500/20 hover:border-red-500/40 text-red-500 hover:text-red-400 font-black text-[10px] py-2.5 rounded-xl transition-all uppercase tracking-widest cursor-pointer text-center"
-            >
-              Zerar Pote Premiado
-            </button>
-          </form>
-        </div>
-
-        {/* Additional Help Info Card */}
-        <div className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 px-6 py-4 rounded-2xl max-w-xl text-center">
-          <HelpCircle size={18} className="text-yellow-500 shrink-0" />
-          <p className="text-zinc-500 font-medium text-[11px] leading-relaxed">
-            O Pote Premiado é updated conforme novos patrocinadores, repasses ou arrecadações são computados. O valor final acumulado será destinado às premiações das categorias do Concurso de Marcha da ExpoGoiabal!
-          </p>
-        </div>
+        )}
 
         {/* Modal "Como Funciona" */}
         {showInfoModal && (
@@ -1161,18 +1185,18 @@ export const PotePremiadoPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 3. Geral (4º ao 15º Lugar) */}
+                {/* 3. Regional (4º ao 15º Lugar) */}
                 <div className="bg-zinc-950/40 border border-zinc-800/80 rounded-2xl p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-yellow-500 font-black text-xs uppercase tracking-wider">
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                    Geral (4º ao 15º Lugar)
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    Regional (4º ao 15º Lugar)
                   </div>
                   <p className="text-zinc-400 text-xs leading-relaxed font-medium">
-                    A categoria geral conta com duas mecânicas sofisticadas de liberação e meritocracia:
+                    A categoria regional (4º ao 15º) conta com duas mecânicas sofisticadas de liberação e meritocracia:
                   </p>
                   <ul className="text-zinc-500 text-[11px] list-disc list-inside flex flex-col gap-1 leading-relaxed pl-1 font-semibold">
                     <li><strong className="text-zinc-300">Desbloqueio Progressivo:</strong> Para cada R$ 200,00 acumulados no fundo de conclusão, uma nova colocação é destravada (do 4º ao 15º). Vagas travadas não recebem prêmio.</li>
-                    <li><strong className="text-zinc-300">Divisão Justa (Pesos Decrescentes):</strong> Todo o saldo da categoria geral é rateado de acordo com a colocação, beneficiando o mérito. O 4º lugar recebe mais do que o 5º, que recebe mais do que o 6º, até o 15º lugar.</li>
+                    <li><strong className="text-zinc-300">Divisão Justa (Pesos Decrescentes):</strong> Todo o saldo dessa subcategoria regional é rateado de acordo com a colocação, beneficiando o mérito. O 4º lugar recebe mais do que o 5º, que recebe mais do que o 6º, até o 15º lugar.</li>
                   </ul>
                   <div className="bg-zinc-900/40 rounded-xl p-3 border border-zinc-800/50 mt-1 flex flex-col gap-1">
                     <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400">Tabela de Pesos Relativos:</span>

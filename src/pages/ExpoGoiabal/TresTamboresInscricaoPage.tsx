@@ -9,6 +9,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
   const [formData, setFormData] = useState({
     nome: '',
     idade: '',
+    responsavel: '',
     cidade: '',
     nomeCavalo: '',
     whatsapp: '',
@@ -130,6 +131,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
       const items = [
         { label: 'COMPETIDORA', value: formData.nome.toUpperCase() },
         { label: 'IDADE', value: `${formData.idade} anos` },
+        ...(formData.idade && parseInt(formData.idade) < 18 ? [{ label: 'RESPONSÁVEL', value: formData.responsavel.toUpperCase() }] : []),
         { label: 'CIDADE', value: formData.cidade.toUpperCase() },
         { label: 'NOME DO CAVALO', value: formData.nomeCavalo.toUpperCase() },
         { label: 'WHATSAPP', value: formData.whatsapp },
@@ -253,6 +255,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
       const items = [
         { label: 'COMPETIDORA', value: formData.nome.toUpperCase() },
         { label: 'IDADE', value: `${formData.idade} anos` },
+        ...(formData.idade && parseInt(formData.idade) < 18 ? [{ label: 'RESPONSÁVEL', value: formData.responsavel.toUpperCase() }] : []),
         { label: 'CIDADE', value: formData.cidade.toUpperCase() },
         { label: 'NOME DO CAVALO', value: formData.nomeCavalo.toUpperCase() },
         { label: 'WHATSAPP', value: formData.whatsapp },
@@ -310,7 +313,10 @@ export const TresTamboresInscricaoPage: React.FC = () => {
   const nextStep = () => {
     // Validações
     if (step === 1 && !formData.nome) return;
-    if (step === 2 && !formData.idade) return;
+    if (step === 2) {
+      if (!formData.idade) return;
+      if (parseInt(formData.idade) < 18 && !formData.responsavel) return;
+    }
     if (step === 3 && !formData.cidade) return;
     if (step === 4 && !formData.nomeCavalo) return;
     if (step === 5 && !formData.whatsapp) return;
@@ -356,6 +362,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
         .insert({
           nome: formData.nome,
           idade: parseInt(formData.idade),
+          responsavel: parseInt(formData.idade) < 18 ? formData.responsavel : null,
           cidade: formData.cidade,
           nome_cavalo: formData.nomeCavalo,
           whatsapp: formData.whatsapp,
@@ -402,6 +409,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
     setFormData({
       nome: '',
       idade: '',
+      responsavel: '',
       cidade: '',
       nomeCavalo: '',
       whatsapp: '',
@@ -475,21 +483,41 @@ export const TresTamboresInscricaoPage: React.FC = () => {
               {/* Step 2: Idade */}
               {step === 2 && (
                 <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
-                  <div className="flex items-center gap-3 text-yellow-500 mb-2">
-                    <Calendar size={28} />
-                    <h2 className="text-2xl font-bold text-white">Idade</h2>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3 text-yellow-500 mb-2">
+                      <Calendar size={28} />
+                      <h2 className="text-2xl font-bold text-white">Idade</h2>
+                    </div>
+                    <input 
+                      type="number" 
+                      name="idade"
+                      value={formData.idade}
+                      onChange={handleInputChange}
+                      placeholder="Sua idade"
+                      min="1"
+                      max="100"
+                      required
+                      className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
+                    />
                   </div>
-                  <input 
-                    type="number" 
-                    name="idade"
-                    value={formData.idade}
-                    onChange={handleInputChange}
-                    placeholder="Sua idade"
-                    min="1"
-                    max="100"
-                    required
-                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
-                  />
+
+                  {formData.idade && parseInt(formData.idade) < 18 && (
+                    <div className="flex flex-col gap-2 mt-2 animate-in slide-in-from-top-4 duration-300">
+                      <div className="flex items-center gap-3 text-yellow-500 mb-2">
+                        <User size={28} />
+                        <h2 className="text-2xl font-bold text-white">Nome do Responsável</h2>
+                      </div>
+                      <input 
+                        type="text" 
+                        name="responsavel"
+                        value={formData.responsavel}
+                        onChange={handleInputChange}
+                        placeholder="Nome do pai, mãe ou responsável legal"
+                        required
+                        className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -772,10 +800,16 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 pt-0.5">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col col-span-2">
                     <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Competidora</span>
                     <span className="text-white font-bold truncate text-[10px] sm:text-xs">{formData.nome}</span>
                   </div>
+                  {formData.idade && parseInt(formData.idade) < 18 && (
+                    <div className="flex flex-col col-span-2">
+                      <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Responsável</span>
+                      <span className="text-white font-bold truncate text-[10px] sm:text-xs">{formData.responsavel}</span>
+                    </div>
+                  )}
                   <div className="flex flex-col">
                     <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cavalo</span>
                     <span className="text-white font-bold truncate text-[10px] sm:text-xs">{formData.nomeCavalo}</span>
@@ -784,7 +818,7 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                     <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cidade</span>
                     <span className="text-white font-semibold truncate text-[10px] sm:text-xs">{formData.cidade}</span>
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col col-span-2">
                     <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Status</span>
                     <span className="text-yellow-500 font-black text-[10px] sm:text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Aguardando Validação</span>
                   </div>

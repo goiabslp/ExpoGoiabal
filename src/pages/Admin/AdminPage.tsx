@@ -13,6 +13,277 @@ export const AdminPage: React.FC = () => {
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null; table: 'expogoiabal' | '3tambores' }>({ isOpen: false, idToDelete: null, table: 'expogoiabal' });
+  const [selectedVoucher, setSelectedVoucher] = useState<any | null>(null);
+
+  const getRegistrationId = (id: string) => {
+    const idStr = String(id);
+    if (idStr.includes('-')) {
+      return `EG3T-${idStr.split('-')[0].toUpperCase()}`;
+    }
+    return `EG3T-${idStr.padStart(5, '0')}`;
+  };
+
+  const downloadVoucherAsImage = (inscricao: any) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 800;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background Fill
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Decorative Gold Border
+    ctx.strokeStyle = '#eab308';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+    // Inner subtle border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.onload = () => {
+      const logoWidth = 140;
+      const logoHeight = 140 * (logoImg.height / logoImg.width);
+      const logoX = (canvas.width - logoWidth) / 2;
+      const logoY = 40;
+      ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+
+      const contentYStart = logoY + logoHeight + 25;
+
+      ctx.textAlign = 'center';
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b';
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(getRegistrationId(inscricao.id), canvas.width / 2, bannerY + 48);
+
+      ctx.textAlign = 'left';
+      const items = [
+        { label: 'COMPETIDORA', value: inscricao.nome.toUpperCase() },
+        { label: 'IDADE', value: `${inscricao.idade} anos` },
+        { label: 'CIDADE', value: inscricao.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: inscricao.nome_cavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: inscricao.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: 'AGUARDANDO VALIDAÇÃO', color: '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a';
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65;
+        }
+      });
+
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date(inscricao.created_at).toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${inscricao.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    logoImg.onerror = () => {
+      ctx.textAlign = 'center';
+      ctx.font = '900 24px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('EXPO GOIABAL 2026', canvas.width / 2, 80);
+      
+      const contentYStart = 120;
+      ctx.font = '900 20px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('COMPROVANTE DE INSCRIÇÃO', canvas.width / 2, contentYStart);
+      
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('PROVA DE 3 TAMBORES • EXPO GOIABAL 2026', canvas.width / 2, contentYStart + 22);
+
+      ctx.beginPath();
+      ctx.moveTo(40, contentYStart + 35);
+      ctx.lineTo(canvas.width - 40, contentYStart + 35);
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const cardY = contentYStart + 55;
+      const cardWidth = canvas.width - 80;
+      const cardHeight = 440;
+      const cardX = 40;
+      
+      ctx.fillStyle = '#09090b';
+      const r = 16;
+      ctx.beginPath();
+      ctx.moveTo(cardX + r, cardY);
+      ctx.lineTo(cardX + cardWidth - r, cardY);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + r);
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - r);
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - r, cardY + cardHeight);
+      ctx.lineTo(cardX + r, cardY + cardHeight);
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - r);
+      ctx.lineTo(cardX, cardY + r);
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.08)';
+      const bannerH = 65;
+      const bannerY = cardY + 20;
+      ctx.fillRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cardX + 20, bannerY, cardWidth - 40, bannerH);
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('CÓDIGO DE INSCRIÇÃO (ID)', canvas.width / 2, bannerY + 20);
+
+      ctx.font = '900 24px monospace';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText(getRegistrationId(inscricao.id), canvas.width / 2, bannerY + 48);
+
+      ctx.textAlign = 'left';
+      const items = [
+        { label: 'COMPETIDORA', value: inscricao.nome.toUpperCase() },
+        { label: 'IDADE', value: `${inscricao.idade} anos` },
+        { label: 'CIDADE', value: inscricao.cidade.toUpperCase() },
+        { label: 'NOME DO CAVALO', value: inscricao.nome_cavalo.toUpperCase() },
+        { label: 'WHATSAPP', value: inscricao.whatsapp },
+        { label: 'STATUS DO PAGAMENTO', value: 'AGUARDANDO VALIDAÇÃO', color: '#f59e0b' },
+        { label: 'RECEBEDOR', value: 'BeP Eventos Cronometrados' },
+        { label: 'CHAVE PIX CNPJ', value: '62.378.994/0001-31' }
+      ];
+
+      let rowY = cardY + 115;
+      items.forEach((item, index) => {
+        const col = index % 2;
+        const colX = cardX + 30 + col * 260;
+        
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#71717a';
+        ctx.fillText(item.label, colX, rowY);
+        
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.fillText(item.value, colX, rowY + 18);
+
+        if (col === 1 || index === items.length - 1) {
+          rowY += 65;
+        }
+      });
+
+      const cardFooterY = cardY + cardHeight - 25;
+      ctx.textAlign = 'center';
+      ctx.font = 'medium 11px sans-serif';
+      ctx.fillStyle = '#71717a';
+      const nowStr = new Date(inscricao.created_at).toLocaleString('pt-BR');
+      ctx.fillText(`Confirmação: ${nowStr}`, canvas.width / 2, cardFooterY);
+
+      const footerY = cardY + cardHeight + 40;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.fillText('A Organização entrará em contato para liberar sua inscrição.', canvas.width / 2, footerY);
+      
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = '#eab308';
+      ctx.fillText('PREFEITURA DE SÃO JOSÉ DO GOIABAL', canvas.width / 2, footerY + 20);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Comprovante_Inscricao_3Tambores_${inscricao.nome.replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    logoImg.src = window.location.origin + '/logo.png';
+  };
 
   const handleDelete = async () => {
     if (!deleteConfirmModal.idToDelete) return;
@@ -285,42 +556,68 @@ export const AdminPage: React.FC = () => {
                   <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                       <tr className="bg-zinc-950/50 border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
-                        <th className="p-4 font-semibold pl-6 w-10"></th>
-                        <th className="p-4 font-semibold">Competidor(a)</th>
+                        <th className="p-4 font-semibold pl-6">Nome Completo</th>
                         <th className="p-4 font-semibold">Idade</th>
                         <th className="p-4 font-semibold">Cidade</th>
+                        <th className="p-4 font-semibold">Nome do Cavalo</th>
+                        <th className="p-4 font-semibold">WhatsApp</th>
                         <th className="p-4 font-semibold text-right pr-6">Registro</th>
                         <th className="p-4 font-semibold text-center pr-6">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
                       {inscricoesTambores.map((inscricao) => (
-                        <React.Fragment key={inscricao.id}>
-                          <tr 
-                            onClick={() => setExpandedRowId(expandedRowId === inscricao.id ? null : inscricao.id)}
-                            className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
-                          >
-                            <td className="p-4 pl-6 text-zinc-500 group-hover:text-white transition-colors">
-                              {expandedRowId === inscricao.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                            </td>
-                            <td className="p-4">
-                              <div className="font-bold text-white flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-black text-cyan-500 shrink-0">
-                                  {inscricao.nome.charAt(0).toUpperCase()}
-                                </div>
-                                {inscricao.nome}
+                        <tr 
+                          key={inscricao.id}
+                          className="hover:bg-zinc-800/30 transition-colors group"
+                        >
+                          <td className="p-4 pl-6">
+                            <div className="font-bold text-white flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-black text-cyan-500 shrink-0">
+                                {inscricao.nome.charAt(0).toUpperCase()}
                               </div>
-                            </td>
-                            <td className="p-4 text-zinc-400 text-sm font-medium">
-                              {inscricao.idade ? `${inscricao.idade} anos` : '-'}
-                            </td>
-                            <td className="p-4 text-zinc-400 text-sm font-medium">
-                              {inscricao.cidade || '-'}
-                            </td>
-                            <td className="p-4 text-right text-zinc-500 text-xs pr-6">
-                              {new Date(inscricao.created_at).toLocaleString('pt-BR')}
-                            </td>
-                            <td className="p-4 text-center pr-6">
+                              <div className="flex flex-col">
+                                <span>{inscricao.nome}</span>
+                                {inscricao.responsavel && (
+                                  <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                                    Resp: {inscricao.responsavel}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-zinc-400 text-sm font-medium">
+                            {inscricao.idade ? `${inscricao.idade} anos` : '-'}
+                          </td>
+                          <td className="p-4 text-zinc-400 text-sm font-medium">
+                            {inscricao.cidade || '-'}
+                          </td>
+                          <td className="p-4 text-zinc-400 text-sm font-medium">
+                            {inscricao.nome_cavalo || '-'}
+                          </td>
+                          <td className="p-4 text-zinc-400 text-sm font-medium">
+                            <a 
+                              href={`https://wa.me/55${inscricao.whatsapp?.replace(/\D/g, '')}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm flex items-center gap-2 hover:underline"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                              {inscricao.whatsapp}
+                            </a>
+                          </td>
+                          <td className="p-4 text-right text-zinc-500 text-xs pr-6">
+                            {new Date(inscricao.created_at).toLocaleString('pt-BR')}
+                          </td>
+                          <td className="p-4 text-center pr-6">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => setSelectedVoucher(inscricao)}
+                                className="text-yellow-500 hover:text-yellow-400 transition-colors p-2 rounded-full hover:bg-yellow-500/10"
+                                title="Visualizar Comprovante"
+                              >
+                                <FileText size={16} />
+                              </button>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setDeleteConfirmModal({ isOpen: true, idToDelete: inscricao.id, table: '3tambores' }); }}
                                 className="text-zinc-600 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
@@ -328,37 +625,9 @@ export const AdminPage: React.FC = () => {
                               >
                                 <Trash2 size={16} />
                               </button>
-                            </td>
-                          </tr>
-                          
-                          {/* Expanded Details Row */}
-                          {expandedRowId === inscricao.id && (
-                            <tr className="bg-zinc-900/40 border-b border-zinc-800/50">
-                              <td colSpan={6} className="p-4 pl-16">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
-                                  <div>
-                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">Nome do Cavalo</span>
-                                    <span className="text-zinc-300 font-medium text-sm flex items-center gap-2">
-                                      {inscricao.nome_cavalo || '-'}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-zinc-600 uppercase tracking-widest text-[10px] font-black block mb-1">WhatsApp</span>
-                                    <a 
-                                      href={`https://wa.me/55${inscricao.whatsapp?.replace(/\D/g, '')}`} 
-                                      target="_blank" 
-                                      rel="noreferrer" 
-                                      className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm flex items-center gap-2"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                      {inscricao.whatsapp}
-                                    </a>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
+                            </div>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
@@ -804,6 +1073,105 @@ export const AdminPage: React.FC = () => {
                   Apagar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Comprovante de Inscrição */}
+      {selectedVoucher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-yellow-500/30 rounded-3xl w-full max-w-md flex flex-col shadow-[0_0_40px_rgba(234,179,8,0.25)] overflow-hidden relative animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-yellow-500/10 to-transparent pointer-events-none"></div>
+            
+            <div className="p-6 flex justify-between items-center bg-zinc-900 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <FileText className="text-yellow-500" size={20} />
+                <h2 className="text-lg font-bold text-white uppercase tracking-wider">Comprovante</h2>
+              </div>
+              <button 
+                onClick={() => setSelectedVoucher(null)}
+                className="text-zinc-400 hover:text-white transition-colors text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col items-center gap-4">
+              {/* Comprovante Visual Container (Unified Digital Receipt Card) */}
+              <div id="voucher-card" className="w-full bg-zinc-950/80 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3.5 text-left font-sans text-xs relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+                {/* Gold accent vertical line on the left side */}
+                <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500"></div>
+
+                <div className="flex justify-between items-center pb-2.5 border-b border-zinc-800/80">
+                  <img src="/logo.png" alt="Logo ExpoGoiabal" className="h-9 object-contain drop-shadow-[0_0_6px_rgba(255,215,0,0.2)]" />
+                  <div className="text-right">
+                    <span className="block font-black uppercase text-[9px] tracking-widest text-yellow-500">
+                      3 Tambores
+                    </span>
+                    <span className="block text-[7px] uppercase tracking-wider text-zinc-400">
+                      ExpoGoiabal 2026
+                    </span>
+                  </div>
+                </div>
+
+                {/* Highly visible unique Registration ID section */}
+                <div className="bg-black/60 px-3 py-2.5 rounded-xl border border-yellow-500/20 flex flex-col items-center gap-0.5 text-center">
+                  <span className="text-[8px] uppercase tracking-widest text-zinc-400 font-bold">
+                    Código de Inscrição (ID)
+                  </span>
+                  <span className="text-2xl font-black text-yellow-500 font-mono tracking-wider drop-shadow-[0_0_8px_rgba(255,215,0,0.25)]">
+                    {getRegistrationId(selectedVoucher.id)}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 pt-0.5">
+                  <div className="flex flex-col col-span-2">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Competidora</span>
+                    <span className="text-white font-bold truncate text-xs">{selectedVoucher.nome}</span>
+                  </div>
+                  {selectedVoucher.responsavel && (
+                    <div className="flex flex-col col-span-2">
+                      <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Responsável</span>
+                      <span className="text-white font-bold truncate text-xs">{selectedVoucher.responsavel}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cavalo</span>
+                    <span className="text-white font-bold truncate text-xs">{selectedVoucher.nome_cavalo}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Idade</span>
+                    <span className="text-white font-semibold truncate text-xs">{selectedVoucher.idade} anos</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Cidade</span>
+                    <span className="text-white font-semibold truncate text-xs">{selectedVoucher.cidade}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">WhatsApp</span>
+                    <span className="text-white font-semibold truncate text-xs">{selectedVoucher.whatsapp}</span>
+                  </div>
+                  <div className="flex flex-col col-span-2">
+                    <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold mb-0.5">Status</span>
+                    <span className="text-yellow-500 font-black text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Aguardando Validação</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800/80 flex justify-between items-center text-[9px] text-zinc-400 font-medium">
+                  <span>Confirmação: {new Date(selectedVoucher.created_at).toLocaleDateString('pt-BR')} às {new Date(selectedVoucher.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-yellow-500/80 font-bold uppercase tracking-wider text-[7px]">Oficial</span>
+                </div>
+              </div>
+
+              {/* Botão de Download */}
+              <button 
+                onClick={() => downloadVoucherAsImage(selectedVoucher)}
+                className="w-full mt-2 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-black rounded-xl transition-all uppercase tracking-widest text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Upload size={16} className="rotate-180" />
+                Baixar Comprovante (PNG)
+              </button>
             </div>
           </div>
         </div>
