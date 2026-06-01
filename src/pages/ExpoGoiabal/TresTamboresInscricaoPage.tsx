@@ -800,9 +800,9 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                     setSearchError('');
                     setIsStatusModalOpen(true);
                   }}
-                  className="mt-2 px-5 py-2.5 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/60 hover:border-yellow-500/50 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-md flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
+                  className="mt-3 px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 border border-yellow-500/20 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-950 transition-all shadow-[0_0_20px_rgba(234,179,8,0.25)] hover:shadow-[0_0_35px_rgba(234,179,8,0.5)] flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.04] active:scale-[0.98] duration-300 animate-pulse hover:animate-none"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-500 shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   Consultar Status da Inscrição
                 </button>
               </div>
