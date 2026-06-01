@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
 import { User, Calendar, MapPin, Phone, ArrowRight, ArrowLeft, CheckCircle, RefreshCcw, Star } from 'lucide-react';
@@ -27,6 +27,46 @@ export const TresTamboresInscricaoPage: React.FC = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any | null>(null);
   const [searchError, setSearchError] = useState('');
+
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedState, setSelectedState] = useState('MG');
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?ordenar=nome');
+        const data = await response.json();
+        setStates(data);
+      } catch (err) {
+        console.error('Erro ao buscar estados:', err);
+      }
+    };
+    fetchStates();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedState) return;
+    const fetchCities = async () => {
+      setLoadingCities(true);
+      try {
+        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedState}/municipios?ordenar=nome`);
+        const data = await response.json();
+        setCities(data);
+      } catch (err) {
+        console.error('Erro ao buscar cidades:', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    fetchCities();
+  }, [selectedState]);
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedState(e.target.value);
+    setFormData(prev => ({ ...prev, cidade: '' }));
+  };
 
   const getRegistrationId = (id: string) => {
     const idStr = String(id);
@@ -846,20 +886,61 @@ export const TresTamboresInscricaoPage: React.FC = () => {
 
               {/* Step 3: Cidade */}
               {step === 3 && (
-                <div className="flex flex-col gap-6 animate-in slide-in-from-right fade-in">
-                  <div className="flex items-center gap-3 text-yellow-500 mb-2">
+                <div className="flex flex-col gap-5 animate-in slide-in-from-right fade-in">
+                  <div className="flex items-center gap-3 text-yellow-500 mb-1">
                     <MapPin size={28} />
                     <h2 className="text-2xl font-bold text-white">Cidade</h2>
                   </div>
-                  <input 
-                    type="text" 
-                    name="cidade"
-                    value={formData.cidade}
-                    onChange={handleInputChange}
-                    placeholder="Digite sua cidade"
-                    required
-                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg"
-                  />
+                  
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Estado (UF)</label>
+                      <select 
+                        value={selectedState}
+                        onChange={handleStateChange}
+                        className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg appearance-none cursor-pointer"
+                        style={{
+                          backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23eab308\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 1.5rem center',
+                          backgroundSize: '1.2rem'
+                        }}
+                      >
+                        <option value="" disabled className="bg-zinc-900 text-zinc-500">Selecione o Estado</option>
+                        {states.map(state => (
+                          <option key={state.id} value={state.sigla} className="bg-zinc-900 text-white">
+                            {state.nome} ({state.sigla})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Município</label>
+                      <select 
+                        value={formData.cidade}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+                        disabled={!selectedState || loadingCities}
+                        required
+                        className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-6 py-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all text-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23eab308\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 1.5rem center',
+                          backgroundSize: '1.2rem'
+                        }}
+                      >
+                        <option value="" disabled className="bg-zinc-900 text-zinc-500">
+                          {loadingCities ? 'Carregando cidades...' : 'Selecione a Cidade'}
+                        </option>
+                        {cities.map(city => (
+                          <option key={city.id} value={`${city.nome} - ${selectedState}`} className="bg-zinc-900 text-white">
+                            {city.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               )}
 
