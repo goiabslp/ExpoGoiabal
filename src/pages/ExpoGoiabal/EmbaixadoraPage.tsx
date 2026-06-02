@@ -192,9 +192,6 @@ export const EmbaixadoraPage: React.FC = () => {
   }
 
   if (isResultsRevealed) {
-    const winningEmbaixadora = [...embaixadoras].sort((a, b) => b.votes - a.votes)[0];
-    const winningMadrinha = [...madrinhas].sort((a, b) => b.votes - a.votes)[0];
-
     return (
       <div className="min-h-screen flex flex-col bg-zinc-950 text-white font-sans selection:bg-yellow-500/30">
         <Header />
@@ -205,137 +202,43 @@ export const EmbaixadoraPage: React.FC = () => {
             <div className="absolute top-[-10%] left-[20%] w-[40%] h-[40%] rounded-full bg-yellow-500/20 blur-[120px] animate-pulse" />
             <div className="absolute bottom-[-10%] right-[20%] w-[40%] h-[40%] rounded-full bg-yellow-500/20 blur-[120px] animate-pulse" />
           </div>
-
           <div className="relative z-10 text-center space-y-16">
             <div className="space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
               <h1 className="text-5xl md:text-7xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-                Grandes Campeãs
+                Nossa História
               </h1>
               <p className="text-zinc-400 text-xl md:text-2xl max-w-2xl mx-auto">
-                Conheça as vencedoras oficiais da ExpoGoiabal 2026.
+                Conheça as mulheres inspiradoras que representam com orgulho a nossa força e tradição na ExpoGoiabal 2026.
               </p>
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24">
               {/* Embaixadora Winner */}
-              {winningEmbaixadora && (
-                <div className="w-full max-w-sm flex flex-col items-center gap-6 animate-in zoom-in duration-1000 delay-300">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-3xl font-bold uppercase tracking-widest text-yellow-500">Embaixadora</h2>
-                    <p className="text-zinc-500 font-medium">{winningEmbaixadora.votes} Votos</p>
-                  </div>
-                  <div className="relative group rounded-[2.5rem] overflow-hidden ring-8 ring-yellow-500/30 shadow-[0_0_60px_rgba(234,179,8,0.4)] transition-transform duration-700 hover:scale-105">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
-                    <img src={winningEmbaixadora.image} alt={winningEmbaixadora.name} className="w-full aspect-[4/5] object-cover" />
-                    <div className="absolute bottom-0 left-0 w-full p-8 z-20 text-center flex items-end justify-center">
-                      <p className="font-black text-3xl md:text-4xl text-white drop-shadow-xl">{winningEmbaixadora.name}</p>
-                    </div>
+              <div className="w-full max-w-sm flex flex-col items-center gap-6 animate-in zoom-in duration-1000 delay-300">
+                <div className="text-center space-y-2">
+                  <h2 className="text-3xl font-bold uppercase tracking-widest text-yellow-500">Embaixadora</h2>
+                </div>
+                <div className="relative group rounded-[2.5rem] overflow-hidden ring-8 ring-yellow-500/30 shadow-[0_0_60px_rgba(234,179,8,0.4)] transition-transform duration-700 hover:scale-105">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+                  <img src="/candidates/embaixadora.png" alt="Suellen Victoria Alves Martins" className="w-full aspect-[4/5] object-cover" />
+                  <div className="absolute bottom-0 left-0 w-full p-8 z-20 text-center flex items-end justify-center">
+                    <p className="font-black text-3xl md:text-4xl text-white drop-shadow-xl">Suellen Victoria Alves Martins</p>
                   </div>
                 </div>
-              )}
-
-              {/* Madrinha Winner */}
-              {winningMadrinha && (
-                <div className="w-full max-w-sm flex flex-col items-center gap-6 animate-in zoom-in duration-1000 delay-500">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-3xl font-bold uppercase tracking-widest text-red-500">Madrinha</h2>
-                    <p className="text-zinc-500 font-medium">{winningMadrinha.votes} Votos</p>
-                  </div>
-                  <div className="relative group rounded-[2.5rem] overflow-hidden ring-8 ring-red-500/30 shadow-[0_0_60px_rgba(239,68,68,0.4)] transition-transform duration-700 hover:scale-105">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
-                    <img src={winningMadrinha.image} alt={winningMadrinha.name} className="w-full aspect-[4/5] object-cover" />
-                    <div className="absolute bottom-0 left-0 w-full p-8 z-20 text-center flex items-end justify-center">
-                      <p className="font-black text-3xl md:text-4xl text-white drop-shadow-xl">{winningMadrinha.name}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* General Results / Classification Section */}
-            <div className="w-full max-w-5xl mx-auto pt-16 border-t border-zinc-800 space-y-12 animate-in fade-in duration-1000 delay-700">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <h3 className="text-3xl font-black uppercase tracking-widest text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.05)]">
-                  Classificação Geral
-                </h3>
-                <div className="h-1 w-20 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.5)]"></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
-                
-                {/* Embaixadoras General Results */}
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500"></div>
-                  <h4 className="text-xl font-bold uppercase tracking-widest text-yellow-500 flex items-center justify-between">
-                    <span>Embaixadoras</span>
-                  </h4>
-                  
-                  <div className="flex flex-col gap-4">
-                    {[...embaixadoras]
-                      .sort((a, b) => b.votes - a.votes)
-                      .map((candidate, idx) => {
-                        const totalVotes = embaixadoras.reduce((sum, c) => sum + c.votes, 0) || 1;
-                        const pct = ((candidate.votes / totalVotes) * 100).toFixed(1);
-                        return (
-                          <div key={candidate.id} className="flex items-center gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/40 group hover:border-yellow-500/20 transition-all">
-                            <span className="w-8 text-center font-mono font-black text-zinc-500 text-sm group-hover:text-yellow-500 transition-colors">
-                              {idx + 1}º
-                            </span>
-                            <img src={candidate.image} alt={candidate.name} className="w-12 h-12 rounded-full object-cover border border-zinc-800 shadow-md shrink-0" />
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <div className="flex justify-between items-center gap-2">
-                                <span className="font-bold text-white text-sm truncate">{candidate.name}</span>
-                                <span className="font-mono font-black text-yellow-500 text-xs shrink-0">{candidate.votes} votos</span>
-                              </div>
-                              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden flex shadow-inner">
-                                <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 h-full rounded-full" style={{ width: `${pct}%` }}></div>
-                              </div>
-                              <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono">
-                                <span>{pct}% do total</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+              {/* Madrinha Winner */}
+              <div className="w-full max-w-sm flex flex-col items-center gap-6 animate-in zoom-in duration-1000 delay-500">
+                <div className="text-center space-y-2">
+                  <h2 className="text-3xl font-bold uppercase tracking-widest text-red-500">Madrinha</h2>
+                </div>
+                <div className="relative group rounded-[2.5rem] overflow-hidden ring-8 ring-red-500/30 shadow-[0_0_60px_rgba(239,68,68,0.4)] transition-transform duration-700 hover:scale-105">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+                  <img src="/candidates/madrinha.png" alt="Ana Carolina Dias" className="w-full aspect-[4/5] object-cover" />
+                  <div className="absolute bottom-0 left-0 w-full p-8 z-20 text-center flex items-end justify-center">
+                    <p className="font-black text-3xl md:text-4xl text-white drop-shadow-xl">Ana Carolina Dias</p>
                   </div>
                 </div>
-
-                {/* Madrinhas General Results */}
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
-                  <h4 className="text-xl font-bold uppercase tracking-widest text-red-500 flex items-center justify-between">
-                    <span>Madrinhas</span>
-                  </h4>
-                  
-                  <div className="flex flex-col gap-4">
-                    {[...madrinhas]
-                      .sort((a, b) => b.votes - a.votes)
-                      .map((candidate, idx) => {
-                        const totalVotes = madrinhas.reduce((sum, c) => sum + c.votes, 0) || 1;
-                        const pct = ((candidate.votes / totalVotes) * 100).toFixed(1);
-                        return (
-                          <div key={candidate.id} className="flex items-center gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/40 group hover:border-red-500/20 transition-all">
-                            <span className="w-8 text-center font-mono font-black text-zinc-500 text-sm group-hover:text-red-500 transition-colors">
-                              {idx + 1}º
-                            </span>
-                            <img src={candidate.image} alt={candidate.name} className="w-12 h-12 rounded-full object-cover border border-zinc-800 shadow-md shrink-0" />
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <div className="flex justify-between items-center gap-2">
-                                <span className="font-bold text-white text-sm truncate">{candidate.name}</span>
-                                <span className="font-mono font-black text-red-500 text-xs shrink-0">{candidate.votes} votos</span>
-                              </div>
-                              <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden flex shadow-inner">
-                                <div className="bg-gradient-to-r from-red-600 to-red-500 h-full rounded-full" style={{ width: `${pct}%` }}></div>
-                              </div>
-                              <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold font-mono">
-                                <span>{pct}% do total</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-
               </div>
             </div>
             
