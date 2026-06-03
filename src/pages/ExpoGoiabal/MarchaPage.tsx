@@ -213,7 +213,7 @@ export const MarchaPage: React.FC = () => {
             <div className="flex items-center gap-3 bg-yellow-500/10 px-6 py-3 rounded-full border border-yellow-500/30 shadow-[0_0_15px_rgba(255,215,0,0.15)] mt-2">
               <Ticket className="text-yellow-500" size={20} />
               <span className="text-zinc-300 font-semibold uppercase tracking-widest text-sm">
-                Código do Evento:
+                Código IMA (GTA):
               </span>
               <span className="font-black text-yellow-500 tracking-widest text-sm md:text-base">
                 96779

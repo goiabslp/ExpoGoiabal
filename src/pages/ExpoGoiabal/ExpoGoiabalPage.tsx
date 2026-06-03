@@ -39,13 +39,16 @@ export const ExpoGoiabalPage: React.FC = () => {
     fetchMirimCount();
   }, []);
 
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
     const targetDate = new Date('2026-06-04T00:00:00-03:00');
     
     const calculateTimeLeft = () => {
-      const difference = +targetDate - +new Date();
+      const now = new Date();
+      setCurrentDate(now);
+      const difference = +targetDate - +now;
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -62,6 +65,68 @@ export const ExpoGoiabalPage: React.FC = () => {
     const interval = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const getBrazilDate = (date: Date) => {
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(date);
+    const getVal = (type: string) => parts.find(p => p.type === type)?.value || '0';
+    return {
+      year: parseInt(getVal('year'), 10),
+      month: parseInt(getVal('month'), 10),
+      day: parseInt(getVal('day'), 10),
+      hour: parseInt(getVal('hour'), 10),
+      minute: parseInt(getVal('minute'), 10),
+      second: parseInt(getVal('second'), 10),
+    };
+  };
+
+  const brDate = getBrazilDate(currentDate);
+  
+  let headerText = '';
+  let statusBadge = 'Contagem Regressiva Oficial';
+  let statusDesc = '';
+  
+  if (brDate.year === 2026 && brDate.month === 6) {
+    if (brDate.day === 3) {
+      headerText = 'AMANHÃ!';
+    } else if (brDate.day === 4) {
+      headerText = 'A EXPO COMEÇOU!';
+      statusBadge = '🤠 A Festa Começou!';
+      statusDesc = '1º Dia de Festa: Edmilson do Forró & Célio Nonato!';
+    } else if (brDate.day === 5) {
+      headerText = 'A EXPO ESTÁ ACONTECENDO!';
+      statusBadge = '🤠 2º Dia de Festa!';
+      statusDesc = 'Hoje tem Naiara Azevedo, Andrey Ferraz & DJ Brinks!';
+    } else if (brDate.day === 6) {
+      headerText = 'A EXPO ESTÁ ACONTECENDO!';
+      statusBadge = '🤠 3º Dia de Festa!';
+      statusDesc = 'Hoje tem Althair & Alexandre, Marconi & Diego & Banda Nova Face!';
+    } else if (brDate.day === 7) {
+      headerText = 'ÚLTIMO DIA DE EXPO!';
+      statusBadge = '🤠 4º Dia de Festa!';
+      statusDesc = 'Cavalgada, Concurso de Marcha, Banda Savassy & Nilson Garcia!';
+    } else if (brDate.day > 7) {
+      headerText = 'A EXPO 2026 TERMINOU!';
+      statusBadge = '🤠 Até a Próxima!';
+      statusDesc = 'A ExpoGoiabal 2026 foi um sucesso! Obrigado pela presença!';
+    }
+  } else if (brDate.year > 2026 || (brDate.year === 2026 && brDate.month > 6)) {
+    headerText = 'A EXPO 2026 TERMINOU!';
+    statusBadge = '🤠 Até a Próxima!';
+    statusDesc = 'A ExpoGoiabal 2026 foi um sucesso! Obrigado pela presença!';
+  }
+
+  const isEventActive = brDate.year === 2026 && brDate.month === 6 && brDate.day >= 4 && brDate.day <= 7;
+  const displayedHeader = headerText || (timeLeft ? `Faltam ${String(timeLeft.days).padStart(2, '0')} dias!` : '');
 
   const toggleDay = (day: string) => {
     setExpandedDay(prev => prev === day ? null : day);
@@ -113,10 +178,16 @@ export const ExpoGoiabalPage: React.FC = () => {
           </div>
 
           {/* Texto Dinâmico de Dias Restantes (Above Entrada Grátis Badge) */}
-          {timeLeft && (
+          {displayedHeader && (
             <div className="animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 -mt-18 md:-mt-20">
-              <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mb-[-0.25rem] animate-pulse text-center">
-                Faltam {String(timeLeft.days).padStart(2, '0')} dias!
+              <p className={`text-lg md:text-xl font-black uppercase tracking-widest animate-pulse text-center ${
+                isEventActive 
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 drop-shadow-[0_2px_8px_rgba(250,204,21,0.2)]'
+                  : headerText === 'AMANHÃ!'
+                  ? 'text-yellow-500 drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]'
+                  : 'text-zinc-200 drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)]'
+              } mb-[-0.25rem]`}>
+                {displayedHeader}
               </p>
             </div>
           )}
@@ -134,7 +205,7 @@ export const ExpoGoiabalPage: React.FC = () => {
             <div className="animate-in fade-in zoom-in-95 duration-1000 flex flex-col items-center gap-3">
               <span className="text-zinc-400 text-xs md:text-sm font-bold uppercase tracking-widest bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.1)] flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-yellow-500 animate-ping"></span>
-                Contagem Regressiva Oficial
+                {statusBadge}
               </span>
               <div className="flex gap-4 items-center justify-center bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 px-6 md:px-8 shadow-2xl hover:border-yellow-500/30 transition-all duration-500 group">
                 <div className="flex flex-col items-center">
@@ -169,10 +240,10 @@ export const ExpoGoiabalPage: React.FC = () => {
           ) : (
             <div className="animate-in fade-in duration-1000 flex flex-col items-center gap-3">
               <span className="text-white text-xs md:text-sm font-black uppercase tracking-widest bg-gradient-to-r from-yellow-500 to-orange-500 border border-yellow-500/20 px-6 py-2 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center gap-2 animate-bounce">
-                🤠 A Festa Começou!
+                {statusBadge}
               </span>
               <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest text-center max-w-md drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] mt-1">
-                A ExpoGoiabal 2026 já começou!
+                {statusDesc || 'A ExpoGoiabal 2026 já começou!'}
               </p>
             </div>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { User, Calendar, MapPin, Phone, ArrowRight, ArrowLeft, CheckCircle, RefreshCcw, Star } from 'lucide-react';
+import { User, Calendar, MapPin, Phone, ArrowRight, ArrowLeft, CheckCircle, RefreshCcw, Star, Ticket, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 export const TresTamboresInscricaoPage: React.FC = () => {
@@ -805,6 +805,16 @@ export const TresTamboresInscricaoPage: React.FC = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   Consultar Status da Inscrição
                 </button>
+                
+                <div className="flex items-center gap-3 bg-yellow-500/10 px-6 py-3 rounded-full border border-yellow-500/30 shadow-[0_0_15px_rgba(255,215,0,0.15)] mt-3">
+                  <Ticket className="text-yellow-500" size={18} />
+                  <span className="text-zinc-300 font-semibold uppercase tracking-widest text-xs">
+                    Código IMA (GTA):
+                  </span>
+                  <span className="font-black text-yellow-500 tracking-widest text-xs md:text-sm">
+                    96779
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1107,6 +1117,15 @@ export const TresTamboresInscricaoPage: React.FC = () => {
             </form>
 
           </div>
+
+          {/* Aviso Importante */}
+          <div className="bg-red-950/90 backdrop-blur-xl border border-red-500/50 rounded-2xl p-5 flex items-start sm:items-center gap-4 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+            <AlertTriangle className="text-red-500 shrink-0" size={24} />
+            <p className="text-white font-bold uppercase tracking-wider text-xs md:text-sm leading-relaxed">
+              Será exigido exame de AIE, atestado sanitário da propriedade e GTA impressos e originais.
+            </p>
+          </div>
+
           </div>
         </div>
       </main>

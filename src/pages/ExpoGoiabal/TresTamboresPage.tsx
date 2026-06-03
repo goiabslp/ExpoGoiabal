@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
+import { Ticket } from 'lucide-react';
 
 export const TresTamboresPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,16 @@ export const TresTamboresPage: React.FC = () => {
             <h1 className="text-3xl font-black text-white uppercase tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               3 Tambores
             </h1>
+            
+            <div className="flex items-center gap-3 bg-yellow-500/10 px-6 py-3 rounded-full border border-yellow-500/30 shadow-[0_0_15px_rgba(255,215,0,0.15)] mt-2 animate-pulse">
+              <Ticket className="text-yellow-500 animate-bounce" size={20} />
+              <span className="text-zinc-300 font-semibold uppercase tracking-widest text-xs">
+                Código IMA (GTA):
+              </span>
+              <span className="font-black text-yellow-500 tracking-widest text-sm md:text-base">
+                96779
+              </span>
+            </div>
           </div>
 
           {/* Lado Direito: Card de Inscrição */}
