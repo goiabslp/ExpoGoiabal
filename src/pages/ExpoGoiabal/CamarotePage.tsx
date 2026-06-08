@@ -1,16 +1,9 @@
 import React from 'react';
 import { Header } from '../../components/Header';
-import { Ticket, QrCode, Sparkles, Calendar, ShieldCheck, Gem, Coins, ArrowRight, Clock, Trophy, X } from 'lucide-react';
+import { Ticket, QrCode, Sparkles, Calendar, ShieldCheck, Gem, Coins, ArrowRight, Clock } from 'lucide-react';
 
 export const CamarotePage: React.FC = () => {
-  const [showGratisModal, setShowGratisModal] = React.useState(false);
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowGratisModal(true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const ticketUrl = "https://www.ingressonacional.com.br/evento/34244/camarote-expo-goiabal";
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(ticketUrl)}`;
@@ -277,83 +270,6 @@ export const CamarotePage: React.FC = () => {
 
         </div>
       </main>
-
-      {/* Modal: Festa é TOTALMENTE GRÁTIS */}
-      {showGratisModal && (
-        <div 
-          onClick={() => setShowGratisModal(false)}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-none animate-in fade-in duration-300 cursor-pointer overflow-hidden"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="relative bg-zinc-950 border-2 border-emerald-500/30 rounded-3xl w-full max-w-sm md:max-w-md p-4 md:p-5 shadow-[0_0_50px_rgba(16,185,129,0.25)] animate-in zoom-in-95 duration-300 my-auto max-h-[92vh] flex flex-col justify-between overflow-y-auto cursor-default scrollbar-thin scrollbar-thumb-zinc-800"
-          >
-            
-            {/* Botão Fechar (White Close Button) */}
-            <button 
-              onClick={() => setShowGratisModal(false)}
-              className="absolute top-3 right-3 text-white hover:text-zinc-300 transition-colors cursor-pointer focus:outline-none p-1.5 rounded-full hover:bg-white/10 z-20"
-              aria-label="Fechar"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Top gradient strip */}
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 via-yellow-500 to-emerald-600"></div>
-
-            {/* Top Icon */}
-            <div className="flex flex-col items-center gap-1.5 md:gap-2 text-center mt-1">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-bounce">
-                <Trophy size={20} className="text-yellow-300 md:w-5 md:h-5" />
-              </div>
-              
-              <h2 className="text-lg md:text-xl font-black uppercase tracking-wider text-white">
-                Atenção Galera! 🤠
-              </h2>
-              <div className="h-0.5 w-10 bg-emerald-500 rounded-full"></div>
-            </div>
-
-            {/* Content Message */}
-            <div className="text-center space-y-2.5 md:space-y-3.5 my-3 md:my-4">
-              <p className="text-zinc-300 font-medium text-xs md:text-sm leading-relaxed">
-                A gente sabe que a programação está tão sensacional que parece...
-              </p>
-              
-              <div className="py-1 px-3 md:py-1.5 md:px-4 bg-red-500/10 border border-red-500/20 rounded-2xl inline-block transform hover:scale-105 transition-transform duration-300 shadow-inner">
-                <span className="text-red-400 font-black text-xs md:text-sm uppercase tracking-widest block animate-pulse">
-                  SABOOORR... COBRADO
-                </span>
-              </div>
-              
-              <p className="text-zinc-300 font-medium text-xs md:text-sm leading-relaxed">
-                Mas acalme o coração, porque a entrada é...
-              </p>
-              
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm md:text-base uppercase tracking-widest px-4 py-1.5 md:px-5 md:py-2 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-400/30 inline-block transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                TOTALMENTE GRÁTIS! 🎉
-              </div>
-            </div>
-
-            {/* Disclaimer block */}
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-2.5 md:p-3 text-left">
-              <p className="text-zinc-400 text-[10px] md:text-xs leading-relaxed">
-                ⚠️ <strong className="text-yellow-500">Nota:</strong> Apenas o <strong className="text-white">camarote</strong> terá comercialização de entrada. A arena de rodeio, a praça de alimentação e a pista de shows têm acesso 100% gratuito todos os dias!
-              </p>
-            </div>
-
-            {/* Action button */}
-            <div className="flex flex-col items-center mt-4">
-              <button 
-                onClick={() => setShowGratisModal(false)}
-                className="w-full py-2.5 md:py-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-xs md:text-sm rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:scale-[1.02] transition-all duration-300 uppercase tracking-widest font-sans cursor-pointer"
-              >
-                Bora Curtir! 🐴
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
     </div>
   );
 };

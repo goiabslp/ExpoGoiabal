@@ -5,13 +5,19 @@ import { useNavigate } from 'react-router-dom';
 
 export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<'menu' | 'embaixadora' | 'tambores' | 'mirim'>('menu');
+  const [view, setView] = useState<'menu' | 'embaixadora' | 'tambores' | 'mirim' | 'fotos'>('menu');
   const [inscricoes, setInscricoes] = useState<any[]>([]);
   const [inscricoesTambores, setInscricoesTambores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroModalidade, setFiltroModalidade] = useState<string>('Todos');
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; type: 'success'|'error'; message: string }>({ isOpen: false, type: 'success', message: '' });
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  
+  // Link configuration states for photos
+  const [linkQuinta, setLinkQuinta] = useState('');
+  const [linkSexta, setLinkSexta] = useState('');
+  const [linkSabado, setLinkSabado] = useState('');
+  const [linkDomingo, setLinkDomingo] = useState('');
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null; table: 'expogoiabal' | '3tambores' }>({ isOpen: false, idToDelete: null, table: 'expogoiabal' });
   const [selectedVoucher, setSelectedVoucher] = useState<any | null>(null);
 
@@ -329,7 +335,20 @@ export const AdminPage: React.FC = () => {
   useEffect(() => {
     fetchInscricoes();
     fetchInscricoesTambores();
+    setLinkQuinta(localStorage.getItem('fotos_galeria_quinta') || '');
+    setLinkSexta(localStorage.getItem('fotos_galeria_sexta') || '');
+    setLinkSabado(localStorage.getItem('fotos_galeria_sabado') || '');
+    setLinkDomingo(localStorage.getItem('fotos_galeria_domingo') || '');
   }, []);
+
+  const handleSaveFotos = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('fotos_galeria_quinta', linkQuinta);
+    localStorage.setItem('fotos_galeria_sexta', linkSexta);
+    localStorage.setItem('fotos_galeria_sabado', linkSabado);
+    localStorage.setItem('fotos_galeria_domingo', linkDomingo);
+    setFeedbackModal({ isOpen: true, type: 'success', message: 'Links das fotos salvos com sucesso!' });
+  };
 
   const fetchInscricoes = async () => {
     setLoading(true);
@@ -473,7 +492,7 @@ export const AdminPage: React.FC = () => {
               <p className="mt-4 text-zinc-400 uppercase tracking-widest text-sm font-semibold">Escolha qual módulo deseja administrar</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full px-4 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full px-4 mt-6">
               {/* Card 1: Embaixadora */}
               <div 
                 onClick={() => { setFiltroModalidade('Todos'); setView('embaixadora'); }}
@@ -516,6 +535,21 @@ export const AdminPage: React.FC = () => {
                 />
                 <span className="mt-5 text-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-orange-500 transition-colors">
                   Peão Mirim
+                </span>
+              </div>
+
+              {/* Card 4: Fotos Oficiais */}
+              <div 
+                onClick={() => setView('fotos')}
+                className="cursor-pointer group flex flex-col items-center justify-center transition-all duration-500 hover:scale-105"
+              >
+                <img 
+                  src="/banner-fotos.png" 
+                  alt="Fotos Oficiais" 
+                  className="w-3/5 max-w-[260px] aspect-square object-cover rounded-3xl drop-shadow-[0_0_15px_rgba(234,179,8,0.3)] group-hover:drop-shadow-[0_0_30px_rgba(234,179,8,0.6)] transition-all duration-500"
+                />
+                <span className="mt-5 text-lg font-bold uppercase tracking-widest text-zinc-400 group-hover:text-yellow-500 transition-colors">
+                  Fotos Oficiais
                 </span>
               </div>
             </div>
@@ -1027,6 +1061,83 @@ export const AdminPage: React.FC = () => {
                   </table>
                 )}
               </div>
+            </div>
+          </>
+        )}
+
+        {view === 'fotos' && (
+          <>
+            <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4">
+              <button 
+                onClick={() => setView('menu')}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 uppercase tracking-widest text-xs"
+              >
+                <ArrowLeft size={14} /> Voltar
+              </button>
+              <h2 className="text-2xl font-black text-white uppercase tracking-widest">Fotos Oficiais: Links das Galerias</h2>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 max-w-2xl mx-auto w-full shadow-2xl mt-4">
+              <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+                Preencha os links das galerias externas para cada dia do evento. Os botões na página oficial de fotos redirecionarão as pessoas para estes links automaticamente assim que a data de liberação for atingida.
+              </p>
+
+              <form onSubmit={handleSaveFotos} className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Link Quinta-feira (04/06)</label>
+                  <input 
+                    type="url" 
+                    placeholder="https://..." 
+                    value={linkQuinta}
+                    onChange={e => setLinkQuinta(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-700 focus:outline-none focus:border-yellow-500 transition-all font-mono text-sm"
+                  />
+                  <span className="text-[10px] text-zinc-600 font-bold">Data de liberação pública: 08/06/2026</span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Link Sexta-feira (05/06)</label>
+                  <input 
+                    type="url" 
+                    placeholder="https://..." 
+                    value={linkSexta}
+                    onChange={e => setLinkSexta(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-700 focus:outline-none focus:border-yellow-500 transition-all font-mono text-sm"
+                  />
+                  <span className="text-[10px] text-zinc-600 font-bold">Data de liberação pública: 09/06/2026</span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Link Sábado (06/06)</label>
+                  <input 
+                    type="url" 
+                    placeholder="https://..." 
+                    value={linkSabado}
+                    onChange={e => setLinkSabado(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-700 focus:outline-none focus:border-yellow-500 transition-all font-mono text-sm"
+                  />
+                  <span className="text-[10px] text-zinc-600 font-bold">Data de liberação pública: 10/06/2026</span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Link Domingo (07/06)</label>
+                  <input 
+                    type="url" 
+                    placeholder="https://..." 
+                    value={linkDomingo}
+                    onChange={e => setLinkDomingo(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-700 focus:outline-none focus:border-yellow-500 transition-all font-mono text-sm"
+                  />
+                  <span className="text-[10px] text-zinc-600 font-bold">Data de liberação pública: 11/06/2026</span>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="mt-4 w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:scale-[1.01] text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer"
+                >
+                  Salvar Configurações
+                </button>
+              </form>
             </div>
           </>
         )}

@@ -27,11 +27,8 @@ export const Header: React.FC = () => {
 
   const navItems = [
     { label: 'Início', path: '/ExpoGoiabal/Inicio' },
-    { label: 'Programação', path: '/ExpoGoiabal/Programacao' },
-    { label: 'Camarote', path: '/ExpoGoiabal/Camarote' },
+    { label: 'Fotos', path: '/ExpoGoiabal/fotos' },
     { label: 'Embaixadora', path: '/ExpoGoiabal/Embaixadora' },
-    { label: 'Concurso de Marcha', path: '/ExpoGoiabal/Marcha' },
-    { label: 'Inscrição', path: '/ExpoGoiabal/Inscricao' },
     { label: 'Patrocinador', path: '/ExpoGoiabal/Patrocinador' },
   ];
 

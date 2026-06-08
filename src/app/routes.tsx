@@ -1,18 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { trackPageView } from '../lib/analytics';
 import { ExpoGoiabalPage } from '../pages/ExpoGoiabal/ExpoGoiabalPage';
-import { ProgramacaoPage } from '../pages/ExpoGoiabal/ProgramacaoPage';
-import { CamarotePage } from '../pages/ExpoGoiabal/CamarotePage';
 import { EmbaixadoraPage } from '../pages/ExpoGoiabal/EmbaixadoraPage';
-import { MarchaPage } from '../pages/ExpoGoiabal/MarchaPage';
-import { InscricaoPage } from '../pages/ExpoGoiabal/InscricaoPage';
-import { EmbaixadoraInscricaoPage } from '../pages/ExpoGoiabal/EmbaixadoraInscricaoPage';
-import { TresTamboresPage } from '../pages/ExpoGoiabal/TresTamboresPage';
-import { TresTamboresInscricaoPage } from '../pages/ExpoGoiabal/TresTamboresInscricaoPage';
-import { MirimInscricaoPage } from '../pages/ExpoGoiabal/MirimInscricaoPage';
 import { AdminPage } from '../pages/Admin/AdminPage';
 import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
-import { PotePremiadoPage } from '../pages/ExpoGoiabal/PotePremiadoPage';
+import { FotosPage } from '../pages/ExpoGoiabal/FotosPage';
 
 export const router = createBrowserRouter([
   {
@@ -24,16 +16,20 @@ export const router = createBrowserRouter([
     element: <ExpoGoiabalPage />,
   },
   {
+    path: '/ExpoGoiabal/fotos',
+    element: <FotosPage />,
+  },
+  {
     path: '/ExpoGoiabal/Programacao',
-    element: <ProgramacaoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/Camarote',
-    element: <CamarotePage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/pote-premiado',
-    element: <PotePremiadoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/Embaixadora',
@@ -41,27 +37,27 @@ export const router = createBrowserRouter([
   },
   {
     path: '/ExpoGoiabal/Marcha',
-    element: <MarchaPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/Inscricao',
-    element: <InscricaoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/Embaixadora/inscricao',
-    element: <EmbaixadoraInscricaoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/Mirim/inscricao',
-    element: <MirimInscricaoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/3tambores',
-    element: <TresTamboresPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/ExpoGoiabal/3tambores/inscricao',
-    element: <TresTamboresInscricaoPage />,
+    element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
   },
   {
     path: '/Admin',
