@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../../components/Header';
 import { BackButton } from '../../components/BackButton';
 import { Camera, Calendar, Lock, ExternalLink, Clock } from 'lucide-react';
+import { supabase } from '../../services/supabase';
 
 interface DayConfig {
   key: string;
@@ -52,13 +53,37 @@ export const FotosPage: React.FC = () => {
   const [galleryLinks, setGalleryLinks] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Carrega os links do localStorage salvos pelo Admin
-    const links: Record<string, string> = {};
-    DAYS_CONFIG.forEach((day) => {
-      const savedLink = localStorage.getItem(`fotos_galeria_${day.key}`);
-      links[day.key] = savedLink || day.defaultLink;
-    });
-    setGalleryLinks(links);
+    const loadLinks = async () => {
+      // Start with defaults / local storage fallback
+      const links: Record<string, string> = {};
+      DAYS_CONFIG.forEach((day) => {
+        const savedLink = localStorage.getItem(`fotos_galeria_${day.key}`);
+        links[day.key] = savedLink || day.defaultLink;
+      });
+      setGalleryLinks(links);
+
+      try {
+        const { data, error } = await supabase
+          .from('configuracoes')
+          .select('*')
+          .in('chave', DAYS_CONFIG.map(d => `fotos_galeria_${d.key}`));
+
+        if (error) throw error;
+
+        if (data) {
+          const dbLinks = { ...links };
+          data.forEach((item) => {
+            const key = item.chave.replace('fotos_galeria_', '');
+            dbLinks[key] = item.valor || DAYS_CONFIG.find(d => d.key === key)?.defaultLink || '';
+          });
+          setGalleryLinks(dbLinks);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar links das galerias no Supabase:', error);
+      }
+    };
+
+    loadLinks();
 
     // Timer para manter a hora atualizada e checar a liberação de forma reativa
     const interval = setInterval(() => {

@@ -332,22 +332,71 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchFotosConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('configuracoes')
+        .select('*')
+        .in('chave', [
+          'fotos_galeria_quinta',
+          'fotos_galeria_sexta',
+          'fotos_galeria_sabado',
+          'fotos_galeria_domingo',
+        ]);
+      if (error) throw error;
+      if (data) {
+        data.forEach((item) => {
+          if (item.chave === 'fotos_galeria_quinta') setLinkQuinta(item.valor || '');
+          if (item.chave === 'fotos_galeria_sexta') setLinkSexta(item.valor || '');
+          if (item.chave === 'fotos_galeria_sabado') setLinkSabado(item.valor || '');
+          if (item.chave === 'fotos_galeria_domingo') setLinkDomingo(item.valor || '');
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar configurações de fotos:', error);
+      // Fallback to localStorage
+      setLinkQuinta(localStorage.getItem('fotos_galeria_quinta') || '');
+      setLinkSexta(localStorage.getItem('fotos_galeria_sexta') || '');
+      setLinkSabado(localStorage.getItem('fotos_galeria_sabado') || '');
+      setLinkDomingo(localStorage.getItem('fotos_galeria_domingo') || '');
+    }
+  };
+
   useEffect(() => {
     fetchInscricoes();
     fetchInscricoesTambores();
-    setLinkQuinta(localStorage.getItem('fotos_galeria_quinta') || '');
-    setLinkSexta(localStorage.getItem('fotos_galeria_sexta') || '');
-    setLinkSabado(localStorage.getItem('fotos_galeria_sabado') || '');
-    setLinkDomingo(localStorage.getItem('fotos_galeria_domingo') || '');
+    fetchFotosConfig();
   }, []);
 
-  const handleSaveFotos = (e: React.FormEvent) => {
+  const handleSaveFotos = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('fotos_galeria_quinta', linkQuinta);
-    localStorage.setItem('fotos_galeria_sexta', linkSexta);
-    localStorage.setItem('fotos_galeria_sabado', linkSabado);
-    localStorage.setItem('fotos_galeria_domingo', linkDomingo);
-    setFeedbackModal({ isOpen: true, type: 'success', message: 'Links das fotos salvos com sucesso!' });
+    setLoading(true);
+    try {
+      // Save locally as a fallback
+      localStorage.setItem('fotos_galeria_quinta', linkQuinta);
+      localStorage.setItem('fotos_galeria_sexta', linkSexta);
+      localStorage.setItem('fotos_galeria_sabado', linkSabado);
+      localStorage.setItem('fotos_galeria_domingo', linkDomingo);
+
+      // Save to Supabase (using upsert)
+      const { error } = await supabase
+        .from('configuracoes')
+        .upsert([
+          { chave: 'fotos_galeria_quinta', valor: linkQuinta, updated_at: new Date().toISOString() },
+          { chave: 'fotos_galeria_sexta', valor: linkSexta, updated_at: new Date().toISOString() },
+          { chave: 'fotos_galeria_sabado', valor: linkSabado, updated_at: new Date().toISOString() },
+          { chave: 'fotos_galeria_domingo', valor: linkDomingo, updated_at: new Date().toISOString() }
+        ], { onConflict: 'chave' });
+
+      if (error) throw error;
+
+      setFeedbackModal({ isOpen: true, type: 'success', message: 'Links das fotos salvos com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao salvar configurações de fotos:', error);
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao salvar os links no banco de dados. Salvou apenas localmente.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchInscricoes = async () => {
