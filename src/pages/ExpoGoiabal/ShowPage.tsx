@@ -44,6 +44,8 @@ export const ShowPage: React.FC = () => {
 
   // Lógica das notificações do PIX
   useEffect(() => {
+    let nextTimeoutId: any = null;
+
     const showRandomDonation = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -62,17 +64,23 @@ export const ShowPage: React.FC = () => {
       timeoutRef.current = setTimeout(() => {
         setNotification(prev => prev ? { ...prev, visible: false } : null);
       }, 8000);
+
+      // Agenda a próxima exibição com um tempo dinâmico (entre 30 segundos e 3 minutos)
+      const minDelay = 30000; // 30 segundos
+      const maxDelay = 180000; // 3 minutos
+      const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+      nextTimeoutId = setTimeout(showRandomDonation, randomDelay);
     };
 
     // Primeiro popup após 4 segundos para visualização imediata do usuário
     const initialTimeout = setTimeout(showRandomDonation, 4000);
 
-    // Repete a cada 30 segundos (30000ms) na versão final de produção
-    const interval = setInterval(showRandomDonation, 30000); 
-
     return () => {
       clearTimeout(initialTimeout);
-      clearInterval(interval);
+      if (nextTimeoutId) {
+        clearTimeout(nextTimeoutId);
+      }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
