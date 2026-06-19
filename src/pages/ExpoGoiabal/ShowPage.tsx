@@ -74,9 +74,9 @@ export const ShowPage: React.FC = () => {
         setNotification(prev => prev ? { ...prev, visible: false } : null);
       }, 8000);
 
-      // Agenda a próxima exibição com um tempo dinâmico (entre 30 segundos e 3 minutos)
+      // Agenda a próxima exibição com um tempo dinâmico (entre 30 segundos e 1 minuto)
       const minDelay = 30000; // 30 segundos
-      const maxDelay = 180000; // 3 minutos
+      const maxDelay = 60000; // 1 minuto
       const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 
       nextTimeoutId = setTimeout(showRandomDonation, randomDelay);
