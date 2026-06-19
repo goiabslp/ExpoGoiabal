@@ -46,13 +46,13 @@ export const ShowPage: React.FC = () => {
   useEffect(() => {
     let nextTimeoutId: any = null;
 
-    const showRandomDonation = () => {
+    const showRandomDonation = (customName?: string, customVal?: string) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomVal = (Math.floor(Math.random() * 24) + 2) + ",00";
+      const randomName = customName || names[Math.floor(Math.random() * names.length)];
+      const randomVal = customVal || ((Math.floor(Math.random() * 24) + 2) + ",00");
       
       setNotification({
         name: randomName,
@@ -74,7 +74,7 @@ export const ShowPage: React.FC = () => {
     };
 
     // Primeiro popup após 4 segundos para visualização imediata do usuário
-    const initialTimeout = setTimeout(showRandomDonation, 4000);
+    const initialTimeout = setTimeout(() => showRandomDonation("Luciano", "20,00"), 4000);
 
     return () => {
       clearTimeout(initialTimeout);
