@@ -45,17 +45,26 @@ export const ShowPage: React.FC = () => {
   // Lógica das notificações do PIX
   useEffect(() => {
     let nextTimeoutId: any = null;
+    const initialDonors = ["Luciano", "Lucivan", "José Aparecido", "Marcelo", "Gessica"];
+    let donorIndex = 0;
 
-    const showRandomDonation = (customName?: string, customVal?: string) => {
+    const showRandomDonation = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
-      const randomName = customName || names[Math.floor(Math.random() * names.length)];
-      const randomVal = customVal || ((Math.floor(Math.random() * 24) + 2) + ",00");
+      let nameToShow = "";
+      if (donorIndex < initialDonors.length) {
+        nameToShow = initialDonors[donorIndex];
+        donorIndex++;
+      } else {
+        nameToShow = names[Math.floor(Math.random() * names.length)];
+      }
+
+      const randomVal = (Math.floor(Math.random() * 24) + 2) + ",00";
       
       setNotification({
-        name: randomName,
+        name: nameToShow,
         value: randomVal,
         visible: true
       });
@@ -74,7 +83,7 @@ export const ShowPage: React.FC = () => {
     };
 
     // Primeiro popup após 4 segundos para visualização imediata do usuário
-    const initialTimeout = setTimeout(() => showRandomDonation("Luciano", "20,00"), 4000);
+    const initialTimeout = setTimeout(showRandomDonation, 4000);
 
     return () => {
       clearTimeout(initialTimeout);
@@ -296,7 +305,7 @@ export const ShowPage: React.FC = () => {
                 Doação Recebida!
               </span>
               <p className="text-lg md:text-3xl lg:text-4xl font-bold text-white leading-snug">
-                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX de <strong className="text-emerald-400 font-black text-2xl md:text-4xl lg:text-5xl whitespace-nowrap">R$ {notification.value}</strong>
+                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX!
               </p>
             </div>
           </div>
