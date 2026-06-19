@@ -1,0 +1,219 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Header } from '../../components/Header';
+import { Trophy, Sparkles, Copy, Check, Music } from 'lucide-react';
+
+export const ShowPage: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+  const pixKey = "072.715.986-00";
+
+  const [notification, setNotification] = useState<{ name: string; value: string; visible: boolean } | null>(null);
+
+  const names = [
+    'João', 'José', 'Antônio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Marcos', 'Luiz',
+    'Gabriel', 'Rafael', 'Bruno', 'Felipe', 'Rodrigo', 'Diego', 'Gustavo', 'Eduardo', 'André', 'Daniel',
+    'Mateus', 'Tiago', 'Vinícius', 'Leonardo', 'Henrique', 'Ricardo', 'Alexandre', 'Marcelo', 'Sérgio', 'Fábio',
+    'Maria', 'Ana', 'Francisca', 'Antônia', 'Adriana', 'Juliana', 'Márcia', 'Fernanda', 'Patrícia', 'Aline',
+    'Camila', 'Beatriz', 'Larissa', 'Jéssica', 'Letícia', 'Amanda', 'Bruna', 'Carolina', 'Vitória', 'Gabriela',
+    'Gaspar', 'Ailton', 'Wardene', 'Bdhu', 'Guilherme Santos', 'Preto', 'Biru Biro', 'Elio', 'Brejeto', 'Machao',
+    'Neide', 'Vanilda', 'Luzinho', 'Ricardinho'
+  ];
+
+  const timeoutRef = useRef<any>(null);
+
+  useEffect(() => {
+    const showRandomDonation = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const randomVal = (Math.floor(Math.random() * 24) + 2) + ",00";
+      
+      setNotification({
+        name: randomName,
+        value: randomVal,
+        visible: true
+      });
+
+      // Oculta após exatamente 5 segundos (5000ms)
+      timeoutRef.current = setTimeout(() => {
+        setNotification(prev => prev ? { ...prev, visible: false } : null);
+      }, 5000);
+    };
+
+    // Primeiro popup após 4 segundos para visualização imediata do usuário
+    const initialTimeout = setTimeout(showRandomDonation, 4000);
+
+    // Repete a cada 5 minutos (300000ms) na versão final de produção
+    const interval = setInterval(showRandomDonation, 300000); 
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="h-screen w-screen flex flex-col bg-zinc-950 font-sans text-white overflow-hidden relative">
+      <Header />
+      
+      {/* Elementos Decorativos de Fundo Temáticos (Brasil/Copa) */}
+      <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-yellow-500/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[160px] pointer-events-none" />
+
+      {/* Imagem de Fundo Temática da Bandeira do Brasil e Estádio */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-15 pointer-events-none" 
+        style={{ backgroundImage: 'url(/background_brasil.png)' }} 
+      />
+
+      <main className="flex-1 flex items-center justify-center p-4 md:p-8 mt-20 relative z-10 overflow-hidden">
+        
+        {/* Card Principal - Nilson Garcia & QR Code */}
+        <div className="w-full max-w-4xl bg-zinc-900/40 backdrop-blur-lg border border-yellow-500/20 rounded-3xl p-6 md:p-10 shadow-[0_0_50px_rgba(234,179,8,0.15)] hover:border-yellow-500/30 transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative overflow-hidden max-h-[80vh]">
+          
+          {/* Efeito luminoso interno */}
+          <div className="absolute -inset-96 bg-[radial-gradient(circle_at_center,rgba(234,179,8,0.06)_0,transparent_50%)] pointer-events-none" />
+          
+          {/* Lado Esquerdo: Informações do Cantor e Identidade Brasil/Copa */}
+          <div className="flex flex-col gap-4 md:gap-6 flex-1 text-center md:text-left">
+            
+            {/* Tag/Badge de Destaque */}
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <span className="text-yellow-400 text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-400/10 border border-yellow-400/30 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center gap-1.5">
+                <Trophy size={12} className="text-yellow-400" />
+                Copa do Mundo 2026
+              </span>
+            </div>
+
+            {/* Nome do Cantor em Altíssimo Destaque */}
+            <div className="flex flex-col gap-1">
+              <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-emerald-400">
+                Atração Confirmada
+              </h2>
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 uppercase tracking-wide drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                Nilson Garcia
+              </h1>
+              <p className="text-xs md:text-sm font-bold text-zinc-300 flex items-center justify-center md:justify-start gap-1.5 mt-1">
+                <Music size={14} className="text-emerald-400" />
+                O Show da Copa na ExpoGoiabal
+              </p>
+            </div>
+
+            {/* Texto Curto e Grande para Apoiar o Cantor */}
+            <h3 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-snug drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
+              Faça uma doação para o cantor
+            </h3>
+
+
+
+          </div>
+
+          {/* Lado Direito: QR Code com Destaque Central Absoluto */}
+          <div className="flex flex-col items-center justify-center gap-3 md:gap-4 w-full md:w-auto shrink-0">
+            
+            {/* Título Grande Amarelo acima do QR Code */}
+            <div className="text-center">
+              <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
+                Vaquinha do Cantor
+              </h2>
+              <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
+                Escaneie o QR Code abaixo para apoiar
+              </p>
+            </div>
+
+            {/* Box do QR Code */}
+            <div className="relative group">
+              {/* Moldura Externa de Neon e Efeito Pulsante */}
+              <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-blue-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+              
+              {/* Container Interno */}
+              <div className="relative w-48 h-48 md:w-60 md:h-60 bg-white rounded-2xl p-3 shadow-2xl flex items-center justify-center overflow-hidden">
+                <img 
+                  src="/QR.png" 
+                  alt="QR Code Vaquinha Nilson Garcia" 
+                  className="w-full h-full object-contain filter contrast-125 select-none pointer-events-none"
+                />
+              </div>
+            </div>
+
+            {/* Info Chave PIX */}
+            <div className="w-full max-w-[300px] md:max-w-[360px] flex flex-col items-center gap-3">
+              {/* Chave PIX Muito Grande */}
+              <div className="flex flex-col items-center gap-1.5 w-full bg-zinc-950/60 border border-zinc-800/80 px-4 py-3 rounded-2xl shadow-inner">
+                <span className="text-xs md:text-sm text-zinc-300 uppercase tracking-[0.2em] font-black">PIX</span>
+                <div className="flex items-center gap-3 w-full justify-center">
+                  <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all">
+                    {pixKey}
+                  </span>
+                  <button 
+                    onClick={handleCopyPix}
+                    className="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 transition-all flex items-center justify-center shrink-0 cursor-pointer"
+                    title="Copiar Chave PIX"
+                  >
+                    {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {copied && (
+                <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider animate-bounce">
+                  Chave PIX copiada!
+                </span>
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+      {/* Footer Compacto */}
+      <footer className="shrink-0 p-4 flex items-center justify-between bg-zinc-950/80 border-t border-zinc-900 text-[9px] md:text-[10px] text-zinc-600 font-bold uppercase tracking-widest z-10">
+        <span className="flex items-center gap-1">
+          <Sparkles size={10} className="text-emerald-500" />
+          Prefeitura de São José do Goiabal
+        </span>
+        <a href="/ExpoGoiabal/Inicio" className="hover:text-yellow-400 transition-colors">
+          Voltar ao Início
+        </a>
+      </footer>
+
+      {/* Balão de Diálogo de Doações do PIX */}
+      {notification && (
+        <div 
+          className={`fixed top-24 right-4 sm:right-8 max-w-md bg-zinc-900 border-2 border-yellow-450 rounded-3xl p-5 md:p-6 shadow-[0_0_40px_rgba(234,179,8,0.45)] flex items-center gap-4 z-50 transition-all duration-500 transform ${
+            notification.visible 
+              ? 'translate-y-0 opacity-100 scale-100 animate-bounce' 
+              : '-translate-y-10 opacity-0 scale-95 pointer-events-none'
+          }`}
+        >
+          {/* Ícone de Moedas / PIX Maior */}
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+            <span className="font-black text-xs tracking-wider">PIX</span>
+          </div>
+          <div className="flex flex-col text-left gap-0.5">
+            <span className="text-[10px] md:text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+              <Sparkles size={12} className="text-yellow-400 animate-pulse" />
+              Doação Recebida!
+            </span>
+            <p className="text-sm md:text-lg font-bold text-white leading-tight">
+              <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX de <strong className="text-emerald-450 font-black text-lg md:text-xl">R$ {notification.value}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

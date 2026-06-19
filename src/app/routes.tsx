@@ -5,6 +5,7 @@ import { EmbaixadoraPage } from '../pages/ExpoGoiabal/EmbaixadoraPage';
 import { AdminPage } from '../pages/Admin/AdminPage';
 import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
 import { FotosPage } from '../pages/ExpoGoiabal/FotosPage';
+import { ShowPage } from '../pages/ExpoGoiabal/ShowPage';
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/fotos',
     element: <FotosPage />,
+  },
+  {
+    path: '/ExpoGoiabal/show',
+    element: <ShowPage />,
   },
   {
     path: '/ExpoGoiabal/Programacao',
