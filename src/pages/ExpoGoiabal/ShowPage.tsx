@@ -58,10 +58,10 @@ export const ShowPage: React.FC = () => {
         visible: true
       });
 
-      // Oculta após exatamente 5 segundos (5000ms)
+      // Oculta após exatamente 8 segundos (8000ms)
       timeoutRef.current = setTimeout(() => {
         setNotification(prev => prev ? { ...prev, visible: false } : null);
-      }, 5000);
+      }, 8000);
     };
 
     // Primeiro popup após 4 segundos para visualização imediata do usuário
