@@ -2,11 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/Header';
 import { Trophy, Sparkles, Copy, Check, Music } from 'lucide-react';
 
+interface FloatingFlag {
+  id: number;
+  emoji: string;
+  left: number;
+  delay: number;
+  duration: number;
+  size: number;
+}
+
+const flagEmojis = ['🇧🇷', '🇦🇷', '🇫🇷', '🇩🇪', '🇪🇸', '🇺🇸', '🇲🇽', '🇨🇦', '🇯🇵', '🇭🇷', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇵🇹', '🇺🇾', '🇳🇱', '🇨🇭', '🇸🇪'];
+
 export const ShowPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
-  const pixKey = "072.715.986-00";
-
   const [notification, setNotification] = useState<{ name: string; value: string; visible: boolean } | null>(null);
+
+  const pixKey = "072.715.986-00";
+  const timeoutRef = useRef<any>(null);
 
   const names = [
     'João', 'José', 'Antônio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Marcos', 'Luiz',
@@ -18,8 +30,19 @@ export const ShowPage: React.FC = () => {
     'Neide', 'Vanilda', 'Luzinho', 'Ricardinho'
   ];
 
-  const timeoutRef = useRef<any>(null);
+  // Gera bandeiras flutuantes para o background de forma randômica
+  const [floatingFlags] = useState<FloatingFlag[]>(() => {
+    return Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      emoji: flagEmojis[Math.floor(Math.random() * flagEmojis.length)],
+      left: Math.random() * 90 + 5, // 5% a 95%
+      delay: Math.random() * 6,
+      duration: 12 + Math.random() * 15, // 12 a 27 segundos
+      size: 24 + Math.random() * 20 // 24px a 44px
+    }));
+  });
 
+  // Lógica das notificações do PIX
   useEffect(() => {
     const showRandomDonation = () => {
       if (timeoutRef.current) {
@@ -63,9 +86,36 @@ export const ShowPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-zinc-950 font-sans text-white overflow-hidden relative">
+    <div className="h-screen w-screen flex flex-col bg-zinc-955 font-sans text-white overflow-hidden relative">
       <Header />
       
+      {/* Estilos CSS Inline para Animações Customizadas */}
+      <style>{`
+        @keyframes floatUp {
+          0% {
+            transform: translateY(105vh) rotate(0deg) scale(0.7);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.35;
+          }
+          90% {
+            opacity: 0.35;
+          }
+          100% {
+            transform: translateY(-15vh) rotate(360deg) scale(1.3);
+            opacity: 0;
+          }
+        }
+        @keyframes wave {
+          0%, 100% { transform: rotate(-8deg) scale(1); }
+          50% { transform: rotate(8deg) scale(1.1); }
+        }
+        .animate-wave-flag {
+          animation: wave 2.2s ease-in-out infinite;
+        }
+      `}</style>
+
       {/* Elementos Decorativos de Fundo Temáticos (Brasil/Copa) */}
       <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-yellow-500/10 rounded-full blur-[130px] pointer-events-none" />
@@ -77,10 +127,33 @@ export const ShowPage: React.FC = () => {
         style={{ backgroundImage: 'url(/background_brasil.png)' }} 
       />
 
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8 mt-20 relative z-10 overflow-hidden">
+      {/* Bandeiras flutuantes dinâmicas da Copa no background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+        {floatingFlags.map((flag) => (
+          <div
+            key={flag.id}
+            style={{
+              left: `${flag.left}%`,
+              animationDelay: `${flag.delay}s`,
+              animationDuration: `${flag.duration}s`,
+              fontSize: `${flag.size}px`,
+              animationName: 'floatUp',
+              animationIterationCount: 'infinite',
+              animationTimingFunction: 'linear',
+              position: 'absolute',
+              bottom: '-50px',
+              opacity: 0,
+            }}
+          >
+            {flag.emoji}
+          </div>
+        ))}
+      </div>
+
+      <main className="flex-1 flex items-center justify-center mt-20 relative z-10 overflow-hidden w-full h-full">
         
-        {/* Card Principal - Nilson Garcia & QR Code */}
-        <div className="w-full max-w-4xl bg-zinc-900/40 backdrop-blur-lg border border-yellow-500/20 rounded-3xl p-6 md:p-10 shadow-[0_0_50px_rgba(234,179,8,0.15)] hover:border-yellow-500/30 transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative overflow-hidden max-h-[80vh]">
+        {/* Container Principal cobrindo 100% do viewport */}
+        <div className="w-full h-full bg-zinc-950/20 backdrop-blur-md flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 px-6 py-8 md:px-20 relative overflow-hidden">
           
           {/* Efeito luminoso interno */}
           <div className="absolute -inset-96 bg-[radial-gradient(circle_at_center,rgba(234,179,8,0.06)_0,transparent_50%)] pointer-events-none" />
@@ -111,19 +184,17 @@ export const ShowPage: React.FC = () => {
             </div>
 
             {/* Texto Curto e Grande para Apoiar o Cantor */}
-            <h3 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-snug drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
+            <h3 className="text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-tight drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
               Faça uma doação para o cantor
             </h3>
 
-
-
           </div>
 
-          {/* Lado Direito: QR Code com Destaque Central Absoluto */}
-          <div className="flex flex-col items-center justify-center gap-3 md:gap-4 w-full md:w-auto shrink-0">
+          {/* Lado Direito: QR Code Estático e Chave PIX */}
+          <div className="flex flex-col items-center justify-center gap-3 md:gap-5 w-full md:w-auto shrink-0 z-10">
             
             {/* Título Grande Amarelo acima do QR Code */}
-            <div className="text-center">
+            <div className="text-center h-12 flex flex-col justify-center">
               <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
                 Vaquinha do Cantor
               </h2>
@@ -132,18 +203,25 @@ export const ShowPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Box do QR Code */}
-            <div className="relative group">
+            {/* Box do QR Code Estático e SUPER GIGANTE */}
+            <div className="relative w-72 h-72 md:w-[360px] md:h-[360px] group">
               {/* Moldura Externa de Neon e Efeito Pulsante */}
               <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-blue-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
               
               {/* Container Interno */}
-              <div className="relative w-48 h-48 md:w-60 md:h-60 bg-white rounded-2xl p-3 shadow-2xl flex items-center justify-center overflow-hidden">
+              <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-4 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
+                {/* Selo da Bandeira do Brasil Animada */}
+                <div className="absolute -top-2 -right-2 bg-zinc-950 border-2 border-yellow-500 rounded-full w-10 h-10 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.5)] z-20 animate-wave-flag">
+                  <span className="text-xl select-none">🇧🇷</span>
+                </div>
+
                 <img 
                   src="/QR.png" 
                   alt="QR Code Vaquinha Nilson Garcia" 
                   className="w-full h-full object-contain filter contrast-125 select-none pointer-events-none"
                 />
+                {/* Neon Glow overlay */}
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/10 via-yellow-400/10 to-blue-500/10 rounded-2xl pointer-events-none" />
               </div>
             </div>
 
