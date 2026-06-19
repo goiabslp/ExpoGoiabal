@@ -272,23 +272,23 @@ export const ShowPage: React.FC = () => {
       {notification && (
         <div className="fixed top-28 left-0 right-0 flex justify-center z-50 pointer-events-none px-4">
           <div 
-            className={`pointer-events-auto max-w-2xl w-full sm:w-auto bg-zinc-950/95 border-3 border-yellow-400 rounded-[32px] p-6 md:p-8 shadow-[0_0_50px_rgba(234,179,8,0.6)] flex items-center gap-6 transition-all duration-500 transform ${
+            className={`pointer-events-auto max-w-4xl w-full sm:w-auto bg-zinc-950/98 border-4 border-yellow-400 rounded-[40px] p-8 md:p-12 shadow-[0_0_60px_rgba(234,179,8,0.75)] flex items-center gap-8 md:gap-10 transition-all duration-500 transform ${
               notification.visible 
-                ? 'translate-y-0 opacity-100 scale-105 md:scale-110 animate-bounce' 
+                ? 'translate-y-0 opacity-100 scale-110 md:scale-120 animate-bounce' 
                 : '-translate-y-12 opacity-0 scale-95 pointer-events-none'
             }`}
           >
             {/* Ícone de Moedas / PIX Maior */}
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-emerald-500/20 border-3 border-emerald-400 flex items-center justify-center text-emerald-450 shrink-0 shadow-[0_0_25px_rgba(16,185,129,0.5)]">
-              <span className="font-black text-sm md:text-lg tracking-widest">PIX</span>
+            <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-emerald-500/20 border-4 border-emerald-400 flex items-center justify-center text-emerald-450 shrink-0 shadow-[0_0_35px_rgba(16,185,129,0.6)]">
+              <span className="font-black text-lg md:text-2xl tracking-widest">PIX</span>
             </div>
-            <div className="flex flex-col text-left gap-1.5">
-              <span className="text-xs md:text-sm font-black text-emerald-450 uppercase tracking-[0.2em] flex items-center gap-2">
-                <Sparkles size={14} className="text-yellow-400 animate-pulse" />
+            <div className="flex flex-col text-left gap-2 md:gap-3">
+              <span className="text-sm md:text-lg font-black text-emerald-450 uppercase tracking-[0.25em] flex items-center gap-2.5">
+                <Sparkles size={20} className="text-yellow-400 animate-pulse" />
                 Doação Recebida!
               </span>
-              <p className="text-base md:text-2xl font-bold text-white leading-snug">
-                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX de <strong className="text-emerald-400 font-black text-xl md:text-3xl lg:text-4xl whitespace-nowrap">R$ {notification.value}</strong>
+              <p className="text-lg md:text-3xl lg:text-4xl font-bold text-white leading-snug">
+                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX de <strong className="text-emerald-400 font-black text-2xl md:text-4xl lg:text-5xl whitespace-nowrap">R$ {notification.value}</strong>
               </p>
             </div>
           </div>
