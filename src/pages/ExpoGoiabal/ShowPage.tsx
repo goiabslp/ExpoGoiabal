@@ -45,7 +45,7 @@ export const ShowPage: React.FC = () => {
   // Lógica das notificações do PIX
   useEffect(() => {
     let nextTimeoutId: any = null;
-    const initialDonors = ["Luciano", "Lucivan", "José Aparecido", "Marcelo", "Gessica"];
+    const initialDonors = ["Vanilda", "Wardene", "Guilherme", "Gaspar"];
     let donorIndex = 0;
 
     const showRandomDonation = () => {
@@ -62,7 +62,7 @@ export const ShowPage: React.FC = () => {
       }
 
       const randomVal = (Math.floor(Math.random() * 24) + 2) + ",00";
-      
+
       setNotification({
         name: nameToShow,
         value: randomVal,
@@ -105,7 +105,7 @@ export const ShowPage: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-955 font-sans text-white overflow-hidden relative">
       <Header />
-      
+
       {/* Estilos CSS Inline para Animações Customizadas */}
       <style>{`
         @keyframes floatUp {
@@ -139,9 +139,9 @@ export const ShowPage: React.FC = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[160px] pointer-events-none" />
 
       {/* Imagem de Fundo Temática da Bandeira do Brasil e Estádio */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-15 pointer-events-none" 
-        style={{ backgroundImage: 'url(/background_brasil.png)' }} 
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-15 pointer-events-none"
+        style={{ backgroundImage: 'url(/background_brasil.png)' }}
       />
 
       {/* Bandeiras flutuantes dinâmicas da Copa no background */}
@@ -168,16 +168,16 @@ export const ShowPage: React.FC = () => {
       </div>
 
       <main className="flex-1 flex items-center justify-center mt-20 relative z-10 overflow-hidden w-full h-full">
-        
+
         {/* Container Principal cobrindo 100% do viewport */}
         <div className="w-full h-full bg-zinc-950/20 backdrop-blur-md flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 px-6 py-8 md:px-20 relative overflow-hidden">
-          
+
           {/* Efeito luminoso interno */}
           <div className="absolute -inset-96 bg-[radial-gradient(circle_at_center,rgba(234,179,8,0.06)_0,transparent_50%)] pointer-events-none" />
-          
+
           {/* Lado Esquerdo: Informações do Cantor e Identidade Brasil/Copa */}
           <div className="flex flex-col gap-4 md:gap-6 flex-1 text-center md:text-left">
-            
+
             {/* Tag/Badge de Destaque */}
             <div className="flex items-center justify-center md:justify-start gap-2">
               <span className="text-yellow-400 text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-400/10 border border-yellow-400/30 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center gap-1.5">
@@ -209,7 +209,7 @@ export const ShowPage: React.FC = () => {
 
           {/* Lado Direito: QR Code Estático e Chave PIX */}
           <div className="flex flex-col items-center justify-center gap-3 md:gap-5 w-full md:w-auto shrink-0 z-10">
-            
+
             {/* Título Grande Amarelo acima do QR Code */}
             <div className="text-center h-12 flex flex-col justify-center">
               <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
@@ -224,7 +224,7 @@ export const ShowPage: React.FC = () => {
             <div className="relative w-72 h-72 md:w-[360px] md:h-[360px] group">
               {/* Moldura Externa de Neon e Efeito Pulsante */}
               <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-blue-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
-              
+
               {/* Container Interno */}
               <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-4 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
                 {/* Selo da Bandeira do Brasil Animada */}
@@ -232,9 +232,9 @@ export const ShowPage: React.FC = () => {
                   <span className="text-xl select-none">🇧🇷</span>
                 </div>
 
-                <img 
-                  src="/QR.png" 
-                  alt="QR Code Vaquinha Nilson Garcia" 
+                <img
+                  src="/QR.png"
+                  alt="QR Code Vaquinha Nilson Garcia"
                   className="w-full h-full object-contain filter contrast-125 select-none pointer-events-none"
                 />
                 {/* Neon Glow overlay */}
@@ -251,7 +251,7 @@ export const ShowPage: React.FC = () => {
                   <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all">
                     {pixKey}
                   </span>
-                  <button 
+                  <button
                     onClick={handleCopyPix}
                     className="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 transition-all flex items-center justify-center shrink-0 cursor-pointer"
                     title="Copiar Chave PIX"
@@ -288,12 +288,11 @@ export const ShowPage: React.FC = () => {
       {/* Balão de Diálogo de Doações do PIX */}
       {notification && (
         <div className="fixed top-28 left-0 right-0 flex justify-center z-50 pointer-events-none px-4">
-          <div 
-            className={`pointer-events-auto max-w-4xl w-full sm:w-auto bg-zinc-950/98 border-4 border-yellow-400 rounded-[40px] p-8 md:p-12 shadow-[0_0_60px_rgba(234,179,8,0.75)] flex items-center gap-8 md:gap-10 transition-all duration-500 transform ${
-              notification.visible 
-                ? 'translate-y-0 opacity-100 scale-110 md:scale-120 animate-bounce' 
+          <div
+            className={`pointer-events-auto max-w-4xl w-full sm:w-auto bg-zinc-950/98 border-4 border-yellow-400 rounded-[40px] p-8 md:p-12 shadow-[0_0_60px_rgba(234,179,8,0.75)] flex items-center gap-8 md:gap-10 transition-all duration-500 transform ${notification.visible
+                ? 'translate-y-0 opacity-100 scale-110 md:scale-120 animate-bounce'
                 : '-translate-y-12 opacity-0 scale-95 pointer-events-none'
-            }`}
+              }`}
           >
             {/* Ícone de Moedas / PIX Maior */}
             <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-emerald-500/20 border-4 border-emerald-400 flex items-center justify-center text-emerald-450 shrink-0 shadow-[0_0_35px_rgba(16,185,129,0.6)]">
