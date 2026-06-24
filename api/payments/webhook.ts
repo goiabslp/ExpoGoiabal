@@ -2,11 +2,24 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getPaymentStatus, validateWebhookSignature } from '../_utils/mercadoPago.js';
 import { getSupabaseAdmin } from '../_utils/supabase.js';
 
-function getFriendlyPayerName(payerName?: string): string {
+function getFriendlyPayerName(amount: number, payerName?: string): string {
   if (payerName && payerName.trim().length > 0) {
-    return payerName.trim();
+    const trimmed = payerName.trim();
+    const lower = trimmed.toLowerCase();
+    // Evita exibir nomes genéricos, vazios ou fakes no telão
+    if (lower !== 'doador' && lower !== 'anonimo' && lower !== 'doador anonimo' && lower !== 'anonymous' && lower !== 'payer') {
+      return trimmed;
+    }
   }
-  return "Doador";
+
+  // Classificação do doador baseada na faixa de valor da doação
+  if (amount <= 10.00) {
+    return "Apoiador";
+  } else if (amount <= 30.00) {
+    return "Amigo Fiel";
+  } else {
+    return "Super Fã";
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -138,9 +151,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 6. Atualizar ou Criar automaticamente o status do pagamento no banco de dados (Requisito 8)
     if (realPayment.status === 'approved') {
       let finalPaymentId = dbPaymentId;
-      const nomeDoador = getFriendlyPayerName(realPayment.payerName);
-      const emailDoador = realPayment.payerEmail || 'doador@expogoiabal.com.br';
       const valorDoador = realPayment.amount;
+      const nomeDoador = getFriendlyPayerName(valorDoador, realPayment.payerName);
+      const emailDoador = realPayment.payerEmail || 'doador@expogoiabal.com.br';
 
       if (!dbPaymentId) {
         // Se o pagamento não existia localmente, significa que foi feito lendo o QR Code estático diretamente
