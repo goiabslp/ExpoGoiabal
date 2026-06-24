@@ -9,13 +9,9 @@ CREATE TABLE IF NOT EXISTS public.pagamentos_pix (
     qr_code TEXT NOT NULL,
     qr_code_base64 TEXT,
     data_expiracao TIMESTAMPTZ NOT NULL,
-    session_id VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
--- Garantir que a coluna session_id exista caso a tabela já tenha sido criada
-ALTER TABLE public.pagamentos_pix ADD COLUMN IF NOT EXISTS session_id VARCHAR(255);
 
 -- Habilitar o Realtime para a tabela pagamentos_pix de forma segura
 DO $$
