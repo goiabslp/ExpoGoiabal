@@ -6,6 +6,7 @@ import { AdminPage } from '../pages/Admin/AdminPage';
 import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
 import { FotosPage } from '../pages/ExpoGoiabal/FotosPage';
 import { ShowPage } from '../pages/ExpoGoiabal/ShowPage';
+import { ApoiarPage } from '../pages/ExpoGoiabal/ApoiarPage'; // Novo formulário de doação no celular
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/show',
     element: <ShowPage />,
+  },
+  {
+    path: '/ExpoGoiabal/apoiar',
+    element: <ApoiarPage />,
   },
   {
     path: '/ExpoGoiabal/Programacao',

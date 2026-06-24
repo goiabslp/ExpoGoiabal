@@ -33,9 +33,30 @@ export const ShowPage: React.FC = () => {
   const [confettis, setConfettis] = useState<ConfettiItem[]>([]);
   const [recentRealDonations, setRecentRealDonations] = useState<any[]>([]);
 
-  const pixKey = "31 9 8231-1929";
+  // ID de sessão rotativo para o formulário de doação
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
+
   const timeoutRef = useRef<any>(null);
   const confettiTimeoutRef = useRef<any>(null);
+
+  // Gera um novo ID de sessão
+  const generateNewSession = () => {
+    try {
+      setCurrentSessionId(crypto.randomUUID());
+    } catch (e) {
+      // Fallback simples caso crypto.randomUUID não esteja disponível
+      setCurrentSessionId(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    }
+  };
+
+  // Rotaciona a sessão a cada 45 segundos para novos escaneamentos
+  useEffect(() => {
+    generateNewSession();
+    const interval = setInterval(() => {
+      generateNewSession();
+    }, 45000);
+    return () => clearInterval(interval);
+  }, []);
 
 
 
@@ -159,10 +180,9 @@ export const ShowPage: React.FC = () => {
 
 
 
-  const handleCopyPix = () => {
-    // Remove espaços e traços para copiar a chave celular limpa, aceita de forma universal pelos bancos
-    const cleanKey = pixKey.replace(/[\s-]/g, '');
-    navigator.clipboard.writeText(cleanKey);
+  const handleCopyLink = () => {
+    const apoiarUrl = `${window.location.origin}/ExpoGoiabal/apoiar?sessionId=${currentSessionId}`;
+    navigator.clipboard.writeText(apoiarUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -306,63 +326,71 @@ export const ShowPage: React.FC = () => {
 
             {/* Texto Curto e Grande para Apoiar o Cantor */}
             <h3 className="text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-tight drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
-              Apoie o cantor com qualquer valor
+              Apoie o cantor com seu nome no telão!
             </h3>
 
             <p className="text-zinc-400 text-xs md:text-sm max-w-xs hidden md:block">
-              Escanear o QR Code ao lado pelo aplicativo do seu banco, defina o valor livremente e veja sua doação aparecer no telão em tempo real!
+              Aponte a câmera do seu celular para o QR Code ao lado, preencha o seu nome e escolha o valor que deseja doar. Sua doação aparecerá no telão instantaneamente!
             </p>
 
           </div>
 
-          {/* Lado Direito: QR Code Estático e Chave PIX */}
+          {/* Lado Direito: QR Code de Acesso ao Formulário */}
           <div className="flex flex-col items-center justify-center gap-3 md:gap-5 w-full md:w-auto shrink-0 z-10">
 
             {/* Título Grande Amarelo acima do QR Code */}
             <div className="text-center h-12 flex flex-col justify-center">
               <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
-                Vaquinha do Cantor
-                  </h2>
-              <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-                Escaneie o QR Code abaixo para apoiar
+                Doe Pelo Celular
+              </h2>
+              <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5 animate-pulse">
+                Escaneie o QR Code abaixo para doar
               </p>
             </div>
 
-            {/* Box do QR Code Estático e SUPER GIGANTE */}
+            {/* Box do QR Code Dinâmico e SUPER GIGANTE */}
             <div className="relative w-72 h-72 md:w-[360px] md:h-[360px] group">
               {/* Moldura Externa de Neon e Efeito Pulsante */}
               <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-blue-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
 
               {/* Container Interno */}
-              <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-4 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
+              <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-6 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
                 {/* Selo da Bandeira do Brasil Animada */}
                 <div className="absolute -top-2 -right-2 bg-zinc-955 border-2 border-yellow-500 rounded-full w-10 h-10 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.5)] z-20 animate-wave-flag">
                   <span className="text-xl select-none">🇧🇷</span>
                 </div>
 
-                <img
-                  src="/QR.png"
-                  alt="QR Code Vaquinha Nilson Garcia"
-                  className="w-full h-full object-contain filter contrast-125 select-none pointer-events-none"
-                />
+                {currentSessionId ? (
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+                      `${window.location.origin}/ExpoGoiabal/apoiar?sessionId=${currentSessionId}`
+                    )}`}
+                    alt="QR Code Vaquinha Nilson Garcia"
+                    className="w-full h-full object-contain filter contrast-125 select-none"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-2 text-zinc-600">
+                    <span className="text-xs animate-pulse">Gerando acesso...</span>
+                  </div>
+                )}
                 {/* Neon Glow overlay */}
                 <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/10 via-yellow-400/10 to-blue-500/10 rounded-2xl pointer-events-none" />
               </div>
             </div>
 
-            {/* Info Chave PIX */}
+            {/* Info Chave Link de Doação */}
             <div className="w-full max-w-[300px] md:max-w-[360px] flex flex-col items-center gap-3">
-              {/* Chave PIX Muito Grande */}
+              {/* Link de Doação para quem preferir */}
               <div className="flex flex-col items-center gap-1.5 w-full bg-zinc-950/60 border border-zinc-800/80 px-4 py-3 rounded-2xl shadow-inner">
-                <span className="text-xs md:text-sm text-zinc-300 uppercase tracking-[0.2em] font-black">PIX Copia e Cola</span>
+                <span className="text-[10px] md:text-xs text-zinc-300 uppercase tracking-[0.2em] font-black">Ou acesse pelo link</span>
                 <div className="flex items-center gap-3 w-full justify-center">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px] md:max-w-[260px]">
-                    {pixKey}
+                  <span className="text-xs sm:text-sm font-black text-yellow-400 font-mono tracking-wider select-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px] md:max-w-[260px]">
+                    {typeof window !== 'undefined' ? `${window.location.host}/ExpoGoiabal/apoiar` : 'expogoiabal.com.br/apoiar'}
                   </span>
                   <button
-                    onClick={handleCopyPix}
-                    className="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 transition-all flex items-center justify-center shrink-0 cursor-pointer"
-                    title="Copiar Chave PIX"
+                    onClick={handleCopyLink}
+                    className="bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white p-2 rounded-xl border border-zinc-800 transition-all flex items-center justify-center shrink-0 cursor-pointer"
+                    title="Copiar Link de Doação"
                   >
                     {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                   </button>
@@ -371,13 +399,13 @@ export const ShowPage: React.FC = () => {
 
               {copied && (
                 <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider animate-bounce">
-                  Chave PIX copiada!
+                  Link de doação copiado!
                 </span>
               )}
 
               <div className="flex items-center justify-center gap-1.5 text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-1">
                 <ShieldCheck size={12} className="text-emerald-500 animate-pulse" />
-                Confirmação Automática via Mercado Pago
+                Cada escaneamento gera um ID exclusivo
               </div>
             </div>
 

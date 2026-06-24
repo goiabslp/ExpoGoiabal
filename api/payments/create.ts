@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ message: 'Método não permitido. Use POST.' });
   }
 
-  const { nome, email, valor } = req.body;
+  const { nome, email, valor, sessionId } = req.body;
 
   // Validações básicas
   if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
@@ -65,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         qr_code: mpPayment.qrCode,
         qr_code_base64: mpPayment.qrCodeBase64,
         data_expiracao: mpPayment.dateExpiration,
+        session_id: sessionId,
       })
       .select()
       .single();
