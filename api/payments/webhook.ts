@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getPaymentStatus, validateWebhookSignature } from '../_utils/mercadoPago.js';
-import { supabaseAdmin } from '../_utils/supabase.js';
+import { getSupabaseAdmin } from '../_utils/supabase.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // O Mercado Pago pode enviar webhooks de teste ou pings, então respondemos 200 sempre o mais rápido possível
@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!isSignatureValid) {
       console.warn(`Alerta de Segurança: Assinatura inválida para o pagamento ${mpPaymentId}`);
       // Registra o log de erro de autenticação no banco
-      await supabaseAdmin.from('logs_pagamentos_pix').insert({
+      await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         mercado_pago_id: mpPaymentId,
         acao: 'erro',
         detalhes: {
@@ -81,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 3. Consultar no Supabase se esse pagamento já existe localmente
-    const { data: localPayment, error: findError } = await supabaseAdmin
+    const { data: localPayment, error: findError } = await getSupabaseAdmin()
       .from('pagamentos_pix')
       .select('id, status')
       .eq('mercado_pago_id', mpPaymentId)
@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Grava o log de recebimento de webhook no banco (Requisito 9)
-    await supabaseAdmin.from('logs_pagamentos_pix').insert({
+    await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
       pagamento_id: dbPaymentId,
       mercado_pago_id: mpPaymentId,
       acao: 'recebimento_webhook',
@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!dbPaymentId) {
         // Se o pagamento não existia localmente, significa que foi feito lendo o QR Code estático diretamente
         // no app do banco (PIX de valor livre). Registramos a nova doação no banco.
-        const { data: insertedPayment, error: insertError } = await supabaseAdmin
+        const { data: insertedPayment, error: insertError } = await getSupabaseAdmin()
           .from('pagamentos_pix')
           .insert({
             mercado_pago_id: mpPaymentId,
@@ -155,7 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         finalPaymentId = insertedPayment.id;
       } else {
         // Se já existia (PIX Dinâmico), apenas atualizamos para approved
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await getSupabaseAdmin()
           .from('pagamentos_pix')
           .update({
             status: 'approved',
@@ -169,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Registramos o log de confirmação (Requisito 9)
-      await supabaseAdmin.from('logs_pagamentos_pix').insert({
+      await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         pagamento_id: finalPaymentId,
         mercado_pago_id: mpPaymentId,
         acao: 'confirmacao_pagamento',
@@ -187,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else {
       // Outros status como rejected, cancelled, etc.
       if (dbPaymentId) {
-        await supabaseAdmin
+        await getSupabaseAdmin()
           .from('pagamentos_pix')
           .update({
             status: realPayment.status,
@@ -196,7 +196,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .eq('id', dbPaymentId);
       }
 
-      await supabaseAdmin.from('logs_pagamentos_pix').insert({
+      await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         pagamento_id: dbPaymentId,
         mercado_pago_id: mpPaymentId,
         acao: 'atualizacao_status',
@@ -217,7 +217,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Registra o log do erro de webhook no banco (Requisito 9)
     try {
-      await supabaseAdmin.from('logs_pagamentos_pix').insert({
+      await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         pagamento_id: dbPaymentId,
         mercado_pago_id: mpPaymentId,
         acao: 'erro',

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPixPayment } from '../_utils/mercadoPago.js';
-import { supabaseAdmin } from '../_utils/supabase.js';
+import { getSupabaseAdmin } from '../_utils/supabase.js';
 import crypto from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // 2. Registra o pagamento com status 'pending' no banco de dados do Supabase
-    const { data: dbPayment, error: dbError } = await supabaseAdmin
+    const { data: dbPayment, error: dbError } = await getSupabaseAdmin()
       .from('pagamentos_pix')
       .insert({
         id: localPaymentId,
@@ -77,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 3. Registra o log de criação (Requisito 9)
-    await supabaseAdmin.from('logs_pagamentos_pix').insert({
+    await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
       pagamento_id: localPaymentId,
       mercado_pago_id: String(mpPayment.id),
       acao: 'criacao_cobranca',
@@ -104,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Registra o log do erro no banco se for possível identificar o localPaymentId
     try {
-      await supabaseAdmin.from('logs_pagamentos_pix').insert({
+      await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         pagamento_id: localPaymentId,
         acao: 'erro',
         detalhes: {
