@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPaymentStatus, validateWebhookSignature } from '../_utils/mercadoPago';
-import { supabaseAdmin } from '../_utils/supabase';
+import { getPaymentStatus, validateWebhookSignature } from '../_utils/mercadoPago.js';
+import { supabaseAdmin } from '../_utils/supabase.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // O Mercado Pago pode enviar webhooks de teste ou pings, então respondemos 200 sempre o mais rápido possível

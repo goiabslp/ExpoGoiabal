@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createPixPayment } from '../_utils/mercadoPago';
-import { supabaseAdmin } from '../_utils/supabase';
+import { createPixPayment } from '../_utils/mercadoPago.js';
+import { supabaseAdmin } from '../_utils/supabase.js';
 import crypto from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
