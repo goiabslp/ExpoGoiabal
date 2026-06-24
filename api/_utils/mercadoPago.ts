@@ -97,6 +97,7 @@ export async function getPaymentStatus(paymentId: string | number): Promise<{
   amount: number;
   payerName?: string;
   payerEmail?: string;
+  bankName?: string;
 }> {
   if (!MP_ACCESS_TOKEN) {
     throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
@@ -110,6 +111,9 @@ export async function getPaymentStatus(paymentId: string | number): Promise<{
     const firstName = data.payer?.first_name || '';
     const lastName = data.payer?.last_name || '';
     const payerName = [firstName, lastName].filter(Boolean).join(' ').trim();
+
+    // Obtém o nome da instituição financeira de origem do PIX
+    const bankName = data.point_of_interaction?.transaction_data?.bank_info?.payer?.long_name;
     
     return {
       id: data.id,
@@ -117,6 +121,7 @@ export async function getPaymentStatus(paymentId: string | number): Promise<{
       amount: data.transaction_amount,
       payerName: payerName || undefined,
       payerEmail: data.payer?.email || undefined,
+      bankName: bankName || undefined,
     };
   } catch (error: any) {
     console.error(`Erro ao consultar pagamento ${paymentId} no Mercado Pago:`, error.message);

@@ -2,6 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getPaymentStatus, validateWebhookSignature } from '../_utils/mercadoPago.js';
 import { getSupabaseAdmin } from '../_utils/supabase.js';
 
+function getFriendlyPayerName(payerName?: string): string {
+  if (payerName && payerName.trim().length > 0) {
+    return payerName.trim();
+  }
+  return "Doador";
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // O Mercado Pago pode enviar webhooks de teste ou pings, então respondemos 200 sempre o mais rápido possível
   if (req.method !== 'POST') {
@@ -131,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 6. Atualizar ou Criar automaticamente o status do pagamento no banco de dados (Requisito 8)
     if (realPayment.status === 'approved') {
       let finalPaymentId = dbPaymentId;
-      const nomeDoador = realPayment.payerName || 'Apoiador Anônimo';
+      const nomeDoador = getFriendlyPayerName(realPayment.payerName);
       const emailDoador = realPayment.payerEmail || 'doador@expogoiabal.com.br';
       const valorDoador = realPayment.amount;
 
