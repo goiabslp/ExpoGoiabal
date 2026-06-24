@@ -49,6 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ message: 'Webhook recebido, mas ignorado por não ser de pagamento.' });
   }
 
+  // Tratamento especial para o teste automático do painel do Mercado Pago (ID fictício "123456")
+  if (mpPaymentId === '123456') {
+    console.log('Teste de webhook do painel do Mercado Pago recebido com sucesso.');
+    return res.status(200).json({ message: 'Teste de webhook recebido com sucesso!' });
+  }
+
   // 2. Validar autenticidade da notificação (Requisito 6)
   if (xSignature) {
     const isSignatureValid = validateWebhookSignature({
