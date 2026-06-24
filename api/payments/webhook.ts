@@ -12,13 +12,13 @@ function getFriendlyPayerName(amount: number, payerName?: string): string {
     }
   }
 
-  // Classificação do doador baseada na faixa de valor da doação
+  // Classificação do doador baseada na faixa de valor da doação com o prefixo "Um"
   if (amount <= 10.00) {
-    return "Apoiador";
+    return "Um Apoiador";
   } else if (amount <= 30.00) {
-    return "Amigo Fiel";
+    return "Um Amigo Fiel";
   } else {
-    return "Super Fã";
+    return "Um Super Fã";
   }
 }
 
