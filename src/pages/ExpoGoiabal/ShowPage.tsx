@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/Header';
-import { Trophy, Sparkles, Copy, Check, Music } from 'lucide-react';
+import { Trophy, Sparkles, Copy, Check, Music, ShieldCheck } from 'lucide-react';
+import { supabase } from '../../services/supabase';
 
 interface FloatingFlag {
   id: number;
@@ -11,24 +12,32 @@ interface FloatingFlag {
   size: number;
 }
 
+interface ConfettiItem {
+  id: number;
+  left: number;
+  delay: number;
+  color: string;
+  size: number;
+  shape: 'circle' | 'square';
+}
+
 const flagEmojis = ['🇧🇷', '🇦🇷', '🇫🇷', '🇩🇪', '🇪🇸', '🇺🇸', '🇲🇽', '🇨🇦', '🇯🇵', '🇭🇷', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇵🇹', '🇺🇾', '🇳🇱', '🇨🇭', '🇸🇪'];
+const confettiColors = ['#facc15', '#4ade80', '#60a5fa', '#f87171', '#a78bfa', '#f472b6'];
 
 export const ShowPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [notification, setNotification] = useState<{ name: string; value: string; visible: boolean } | null>(null);
+  
+  // Controle de confetes de comemoração
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettis, setConfettis] = useState<ConfettiItem[]>([]);
+  const [recentRealDonations, setRecentRealDonations] = useState<any[]>([]);
 
-  const pixKey = "072.715.986-00";
+  const pixKey = "31 9 8231-1929";
   const timeoutRef = useRef<any>(null);
+  const confettiTimeoutRef = useRef<any>(null);
 
-  const names = [
-    'João', 'José', 'Antônio', 'Francisco', 'Carlos', 'Paulo', 'Pedro', 'Lucas', 'Marcos', 'Luiz',
-    'Gabriel', 'Rafael', 'Bruno', 'Felipe', 'Rodrigo', 'Diego', 'Gustavo', 'Eduardo', 'André', 'Daniel',
-    'Mateus', 'Tiago', 'Vinícius', 'Leonardo', 'Henrique', 'Ricardo', 'Alexandre', 'Marcelo', 'Sérgio', 'Fábio',
-    'Maria', 'Ana', 'Francisca', 'Antônia', 'Adriana', 'Juliana', 'Márcia', 'Fernanda', 'Patrícia', 'Aline',
-    'Camila', 'Beatriz', 'Larissa', 'Jéssica', 'Letícia', 'Amanda', 'Bruna', 'Carolina', 'Vitória', 'Gabriela',
-    'Gaspar', 'Ailton', 'Wardene', 'Bdhu', 'Guilherme Santos', 'Preto', 'Biru Biro', 'Elio', 'Brejeto', 'Machao',
-    'Neide', 'Vanilda', 'Luzinho', 'Ricardinho'
-  ];
+
 
   // Gera bandeiras flutuantes para o background de forma randômica
   const [floatingFlags] = useState<FloatingFlag[]>(() => {
@@ -42,62 +51,118 @@ export const ShowPage: React.FC = () => {
     }));
   });
 
-  // Lógica das notificações do PIX
+  // Busca doações reais aprovadas recentemente ao iniciar a página
   useEffect(() => {
-    let nextTimeoutId: any = null;
-    const initialDonors = ["Vanilda", "Wardene", "Guilherme", "Gaspar"];
-    let donorIndex = 0;
+    const fetchRecentDonations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('pagamentos_pix')
+          .select('nome_doador, valor')
+          .eq('status', 'approved')
+          .order('updated_at', { ascending: false })
+          .limit(10);
 
-    const showRandomDonation = () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      let nameToShow = "";
-      if (donorIndex < initialDonors.length) {
-        nameToShow = initialDonors[donorIndex];
-        donorIndex++;
-      } else {
-        nameToShow = names[Math.floor(Math.random() * names.length)];
-      }
-
-      const randomVal = (Math.floor(Math.random() * 24) + 2) + ",00";
-
-      setNotification({
-        name: nameToShow,
-        value: randomVal,
-        visible: true
-      });
-
-      // Oculta após exatamente 8 segundos (8000ms)
-      timeoutRef.current = setTimeout(() => {
-        setNotification(prev => prev ? { ...prev, visible: false } : null);
-      }, 8000);
-
-      // Agenda a próxima exibição com um tempo dinâmico (entre 30 segundos e 1 minuto)
-      const minDelay = 30000; // 30 segundos
-      const maxDelay = 60000; // 1 minuto
-      const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-
-      nextTimeoutId = setTimeout(showRandomDonation, randomDelay);
-    };
-
-    // Primeiro popup após 4 segundos para visualização imediata do usuário
-    const initialTimeout = setTimeout(showRandomDonation, 4000);
-
-    return () => {
-      clearTimeout(initialTimeout);
-      if (nextTimeoutId) {
-        clearTimeout(nextTimeoutId);
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        if (!error && data) {
+          setRecentRealDonations(data);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar doações recentes:', err);
       }
     };
+    fetchRecentDonations();
   }, []);
 
+  // Escuta novos pagamentos em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('public_pagamentos_approved')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pagamentos_pix',
+        },
+        (payload) => {
+          const newItem = payload.new as any;
+          if (newItem.status === 'approved') {
+            triggerCelebration(newItem.nome_doador, newItem.valor);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pagamentos_pix',
+        },
+        (payload) => {
+          const updatedItem = payload.new as any;
+          const oldItem = payload.old as any;
+          if (updatedItem.status === 'approved' && oldItem?.status !== 'approved') {
+            triggerCelebration(updatedItem.nome_doador, updatedItem.valor);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [recentRealDonations]);
+
+  // Função que dispara a comemoração visual de confetes e notificação na tela
+  const triggerCelebration = (name: string, value: number | string) => {
+    const numericVal = typeof value === 'string' ? parseFloat(value) : value;
+    const formattedVal = numericVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    // 1. Mostrar a notificação de doação real
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setNotification({
+      name,
+      value: formattedVal,
+      visible: true
+    });
+
+    timeoutRef.current = setTimeout(() => {
+      setNotification(prev => prev ? { ...prev, visible: false } : null);
+    }, 8000);
+
+    // 2. Disparar a animação de confetes
+    setShowConfetti(true);
+    if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    confettiTimeoutRef.current = setTimeout(() => {
+      setShowConfetti(false);
+    }, 7000); // Confetes duram 7 segundos no ar
+
+    // 3. Adicionar a doação à lista de doações recentes na memória
+    setRecentRealDonations(prev => [{ nome_doador: name, valor: numericVal }, ...prev.slice(0, 9)]);
+  };
+
+  // Efeito para criar os confetes virtuais quando showConfetti é ativado
+  useEffect(() => {
+    if (showConfetti) {
+      const items = Array.from({ length: 90 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 2.5,
+        color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+        size: 8 + Math.random() * 14,
+        shape: Math.random() > 0.5 ? 'circle' as const : 'square' as const
+      }));
+      setConfettis(items);
+    } else {
+      setConfettis([]);
+    }
+  }, [showConfetti]);
+
+
+
   const handleCopyPix = () => {
-    navigator.clipboard.writeText(pixKey);
+    // Remove espaços e traços para copiar a chave celular limpa, aceita de forma universal pelos bancos
+    const cleanKey = pixKey.replace(/[\s-]/g, '');
+    navigator.clipboard.writeText(cleanKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -105,6 +170,28 @@ export const ShowPage: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-955 font-sans text-white overflow-hidden relative">
       <Header />
+
+      {/* Confetes Digitais de Sucesso */}
+      {showConfetti && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-50">
+          {confettis.map((c) => (
+            <div
+              key={c.id}
+              className="absolute animate-confetti"
+              style={{
+                left: `${c.left}%`,
+                top: `-20px`,
+                width: `${c.size}px`,
+                height: `${c.size}px`,
+                backgroundColor: c.color,
+                borderRadius: c.shape === 'circle' ? '50%' : '2px',
+                animationDelay: `${c.delay}s`,
+                animationDuration: `${3.5 + Math.random() * 3.5}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Estilos CSS Inline para Animações Customizadas */}
       <style>{`
@@ -128,8 +215,25 @@ export const ShowPage: React.FC = () => {
           0%, 100% { transform: rotate(-8deg) scale(1); }
           50% { transform: rotate(8deg) scale(1.1); }
         }
+        @keyframes confettiFall {
+          0% {
+            transform: translateY(-20px) rotate(0deg) translateX(0);
+            opacity: 1;
+          }
+          50% {
+            transform: translateY(50vh) rotate(360deg) translateX(40px);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110vh) rotate(720deg) translateX(-40px);
+            opacity: 0;
+          }
+        }
         .animate-wave-flag {
           animation: wave 2.2s ease-in-out infinite;
+        }
+        .animate-confetti {
+          animation: confettiFall 4.5s linear forwards;
         }
       `}</style>
 
@@ -202,8 +306,12 @@ export const ShowPage: React.FC = () => {
 
             {/* Texto Curto e Grande para Apoiar o Cantor */}
             <h3 className="text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-tight drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
-              Faça uma doação para o cantor
+              Apoie o cantor com qualquer valor
             </h3>
+
+            <p className="text-zinc-400 text-xs md:text-sm max-w-xs hidden md:block">
+              Escanear o QR Code ao lado pelo aplicativo do seu banco, defina o valor livremente e veja sua doação aparecer no telão em tempo real!
+            </p>
 
           </div>
 
@@ -214,7 +322,7 @@ export const ShowPage: React.FC = () => {
             <div className="text-center h-12 flex flex-col justify-center">
               <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
                 Vaquinha do Cantor
-              </h2>
+                  </h2>
               <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
                 Escaneie o QR Code abaixo para apoiar
               </p>
@@ -228,7 +336,7 @@ export const ShowPage: React.FC = () => {
               {/* Container Interno */}
               <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-4 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
                 {/* Selo da Bandeira do Brasil Animada */}
-                <div className="absolute -top-2 -right-2 bg-zinc-950 border-2 border-yellow-500 rounded-full w-10 h-10 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.5)] z-20 animate-wave-flag">
+                <div className="absolute -top-2 -right-2 bg-zinc-955 border-2 border-yellow-500 rounded-full w-10 h-10 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.5)] z-20 animate-wave-flag">
                   <span className="text-xl select-none">🇧🇷</span>
                 </div>
 
@@ -246,9 +354,9 @@ export const ShowPage: React.FC = () => {
             <div className="w-full max-w-[300px] md:max-w-[360px] flex flex-col items-center gap-3">
               {/* Chave PIX Muito Grande */}
               <div className="flex flex-col items-center gap-1.5 w-full bg-zinc-950/60 border border-zinc-800/80 px-4 py-3 rounded-2xl shadow-inner">
-                <span className="text-xs md:text-sm text-zinc-300 uppercase tracking-[0.2em] font-black">PIX</span>
+                <span className="text-xs md:text-sm text-zinc-300 uppercase tracking-[0.2em] font-black">PIX Copia e Cola</span>
                 <div className="flex items-center gap-3 w-full justify-center">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all">
+                  <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px] md:max-w-[260px]">
                     {pixKey}
                   </span>
                   <button
@@ -266,6 +374,11 @@ export const ShowPage: React.FC = () => {
                   Chave PIX copiada!
                 </span>
               )}
+
+              <div className="flex items-center justify-center gap-1.5 text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-1">
+                <ShieldCheck size={12} className="text-emerald-500 animate-pulse" />
+                Confirmação Automática via Mercado Pago
+              </div>
             </div>
 
           </div>
@@ -304,7 +417,7 @@ export const ShowPage: React.FC = () => {
                 Doação Recebida!
               </span>
               <p className="text-lg md:text-3xl lg:text-4xl font-bold text-white leading-snug">
-                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou um PIX!
+                <strong className="text-yellow-400 font-black">{notification.name}</strong> enviou R$ {notification.value}!
               </p>
             </div>
           </div>
