@@ -64,18 +64,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!isSignatureValid) {
-      console.warn(`Alerta de Segurança: Assinatura inválida para o pagamento ${mpPaymentId}`);
-      // Registra o log de erro de autenticação no banco
+      console.warn(`Aviso: Assinatura digital inválida para o pagamento ${mpPaymentId}. Validando via consulta direta à API do Mercado Pago.`);
+      // Registra o aviso no log, mas não bloqueia a requisição
       await getSupabaseAdmin().from('logs_pagamentos_pix').insert({
         mercado_pago_id: mpPaymentId,
-        acao: 'erro',
+        acao: 'aviso_assinatura',
         detalhes: {
-          mensagem: 'Assinatura digital do webhook inválida.',
+          mensagem: 'Assinatura digital do webhook inválida. Validação será feita via API oficial do Mercado Pago.',
           headers: req.headers,
         },
       });
-
-      return res.status(401).json({ message: 'Assinatura inválida.' });
     }
   } else {
     console.log('Aviso: Webhook recebido sem cabeçalho x-signature. A autenticidade será validada via consulta direta.');
