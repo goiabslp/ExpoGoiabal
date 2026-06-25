@@ -6,6 +6,7 @@ import { AdminPage } from '../pages/Admin/AdminPage';
 import { PatrocinadorPage } from '../pages/ExpoGoiabal/PatrocinadorPage';
 import { FotosPage } from '../pages/ExpoGoiabal/FotosPage';
 import { ShowPage } from '../pages/ExpoGoiabal/ShowPage';
+import { ShowSelectorPage } from '../pages/ExpoGoiabal/ShowSelectorPage';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
   },
   {
     path: '/ExpoGoiabal/show',
+    element: <ShowSelectorPage />,
+  },
+  {
+    path: '/ExpoGoiabal/show/:singerSlug',
     element: <ShowPage />,
   },
   {

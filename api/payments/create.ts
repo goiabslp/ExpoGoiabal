@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ message: 'Método não permitido. Use POST.' });
   }
 
-  const { nome, email, valor } = req.body;
+  const { nome, email, valor, cantor_slug } = req.body;
 
   // Validações básicas
   if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
@@ -39,6 +39,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? email.trim()
     : 'doador@expogoiabal.com.br';
 
+  const slug = (cantor_slug && typeof cantor_slug === 'string') ? cantor_slug.trim() : 'NilsonGarcia';
+  let cantorNome = 'Nilson Garcia';
+
+  try {
+    const { data: cantorData } = await getSupabaseAdmin()
+      .from('cantores')
+      .select('nome')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (cantorData) {
+      cantorNome = cantorData.nome;
+    } else if (slug !== 'NilsonGarcia') {
+      return res.status(404).json({ message: `Cantor com o slug '${slug}' não encontrado.` });
+    }
+  } catch (dbErr: any) {
+    console.error('Erro ao buscar cantor no banco de dados:', dbErr.message);
+    // Em caso de erro, segue com fallback Nilson Garcia
+  }
+
   // Geramos um UUID interno para nossa transação e chave de idempotência
   const localPaymentId = crypto.randomUUID();
 
@@ -46,10 +66,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. Cria o pagamento no Mercado Pago usando o UUID local como Idempotency Key
     const mpPayment = await createPixPayment({
       amount: numericValue,
-      description: `Apoio a Nilson Garcia - ExpoGoiabal 2026 (Doador: ${nome})`,
+      description: `Apoio a ${cantorNome} - ExpoGoiabal 2026 (Doador: ${nome})`,
       payerName: nome.trim(),
       payerEmail,
       idempotencyKey: localPaymentId,
+      externalReference: slug,
     });
 
     // 2. Registra o pagamento com status 'pending' no banco de dados do Supabase
@@ -65,6 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         qr_code: mpPayment.qrCode,
         qr_code_base64: mpPayment.qrCodeBase64,
         data_expiracao: mpPayment.dateExpiration,
+        cantor_slug: slug,
       })
       .select()
       .single();

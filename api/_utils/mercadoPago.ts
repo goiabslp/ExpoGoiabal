@@ -18,6 +18,7 @@ interface PixPaymentPayload {
   payerName: string;
   payerEmail: string;
   idempotencyKey: string;
+  externalReference?: string;
 }
 
 interface MpPaymentResponse {
@@ -49,6 +50,7 @@ export async function createPixPayment(payload: PixPaymentPayload): Promise<MpPa
         transaction_amount: Number(payload.amount),
         description: payload.description,
         payment_method_id: 'pix',
+        external_reference: payload.externalReference,
         payer: {
           email: payload.payerEmail,
           first_name: firstName,
@@ -98,6 +100,7 @@ export async function getPaymentStatus(paymentId: string | number): Promise<{
   payerName?: string;
   payerEmail?: string;
   bankName?: string;
+  externalReference?: string;
 }> {
   if (!MP_ACCESS_TOKEN) {
     throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
@@ -122,6 +125,7 @@ export async function getPaymentStatus(paymentId: string | number): Promise<{
       payerName: payerName || undefined,
       payerEmail: data.payer?.email || undefined,
       bankName: bankName || undefined,
+      externalReference: data.external_reference || undefined,
     };
   } catch (error: any) {
     console.error(`Erro ao consultar pagamento ${paymentId} no Mercado Pago:`, error.message);

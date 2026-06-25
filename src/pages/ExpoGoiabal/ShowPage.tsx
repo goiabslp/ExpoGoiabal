@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
 import { Trophy, Sparkles, Copy, Check, Music, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../services/supabase';
@@ -25,6 +26,11 @@ const flagEmojis = ['🇧🇷', '🇦🇷', '🇫🇷', '🇩🇪', '🇪🇸', 
 const confettiColors = ['#facc15', '#4ade80', '#60a5fa', '#f87171', '#a78bfa', '#f472b6'];
 
 export const ShowPage: React.FC = () => {
+  const { singerSlug } = useParams<{ singerSlug: string }>();
+  const navigate = useNavigate();
+  
+  const [singer, setSinger] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [notification, setNotification] = useState<{ name: string; value: string; visible: boolean } | null>(null);
   
@@ -33,11 +39,8 @@ export const ShowPage: React.FC = () => {
   const [confettis, setConfettis] = useState<ConfettiItem[]>([]);
   const [recentRealDonations, setRecentRealDonations] = useState<any[]>([]);
 
-  const pixKey = "31 9 8231-1929";
   const timeoutRef = useRef<any>(null);
   const confettiTimeoutRef = useRef<any>(null);
-
-
 
   // Gera bandeiras flutuantes para o background de forma randômica
   const [floatingFlags] = useState<FloatingFlag[]>(() => {
@@ -51,14 +54,50 @@ export const ShowPage: React.FC = () => {
     }));
   });
 
-  // Busca doações reais aprovadas recentemente ao iniciar a página
+  // Busca dados do cantor correspondente do Supabase
   useEffect(() => {
+    const fetchSinger = async () => {
+      if (!singerSlug) {
+        navigate('/ExpoGoiabal/show');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('cantores')
+          .select('*')
+          .eq('slug', singerSlug)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.error('Cantor não encontrado ou erro:', error);
+          navigate('/ExpoGoiabal/show');
+          return;
+        }
+
+        setSinger(data);
+      } catch (err) {
+        console.error('Erro geral ao buscar cantor:', err);
+        navigate('/ExpoGoiabal/show');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSinger();
+  }, [singerSlug, navigate]);
+
+  // Busca doações reais aprovadas recentemente ao iniciar a página para este cantor específico
+  useEffect(() => {
+    if (!singerSlug || loading) return;
+
     const fetchRecentDonations = async () => {
       try {
         const { data, error } = await supabase
           .from('pagamentos_pix')
           .select('nome_doador, valor')
           .eq('status', 'approved')
+          .eq('cantor_slug', singerSlug)
           .order('updated_at', { ascending: false })
           .limit(10);
 
@@ -69,19 +108,23 @@ export const ShowPage: React.FC = () => {
         console.error('Erro ao buscar doações recentes:', err);
       }
     };
-    fetchRecentDonations();
-  }, []);
 
-  // Escuta novos pagamentos em tempo real
+    fetchRecentDonations();
+  }, [singerSlug, loading]);
+
+  // Escuta novos pagamentos em tempo real apenas para este cantor
   useEffect(() => {
+    if (!singerSlug || loading) return;
+
     const channel = supabase
-      .channel('public_pagamentos_approved')
+      .channel(`public_pagamentos_approved_${singerSlug}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'pagamentos_pix',
+          filter: `cantor_slug=eq.${singerSlug}`,
         },
         (payload) => {
           const newItem = payload.new as any;
@@ -96,6 +139,7 @@ export const ShowPage: React.FC = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'pagamentos_pix',
+          filter: `cantor_slug=eq.${singerSlug}`,
         },
         (payload) => {
           const updatedItem = payload.new as any;
@@ -110,7 +154,7 @@ export const ShowPage: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [recentRealDonations]);
+  }, [singerSlug, loading, recentRealDonations]);
 
   // Função que dispara a comemoração visual de confetes e notificação na tela
   const triggerCelebration = (name: string, value: number | string) => {
@@ -157,15 +201,65 @@ export const ShowPage: React.FC = () => {
     }
   }, [showConfetti]);
 
-
-
   const handleCopyPix = () => {
+    if (!singer) return;
     // Remove espaços e traços para copiar a chave celular limpa, aceita de forma universal pelos bancos
-    const cleanKey = pixKey.replace(/[\s-]/g, '');
+    const cleanKey = singer.chave_pix.replace(/[\s-]/g, '');
     navigator.clipboard.writeText(cleanKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Helper para mapear cores do tema dinamicamente
+  const getThemeClasses = (primary: string, secondary: string) => {
+    const textPrimary: Record<string, string> = {
+      yellow: 'text-yellow-400',
+      emerald: 'text-emerald-400',
+      blue: 'text-blue-400',
+      red: 'text-red-400',
+      violet: 'text-violet-400'
+    };
+    const borderPrimary: Record<string, string> = {
+      yellow: 'border-yellow-500/60 shadow-[0_0_40px_rgba(234,179,8,0.35)]',
+      emerald: 'border-emerald-500/60 shadow-[0_0_40px_rgba(16,185,129,0.35)]',
+      blue: 'border-blue-500/60 shadow-[0_0_40px_rgba(59,130,246,0.35)]',
+      red: 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.35)]',
+      violet: 'border-violet-500/60 shadow-[0_0_40px_rgba(139,92,246,0.35)]'
+    };
+    const gradientName: Record<string, string> = {
+      yellow: 'from-yellow-400 via-amber-250 to-yellow-500',
+      emerald: 'from-emerald-400 via-teal-250 to-emerald-500',
+      blue: 'from-blue-400 via-sky-250 to-blue-500',
+      red: 'from-red-400 via-orange-250 to-red-500',
+      violet: 'from-violet-400 via-fuchsia-250 to-violet-500'
+    };
+    const badgePrimary: Record<string, string> = {
+      yellow: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30 shadow-[0_0_15px_rgba(234,179,8,0.15)]',
+      emerald: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30 shadow-[0_0_15px_rgba(52,211,153,0.15)]',
+      blue: 'text-blue-400 bg-blue-400/10 border-blue-400/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]',
+      red: 'text-red-400 bg-red-400/10 border-red-400/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]',
+      violet: 'text-violet-400 bg-violet-400/10 border-violet-400/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
+    };
+    
+    return {
+      textPri: textPrimary[primary] || textPrimary['yellow'],
+      borderPri: borderPrimary[primary] || borderPrimary['yellow'],
+      gradientNm: gradientName[primary] || gradientName['yellow'],
+      badgePri: badgePrimary[primary] || badgePrimary['yellow'],
+      textSec: textPrimary[secondary] || textPrimary['emerald'],
+    };
+  };
+
+  if (loading || !singer) {
+    return (
+      <div className="h-screen w-screen bg-zinc-950 flex flex-col items-center justify-center font-sans text-white">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-4">Carregando painel do cantor...</p>
+      </div>
+    );
+  }
+
+  const theme = getThemeClasses(singer.tema_cor_primaria, singer.tema_cor_secundaria);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-955 font-sans text-white overflow-hidden relative">
@@ -237,7 +331,7 @@ export const ShowPage: React.FC = () => {
         }
       `}</style>
 
-      {/* Elementos Decorativos de Fundo Temáticos (Brasil/Copa) */}
+      {/* Elementos Decorativos de Fundo Temáticos */}
       <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-yellow-500/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[160px] pointer-events-none" />
@@ -284,28 +378,28 @@ export const ShowPage: React.FC = () => {
 
             {/* Tag/Badge de Destaque */}
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <span className="text-yellow-400 text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-400/10 border border-yellow-400/30 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.15)] flex items-center gap-1.5">
-                <Trophy size={12} className="text-yellow-400" />
+              <span className={`text-[10px] md:text-xs font-black uppercase tracking-widest border px-4 py-1.5 rounded-full flex items-center gap-1.5 ${theme.badgePri}`}>
+                <Trophy size={12} />
                 Copa do Mundo 2026
               </span>
             </div>
 
             {/* Nome do Cantor em Altíssimo Destaque */}
             <div className="flex flex-col gap-1">
-              <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-emerald-400">
+              <h2 className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] ${theme.textSec}`}>
                 Atração Confirmada
               </h2>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 uppercase tracking-wide drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                Nilson Garcia
+              <h1 className={`text-3xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r ${theme.gradientNm} uppercase tracking-wide drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]`}>
+                {singer.nome}
               </h1>
               <p className="text-xs md:text-sm font-bold text-zinc-300 flex items-center justify-center md:justify-start gap-1.5 mt-1">
-                <Music size={14} className="text-emerald-400" />
-                O Show da Copa na ExpoGoiabal
+                <Music size={14} className={theme.textSec} />
+                {singer.subtitulo}
               </p>
             </div>
 
             {/* Texto Curto e Grande para Apoiar o Cantor */}
-            <h3 className="text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-tight drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md">
+            <h3 className={`text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-300 uppercase tracking-wider leading-tight drop-shadow-[0_0_15px_rgba(34,197,94,0.2)] max-w-md`}>
               Apoie o cantor com qualquer valor
             </h3>
 
@@ -320,9 +414,9 @@ export const ShowPage: React.FC = () => {
 
             {/* Título Grande Amarelo acima do QR Code */}
             <div className="text-center h-12 flex flex-col justify-center">
-              <h2 className="text-xl md:text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)]">
+              <h2 className={`text-xl md:text-3xl font-black uppercase tracking-widest drop-shadow-[0_0_15px_rgba(234,179,8,0.25)] ${theme.textPri}`}>
                 Vaquinha do Cantor
-                  </h2>
+              </h2>
               <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
                 Escaneie o QR Code abaixo para apoiar
               </p>
@@ -334,15 +428,15 @@ export const ShowPage: React.FC = () => {
               <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-blue-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
 
               {/* Container Interno */}
-              <div className="relative w-full h-full bg-white border-[8px] border-yellow-500/60 rounded-3xl p-4 shadow-[0_0_40px_rgba(234,179,8,0.35)] flex items-center justify-center overflow-hidden">
+              <div className={`relative w-full h-full bg-white border-[8px] rounded-3xl p-4 flex items-center justify-center overflow-hidden ${theme.borderPri}`}>
                 {/* Selo da Bandeira do Brasil Animada */}
                 <div className="absolute -top-2 -right-2 bg-zinc-955 border-2 border-yellow-500 rounded-full w-10 h-10 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.5)] z-20 animate-wave-flag">
                   <span className="text-xl select-none">🇧🇷</span>
                 </div>
 
                 <img
-                  src="/QR.png"
-                  alt="QR Code Vaquinha Nilson Garcia"
+                  src={singer.qr_code_url || "/QR.png"}
+                  alt={`QR Code Vaquinha ${singer.nome}`}
                   className="w-full h-full object-contain filter contrast-125 select-none pointer-events-none"
                 />
                 {/* Neon Glow overlay */}
@@ -356,8 +450,8 @@ export const ShowPage: React.FC = () => {
               <div className="flex flex-col items-center gap-1.5 w-full bg-zinc-950/60 border border-zinc-800/80 px-4 py-3 rounded-2xl shadow-inner">
                 <span className="text-xs md:text-sm text-zinc-300 uppercase tracking-[0.2em] font-black">PIX Copia e Cola</span>
                 <div className="flex items-center gap-3 w-full justify-center">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-yellow-400 font-mono tracking-wider select-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px] md:max-w-[260px]">
-                    {pixKey}
+                  <span className={`text-lg sm:text-xl md:text-2xl font-black font-mono tracking-wider select-all overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px] md:max-w-[260px] ${theme.textPri}`}>
+                    {singer.chave_pix}
                   </span>
                   <button
                     onClick={handleCopyPix}

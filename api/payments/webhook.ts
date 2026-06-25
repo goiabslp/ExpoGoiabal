@@ -154,6 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const valorDoador = realPayment.amount;
       const nomeDoador = getFriendlyPayerName(valorDoador, realPayment.payerName);
       const emailDoador = realPayment.payerEmail || 'doador@expogoiabal.com.br';
+      const cantorSlug = realPayment.externalReference || 'NilsonGarcia';
 
       if (!dbPaymentId) {
         // Se o pagamento não existia localmente, significa que foi feito lendo o QR Code estático diretamente
@@ -167,7 +168,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             email_doador: emailDoador,
             status: 'approved',
             qr_code: 'PIX Estático',
-            data_expiracao: new Date().toISOString()
+            data_expiracao: new Date().toISOString(),
+            cantor_slug: cantorSlug,
           })
           .select('id')
           .single();
@@ -203,7 +205,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           valor: valorDoador,
           nome_doador: nomeDoador,
           metodo: 'pix',
-          origem: dbPaymentId ? 'pix_dinamico' : 'pix_estatico'
+          origem: dbPaymentId ? 'pix_dinamico' : 'pix_estatico',
+          cantor_slug: cantorSlug
         },
       });
 
