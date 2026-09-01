@@ -10,11 +10,14 @@ export interface TrucoJogador {
   created_at?: string;
 }
 
+export type TrucoStatusEquipe = 'pendente' | 'aprovado' | 'reprovado';
+
 export interface TrucoEquipe {
   id: string;
   nome: string;
   cidade: string;
   foto_url?: string;
+  status: TrucoStatusEquipe;
   created_at?: string;
   jogadores?: TrucoJogador[];
 }
@@ -61,6 +64,19 @@ export interface TrucoTorneioStatus {
   campeao_equipe_id: string | null;
 }
 
+export const DEFAULT_STATUS: TrucoTorneioStatus = {
+  id: 'main',
+  fase_atual: 'inscricao',
+  sorteio_primeira_fase_confirmado: false,
+  sorteio_mata_mata_confirmado: false,
+  sorteio_iniciado_em: null,
+  sorteio_animacao_ativa: false,
+  top8_equipes_ids: [],
+  grupo_a_equipes_ids: [],
+  grupo_b_equipes_ids: [],
+  campeao_equipe_id: null
+};
+
 /**
  * Calcula a data de cada rodada iniciando em agosto de 2026
  * Realizadas sempre às Terças e Quintas-feiras
@@ -70,7 +86,7 @@ export const calcularDataRodada = (rodadaNumero: number): { dataFormatada: strin
   const semanaIndex = Math.floor((r - 1) / 2);
   const isQuinta = (r - 1) % 2 === 1;
 
-  // Base: 04 de Agosto de 2026 (Primeira Terça-feira de Agosto/2026 a partir do dia 03/08)
+  // Base: 04 de Agosto de 2026 (Primeira Terça-feira de Agosto/2026)
   const baseDate = new Date(2026, 7, 4); // Agosto é mês 7 (0-indexed)
   const diasAdicionais = (semanaIndex * 7) + (isQuinta ? 2 : 0);
 
@@ -100,76 +116,6 @@ export interface TrucoClassificacaoRow {
   pontosSofridos: number;
   saldoPontos: number;
 }
-
-const STORAGE_KEY_EQUIPES = '@ExpoGoiabal:truco_equipes';
-const STORAGE_KEY_PARTIDAS = '@ExpoGoiabal:truco_partidas';
-const STORAGE_KEY_STATUS = '@ExpoGoiabal:truco_status';
-
-// ==========================================
-// LOCAL STORAGE HELPERS (FALLBACK RESILIENTE)
-// ==========================================
-
-export const getLocalEquipes = (): TrucoEquipe[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_EQUIPES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-export const saveLocalEquipes = (equipes: TrucoEquipe[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_EQUIPES, JSON.stringify(equipes));
-  } catch (e) {
-    console.error('Erro ao salvar equipes localmente:', e);
-  }
-};
-
-export const getLocalPartidas = (): TrucoPartida[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PARTIDAS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-export const saveLocalPartidas = (partidas: TrucoPartida[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_PARTIDAS, JSON.stringify(partidas));
-  } catch (e) {
-    console.error('Erro ao salvar partidas localmente:', e);
-  }
-};
-
-const DEFAULT_STATUS: TrucoTorneioStatus = {
-  id: 'main',
-  fase_atual: 'inscricao',
-  sorteio_primeira_fase_confirmado: false,
-  sorteio_mata_mata_confirmado: false,
-  top8_equipes_ids: [],
-  grupo_a_equipes_ids: [],
-  grupo_b_equipes_ids: [],
-  campeao_equipe_id: null
-};
-
-export const getLocalStatus = (): TrucoTorneioStatus => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_STATUS);
-    return raw ? JSON.parse(raw) : DEFAULT_STATUS;
-  } catch {
-    return DEFAULT_STATUS;
-  }
-};
-
-export const saveLocalStatus = (status: TrucoTorneioStatus) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_STATUS, JSON.stringify(status));
-  } catch (e) {
-    console.error('Erro ao salvar status localmente:', e);
-  }
-};
 
 export const TIMES_FICTICIOS_SEED: {
   nome: string;
@@ -240,55 +186,59 @@ export const TIMES_FICTICIOS_SEED: {
   {
     nome: 'Manilha de Ouro',
     cidade: 'Bela Vista de Minas - MG',
-    foto_url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&auto=format&fit=crop&q=80',
+    foto_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&auto=format&fit=crop&q=80',
     jogadores: [
-      { nome_completo: 'Renan Lucas Macedo', cpf: '692.703.814-65', data_nascimento: '1991-10-10', is_titular: true },
-      { nome_completo: 'Wesley Douglas Freitas', cpf: '703.814.925-76', data_nascimento: '1995-06-04', is_titular: true },
-      { nome_completo: 'Patrick Emanuel Borges', cpf: '814.925.036-87', data_nascimento: '1989-02-27', is_titular: true },
-      { nome_completo: 'Renan Augusto Cardoso', cpf: '925.036.147-98', data_nascimento: '1993-12-16', is_titular: true },
-      { nome_completo: 'Valdir Soares Cruz', cpf: '036.147.258-09', data_nascimento: '1996-08-07', is_titular: false }
+      { nome_completo: 'Renan Lucas Macedo', cpf: '258.147.369-05', data_nascimento: '1991-06-19', is_titular: true },
+      { nome_completo: 'Wesley Douglas Freitas', cpf: '369.258.147-16', data_nascimento: '1993-11-27', is_titular: true },
+      { nome_completo: 'Patrick Emanuel Borges', cpf: '470.369.258-27', data_nascimento: '1989-08-14', is_titular: true },
+      { nome_completo: 'Renan Augusto Cardoso', cpf: '581.470.369-38', data_nascimento: '1996-04-03', is_titular: true },
+      { nome_completo: 'Valdir Soares Cruz', cpf: '692.581.470-49', data_nascimento: '1987-10-10', is_titular: false }
     ]
   },
   {
     nome: 'Espadilha FC',
     cidade: 'Nova Era - MG',
-    foto_url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&auto=format&fit=crop&q=80',
+    foto_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&auto=format&fit=crop&q=80',
     jogadores: [
-      { nome_completo: 'Juliano César Vasconcelos', cpf: '159.357.246-80', data_nascimento: '1990-05-31', is_titular: true },
-      { nome_completo: 'Marcelo Henrique Duarte', cpf: '260.468.357-91', data_nascimento: '1993-09-12', is_titular: true },
-      { nome_completo: 'Fábio Rogério Santana', cpf: '371.579.468-02', data_nascimento: '1987-11-25', is_titular: true },
-      { nome_completo: 'Ricardo Souza Campos', cpf: '482.680.579-13', data_nascimento: '1996-04-03', is_titular: true },
-      { nome_completo: 'Reginaldo Bento Lima', cpf: '593.791.680-24', data_nascimento: '1991-01-19', is_titular: false }
+      { nome_completo: 'Juliano César Vasconcelos', cpf: '369.147.258-99', data_nascimento: '1990-12-05', is_titular: true },
+      { nome_completo: 'Marcelo Henrique Duarte', cpf: '470.258.369-88', data_nascimento: '1994-07-21', is_titular: true },
+      { nome_completo: 'Fábio Rogério Santana', cpf: '581.369.470-77', data_nascimento: '1988-03-16', is_titular: true },
+      { nome_completo: 'Ricardo Souza Campos', cpf: '692.470.581-66', data_nascimento: '1995-09-30', is_titular: true },
+      { nome_completo: 'Reginaldo Bento Lima', cpf: '703.581.692-55', data_nascimento: '1992-02-14', is_titular: false }
     ]
   },
   {
     nome: 'Zap & Copas',
     cidade: 'Dionísio - MG',
-    foto_url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&auto=format&fit=crop&q=80',
+    foto_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&auto=format&fit=crop&q=80',
     jogadores: [
-      { nome_completo: 'Wanderson Alves Monteiro', cpf: '604.802.791-35', data_nascimento: '1992-08-08', is_titular: true },
-      { nome_completo: 'Jonathan Silveira Reis', cpf: '715.913.802-46', data_nascimento: '1995-12-21', is_titular: true },
-      { nome_completo: 'Cristiano Morais Fontes', cpf: '826.024.913-57', data_nascimento: '1988-03-16', is_titular: true },
-      { nome_completo: 'Alan Douglas Pacheco', cpf: '937.135.024-68', data_nascimento: '1994-07-01', is_titular: true },
-      { nome_completo: 'Everton Lucas Brandão', cpf: '048.246.135-79', data_nascimento: '1997-10-27', is_titular: false }
+      { nome_completo: 'Wanderson Alves Monteiro', cpf: '814.725.369-00', data_nascimento: '1991-05-18', is_titular: true },
+      { nome_completo: 'Jonathan Silveira Reis', cpf: '925.836.470-11', data_nascimento: '1995-10-29', is_titular: true },
+      { nome_completo: 'Cristiano Morais Fontes', cpf: '036.947.581-22', data_nascimento: '1989-01-12', is_titular: true },
+      { nome_completo: 'Alan Douglas Pacheco', cpf: '147.058.692-33', data_nascimento: '1996-08-07', is_titular: true },
+      { nome_completo: 'Everton Lucas Brandão', cpf: '258.169.703-44', data_nascimento: '1993-04-25', is_titular: false }
     ]
   }
 ];
 
+/**
+ * Insere as 08 equipes fictícias no banco de dados Supabase (Ação manual do Administrador).
+ */
 export const popularTimesFicticios = async (): Promise<TrucoEquipe[]> => {
   const novasEquipes: TrucoEquipe[] = [];
 
-  for (const time of TIMES_FICTICIOS_SEED) {
-    const equipeId = crypto.randomUUID();
+  for (const seed of TIMES_FICTICIOS_SEED) {
+    const novaEqId = crypto.randomUUID();
     const novaEq: TrucoEquipe = {
-      id: equipeId,
-      nome: time.nome,
-      cidade: time.cidade,
-      foto_url: time.foto_url,
+      id: novaEqId,
+      nome: seed.nome,
+      cidade: seed.cidade,
+      foto_url: seed.foto_url,
+      status: 'aprovado',
       created_at: new Date().toISOString(),
-      jogadores: time.jogadores.map(j => ({
+      jogadores: seed.jogadores.map(j => ({
         id: crypto.randomUUID(),
-        equipe_id: equipeId,
+        equipe_id: novaEqId,
         nome_completo: j.nome_completo,
         cpf: j.cpf,
         data_nascimento: j.data_nascimento,
@@ -298,65 +248,88 @@ export const popularTimesFicticios = async (): Promise<TrucoEquipe[]> => {
     };
 
     try {
-      await supabase.from('truco_equipes').upsert({
+      await supabase.from('truco_equipes').insert({
         id: novaEq.id,
         nome: novaEq.nome,
         cidade: novaEq.cidade,
-        foto_url: novaEq.foto_url
+        foto_url: novaEq.foto_url,
+        status: novaEq.status
       });
 
       if (novaEq.jogadores && novaEq.jogadores.length > 0) {
-        await supabase.from('truco_jogadores').upsert(novaEq.jogadores);
+        await supabase.from('truco_jogadores').insert(novaEq.jogadores);
       }
     } catch (e) {
-      console.warn('Erro ao inserir time ficticio no Supabase:', e);
+      console.error('Erro ao inserir time ficticio no Supabase:', e);
     }
 
     novasEquipes.push(novaEq);
   }
 
-  saveLocalEquipes(novasEquipes);
-  try {
-    window.dispatchEvent(new Event('storage'));
-  } catch {}
   return novasEquipes;
 };
 
 // ==========================================
-// SERVIÇOS DE EQUIPES E JOGADORES
+// SERVIÇOS DE EQUIPES E JOGADORES (SUPABASE)
 // ==========================================
 
-export const buscarEquipes = async (): Promise<TrucoEquipe[]> => {
+/**
+ * Busca equipes cadastradas diretamente no banco de dados.
+ * Por padrão (apenasAprovados = true), retorna EXCLUSIVAMENTE equipes com status 'aprovado' para telas públicas.
+ * Para a área administrativa, use apenasAprovados = false ou buscarTodasEquipesAdmin().
+ */
+export const buscarEquipes = async (apenasAprovados: boolean = true): Promise<TrucoEquipe[]> => {
   try {
-    const { data: equipesData, error: equipesError } = await supabase
+    let query = supabase
       .from('truco_equipes')
       .select('*')
       .order('nome', { ascending: true });
 
-    if (!equipesError && equipesData && equipesData.length >= 8) {
-      const { data: jogadoresData } = await supabase
-        .from('truco_jogadores')
-        .select('*');
-
-      const equipesComJogadores: TrucoEquipe[] = equipesData.map((eq: any) => ({
-        ...eq,
-        jogadores: (jogadoresData || []).filter((j: any) => j.equipe_id === eq.id)
-      }));
-
-      saveLocalEquipes(equipesComJogadores);
-      return equipesComJogadores;
+    if (apenasAprovados) {
+      query = query.eq('status', 'aprovado');
     }
+
+    const { data: equipesData, error: equipesError } = await query;
+
+    if (equipesError) {
+      console.error('Erro ao buscar equipes no Supabase:', equipesError);
+      return [];
+    }
+
+    if (!equipesData || equipesData.length === 0) {
+      return [];
+    }
+
+    const { data: jogadoresData, error: jogadoresError } = await supabase
+      .from('truco_jogadores')
+      .select('*');
+
+    if (jogadoresError) {
+      console.warn('Erro ao buscar jogadores no Supabase:', jogadoresError);
+    }
+
+    const equipesComJogadores: TrucoEquipe[] = equipesData.map((eq: any) => ({
+      id: eq.id,
+      nome: eq.nome,
+      cidade: eq.cidade,
+      foto_url: eq.foto_url,
+      status: (eq.status || 'aprovado') as TrucoStatusEquipe,
+      created_at: eq.created_at,
+      jogadores: (jogadoresData || []).filter((j: any) => j.equipe_id === eq.id)
+    }));
+
+    return equipesComJogadores;
   } catch (err) {
-    console.warn('Supabase inacessível, utilizando cache local para equipes:', err);
+    console.error('Falha de conexão com o banco ao buscar equipes:', err);
+    return [];
   }
+};
 
-  const locais = getLocalEquipes();
-  if (locais.length >= 8) {
-    return locais;
-  }
-
-  // Se houver menos de 8 equipes cadastradas, popula os 8 times fictícios oficiais
-  return popularTimesFicticios();
+/**
+ * Busca todas as equipes para o Painel Administrativo (Pendentes, Aprovadas e Reprovadas).
+ */
+export const buscarTodasEquipesAdmin = async (): Promise<TrucoEquipe[]> => {
+  return buscarEquipes(false);
 };
 
 export const excluirTodasEquipes = async (): Promise<void> => {
@@ -365,14 +338,16 @@ export const excluirTodasEquipes = async (): Promise<void> => {
     await supabase.from('truco_partidas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('truco_equipes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   } catch (e) {
-    console.warn('Erro ao excluir todas equipes no Supabase:', e);
+    console.error('Erro ao excluir todas equipes no Supabase:', e);
   }
 
-  saveLocalEquipes([]);
-  saveLocalPartidas([]);
   await resetarTorneio();
 };
 
+/**
+ * Realiza o cadastro de uma nova equipe no banco de dados.
+ * OBRIGATÓRIO: Toda nova equipe entra com status 'pendente' aguardando moderação admin.
+ */
 export const cadastrarEquipe = async (
   dados: { nome: string; cidade: string; foto_url?: string },
   jogadores: { nome_completo: string; cpf: string; data_nascimento: string; is_titular?: boolean }[],
@@ -380,91 +355,64 @@ export const cadastrarEquipe = async (
 ): Promise<TrucoEquipe> => {
   let fotoUrlFinal = dados.foto_url || '';
 
+  // Upload no Supabase Storage se houver arquivo
   if (fotoFile) {
     try {
-      const fileExt = fotoFile.name.split('.').pop();
-      const fileName = `truco_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-      const filePath = `truco/${fileName}`;
+      const fileExt = fotoFile.name.split('.').pop() || 'png';
+      const fileName = `truco_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `truco-equipes/${fileName}`;
 
-      const { error: uploadErr } = await supabase.storage
-        .from('fotos_truco')
-        .upload(filePath, fotoFile, { upsert: true });
+      const { error: uploadError } = await supabase.storage
+        .from('expogoiabal')
+        .upload(filePath, fotoFile, { cacheControl: '3600', upsert: true });
 
-      if (!uploadErr) {
-        const { data: publicUrlData } = supabase.storage
-          .from('fotos_truco')
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('expogoiabal')
           .getPublicUrl(filePath);
-
-        if (publicUrlData?.publicUrl) {
-          fotoUrlFinal = publicUrlData.publicUrl;
-        }
-      }
-    } catch (e) {
-      console.warn('Erro ao enviar foto para o Supabase Storage:', e);
-    }
-
-    if (!fotoUrlFinal && fotoFile) {
-      try {
+        fotoUrlFinal = publicUrl;
+      } else {
+        // Fallback para Base64 caso o bucket não esteja configurado
         fotoUrlFinal = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(fotoFile);
         });
-      } catch {
-        fotoUrlFinal = '';
       }
+    } catch (e) {
+      console.warn('Falha no upload de imagem:', e);
     }
   }
 
   const novaEquipeId = crypto.randomUUID();
+  const statusInicial: TrucoStatusEquipe = 'pendente';
 
-  try {
-    const { data: equipeCriada, error: equipeErr } = await supabase
-      .from('truco_equipes')
-      .insert({
-        id: novaEquipeId,
-        nome: dados.nome.trim(),
-        cidade: dados.cidade.trim(),
-        foto_url: fotoUrlFinal
-      })
-      .select()
-      .single();
-
-    if (!equipeErr && equipeCriada) {
-      const jogadoresParaInserir = jogadores.map((j, idx) => ({
-        id: crypto.randomUUID(),
-        equipe_id: equipeCriada.id,
-        nome_completo: j.nome_completo.trim(),
-        cpf: j.cpf.trim(),
-        data_nascimento: j.data_nascimento,
-        is_titular: j.is_titular !== undefined ? j.is_titular : idx < 4
-      }));
-
-      const { data: jogadoresCriados } = await supabase
-        .from('truco_jogadores')
-        .insert(jogadoresParaInserir)
-        .select();
-
-      const resultado: TrucoEquipe = {
-        ...equipeCriada,
-        jogadores: jogadoresCriados || jogadoresParaInserir
-      };
-
-      const locais = getLocalEquipes().filter(e => e.id !== resultado.id);
-      saveLocalEquipes([...locais, resultado]);
-      return resultado;
-    }
-  } catch (err) {
-    console.warn('Falha no Supabase ao cadastrar equipe, salvando localmente:', err);
-  }
-
-  const novaEquipeLocal: TrucoEquipe = {
+  const novaEquipe: TrucoEquipe = {
     id: novaEquipeId,
     nome: dados.nome.trim(),
     cidade: dados.cidade.trim(),
     foto_url: fotoUrlFinal,
-    created_at: new Date().toISOString(),
-    jogadores: jogadores.map((j, idx) => ({
+    status: statusInicial,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { error: equipeError } = await supabase
+      .from('truco_equipes')
+      .insert({
+        id: novaEquipe.id,
+        nome: novaEquipe.nome,
+        cidade: novaEquipe.cidade,
+        foto_url: novaEquipe.foto_url,
+        status: novaEquipe.status
+      });
+
+    if (equipeError) {
+      console.error('Erro ao cadastrar equipe no Supabase:', equipeError);
+      throw new Error(`Erro ao salvar equipe no banco de dados: ${equipeError.message}`);
+    }
+
+    const jogadoresFormatados: TrucoJogador[] = jogadores.map((j, idx) => ({
       id: crypto.randomUUID(),
       equipe_id: novaEquipeId,
       nome_completo: j.nome_completo.trim(),
@@ -472,31 +420,78 @@ export const cadastrarEquipe = async (
       data_nascimento: j.data_nascimento,
       is_titular: j.is_titular !== undefined ? j.is_titular : idx < 4,
       created_at: new Date().toISOString()
-    }))
-  };
+    }));
 
-  const locais = getLocalEquipes();
-  saveLocalEquipes([...locais, novaEquipeLocal]);
-  return novaEquipeLocal;
+    if (jogadoresFormatados.length > 0) {
+      const { error: jogadoresError } = await supabase
+        .from('truco_jogadores')
+        .insert(jogadoresFormatados);
+
+      if (jogadoresError) {
+        console.warn('Erro ao cadastrar jogadores no Supabase:', jogadoresError);
+      }
+    }
+
+    return {
+      ...novaEquipe,
+      jogadores: jogadoresFormatados
+    };
+  } catch (err: any) {
+    console.error('Falha de inserção no Supabase:', err);
+    throw err;
+  }
 };
 
+/**
+ * Atualiza o status de aprovação de uma equipe no banco de dados (pendente, aprovado, reprovado).
+ */
+export const atualizarStatusEquipe = async (
+  equipeId: string, 
+  novoStatus: TrucoStatusEquipe
+): Promise<void> => {
+  const { error } = await supabase
+    .from('truco_equipes')
+    .update({ status: novoStatus, updated_at: new Date().toISOString() })
+    .eq('id', equipeId);
+
+  if (error) {
+    console.error('Erro ao atualizar status da equipe no Supabase:', error);
+    throw new Error(`Falha ao atualizar status no banco: ${error.message}`);
+  }
+};
+
+/**
+ * Aprova um time cadastrado (torna participante oficial do torneio).
+ */
+export const aprovarEquipe = async (equipeId: string): Promise<void> => {
+  return atualizarStatusEquipe(equipeId, 'aprovado');
+};
+
+/**
+ * Reprova um time cadastrado (remove do torneio e oculta publicamente).
+ */
+export const reprovarEquipe = async (equipeId: string): Promise<void> => {
+  return atualizarStatusEquipe(equipeId, 'reprovado');
+};
+
+/**
+ * Exclui definitivamente uma equipe e seus registros associados do banco de dados.
+ */
 export const excluirEquipe = async (equipeId: string): Promise<void> => {
   try {
     await supabase.from('truco_jogadores').delete().eq('equipe_id', equipeId);
     await supabase.from('truco_partidas').delete().or(`time_a_id.eq.${equipeId},time_b_id.eq.${equipeId}`);
-    await supabase.from('truco_equipes').delete().eq('id', equipeId);
+    const { error } = await supabase.from('truco_equipes').delete().eq('id', equipeId);
+    if (error) {
+      console.error('Erro ao excluir equipe no Supabase:', error);
+    }
   } catch (e) {
-    console.warn('Erro ao excluir equipe no Supabase:', e);
+    console.error('Erro ao excluir equipe no Supabase:', e);
   }
-
-  const equipes = getLocalEquipes().filter(e => e.id !== equipeId);
-  saveLocalEquipes(equipes);
-  const partidas = getLocalPartidas().filter(p => p.time_a_id !== equipeId && p.time_b_id !== equipeId);
-  saveLocalPartidas(partidas);
 };
 
 // ==========================================
-// STATUS DO TORNEIO
+// STATUS DO TORNEIO (SUPABASE)
 // ==========================================
 
 export const buscarStatusTorneio = async (): Promise<TrucoTorneioStatus> => {
@@ -505,27 +500,34 @@ export const buscarStatusTorneio = async (): Promise<TrucoTorneioStatus> => {
       .from('truco_torneio_status')
       .select('*')
       .eq('id', 'main')
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
-      const parsed: TrucoTorneioStatus = {
-        ...data,
+      return {
+        id: data.id,
+        fase_atual: data.fase_atual,
+        sorteio_primeira_fase_confirmado: Boolean(data.sorteio_primeira_fase_confirmado),
+        sorteio_mata_mata_confirmado: Boolean(data.sorteio_mata_mata_confirmado),
+        sorteio_iniciado_em: data.sorteio_iniciado_em,
+        sorteio_animacao_ativa: Boolean(data.sorteio_animacao_ativa),
         top8_equipes_ids: typeof data.top8_equipes_ids === 'string' ? JSON.parse(data.top8_equipes_ids) : (data.top8_equipes_ids || []),
         grupo_a_equipes_ids: typeof data.grupo_a_equipes_ids === 'string' ? JSON.parse(data.grupo_a_equipes_ids) : (data.grupo_a_equipes_ids || []),
         grupo_b_equipes_ids: typeof data.grupo_b_equipes_ids === 'string' ? JSON.parse(data.grupo_b_equipes_ids) : (data.grupo_b_equipes_ids || []),
+        campeao_equipe_id: data.campeao_equipe_id
       };
-      saveLocalStatus(parsed);
-      return parsed;
     }
-  } catch (err) {
-    console.warn('Supabase status inacessível, usando cache local:', err);
-  }
 
-  return getLocalStatus();
+    // Se ainda não existir registro no Supabase, cria o registro inicial padrão
+    await supabase.from('truco_torneio_status').upsert(DEFAULT_STATUS);
+    return DEFAULT_STATUS;
+  } catch (err) {
+    console.error('Erro ao buscar status do torneio no Supabase:', err);
+    return DEFAULT_STATUS;
+  }
 };
 
 export const salvarStatusTorneio = async (status: Partial<TrucoTorneioStatus>): Promise<TrucoTorneioStatus> => {
-  const current = getLocalStatus();
+  const current = await buscarStatusTorneio();
   const updated: TrucoTorneioStatus = {
     ...current,
     ...status,
@@ -533,24 +535,29 @@ export const salvarStatusTorneio = async (status: Partial<TrucoTorneioStatus>): 
   };
 
   try {
-    await supabase
+    const { error } = await supabase
       .from('truco_torneio_status')
       .upsert({
         id: 'main',
         fase_atual: updated.fase_atual,
         sorteio_primeira_fase_confirmado: updated.sorteio_primeira_fase_confirmado,
         sorteio_mata_mata_confirmado: updated.sorteio_mata_mata_confirmado,
+        sorteio_iniciado_em: updated.sorteio_iniciado_em,
+        sorteio_animacao_ativa: updated.sorteio_animacao_ativa,
         top8_equipes_ids: updated.top8_equipes_ids,
         grupo_a_equipes_ids: updated.grupo_a_equipes_ids,
         grupo_b_equipes_ids: updated.grupo_b_equipes_ids,
         campeao_equipe_id: updated.campeao_equipe_id,
         updated_at: new Date().toISOString()
       });
+
+    if (error) {
+      console.error('Erro ao salvar status no Supabase:', error);
+    }
   } catch (e) {
-    console.warn('Erro ao salvar status no Supabase:', e);
+    console.error('Erro ao salvar status no Supabase:', e);
   }
 
-  saveLocalStatus(updated);
   return updated;
 };
 
@@ -585,10 +592,8 @@ export const gerarRoundRobin = (equipesIds: string[]): RoundRobinConfronto[] => 
   const jogosPorRodada = n / 2;
   const confrontos: RoundRobinConfronto[] = [];
 
-  // Posição fixa: índice 0 (equipesIds[0])
-  // Elementos móveis: equipesIds[1 ... n-1]
   const rotating = equipesIds.slice(1);
-  const rotatingLen = rotating.length; // n - 1
+  const rotatingLen = rotating.length;
 
   let contadorJogo = 1;
 
@@ -599,7 +604,6 @@ export const gerarRoundRobin = (equipesIds: string[]): RoundRobinConfronto[] => 
     const timeFixo = equipesIds[0];
     const timeMovel1 = rotating[r % rotatingLen];
 
-    // Alternância de mando de jogo para equilíbrio
     if (r % 2 === 0) {
       confrontos.push({
         rodada: rodadaNumero,
@@ -646,12 +650,14 @@ export const realizarSorteioPrimeiraFase = (equipes: TrucoEquipe[]): {
   totalJogos: number;
   partidasGeradas: TrucoPartida[];
 } => {
-  if (equipes.length < 4 || equipes.length % 2 !== 0) {
-    throw new Error('O torneio precisa ter uma quantidade par de equipes (mínimo de 4).');
+  const equipesAprovadas = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
+
+  if (equipesAprovadas.length < 4 || equipesAprovadas.length % 2 !== 0) {
+    throw new Error('O torneio precisa ter uma quantidade PAR de equipes APROVADAS (mínimo de 4).');
   }
 
   // Embaralha as equipes (Fisher-Yates)
-  const shuffled = [...equipes];
+  const shuffled = [...equipesAprovadas];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -676,9 +682,9 @@ export const realizarSorteioPrimeiraFase = (equipes: TrucoEquipe[]): {
     updated_at: new Date().toISOString()
   }));
 
-  const numRodadas = equipes.length - 1;
-  const jogosPorRodada = equipes.length / 2;
-  const totalJogos = (equipes.length * (equipes.length - 1)) / 2;
+  const numRodadas = equipesAprovadas.length - 1;
+  const jogosPorRodada = equipesAprovadas.length / 2;
+  const totalJogos = (equipesAprovadas.length * (equipesAprovadas.length - 1)) / 2;
 
   return {
     equipesSorteadaOrdem: shuffled,
@@ -690,7 +696,6 @@ export const realizarSorteioPrimeiraFase = (equipes: TrucoEquipe[]): {
 };
 
 export const confirmarSorteioPrimeiraFase = async (partidas: TrucoPartida[]): Promise<void> => {
-  // Limpar partidas antigas da 1ª fase
   try {
     await supabase.from('truco_partidas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('truco_partidas').insert(partidas.map(p => ({
@@ -707,10 +712,9 @@ export const confirmarSorteioPrimeiraFase = async (partidas: TrucoPartida[]): Pr
       fase_nome: p.fase_nome
     })));
   } catch (e) {
-    console.warn('Erro ao salvar partidas no Supabase:', e);
+    console.error('Erro ao salvar partidas no Supabase:', e);
   }
 
-  saveLocalPartidas(partidas);
   await salvarStatusTorneio({
     fase_atual: 'primeira_fase',
     sorteio_primeira_fase_confirmado: true,
@@ -728,21 +732,23 @@ export const confirmarSorteioPrimeiraFase = async (partidas: TrucoPartida[]): Pr
  * Aciona o sorteio oficial pelo Administrador e dispara a transmissão pública
  */
 export const acionarSorteioPublicoAdmin = async (equipes: TrucoEquipe[]): Promise<{ sucesso: boolean; mensagem: string }> => {
-  if (equipes.length < 4) {
-    return { sucesso: false, mensagem: 'É necessário ter pelo menos 4 equipes cadastradas para realizar o sorteio.' };
+  const equipesAprovadas = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
+
+  if (equipesAprovadas.length < 4) {
+    return { sucesso: false, mensagem: 'É necessário ter pelo menos 4 equipes APROVADAS para realizar o sorteio.' };
   }
-  if (equipes.length % 2 !== 0) {
-    return { sucesso: false, mensagem: 'A quantidade de equipes deve ser PAR para que todas as partidas ocorram simultaneamente.' };
+  if (equipesAprovadas.length % 2 !== 0) {
+    return { sucesso: false, mensagem: 'A quantidade de equipes APROVADAS deve ser PAR para que todas as partidas ocorram simultaneamente.' };
   }
 
-  const resultado = realizarSorteioPrimeiraFase(equipes);
+  const resultado = realizarSorteioPrimeiraFase(equipesAprovadas);
   if (!resultado || resultado.partidasGeradas.length === 0) {
     return { sucesso: false, mensagem: 'Falha ao gerar os confrontos da primeira fase.' };
   }
 
   await confirmarSorteioPrimeiraFase(resultado.partidasGeradas);
 
-  return { sucesso: true, mensagem: `Sorteio ativado com sucesso! ${resultado.partidasGeradas.length} partidas geradas.` };
+  return { sucesso: true, mensagem: `Sorteio ativado com sucesso! ${resultado.partidasGeradas.length} partidas geradas com as ${equipesAprovadas.length} equipes aprovadas.` };
 };
 
 /**
@@ -760,10 +766,9 @@ export const resetarTorneio = async (): Promise<void> => {
   try {
     await supabase.from('truco_partidas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   } catch (e) {
-    console.warn('Erro ao resetar partidas no Supabase:', e);
+    console.error('Erro ao resetar partidas no Supabase:', e);
   }
 
-  saveLocalPartidas([]);
   await salvarStatusTorneio({
     fase_atual: 'inscricao',
     sorteio_primeira_fase_confirmado: false,
@@ -778,7 +783,7 @@ export const resetarTorneio = async (): Promise<void> => {
 };
 
 // ==========================================
-// CONSULTA E ATUALIZAÇÃO DE PARTIDAS
+// CONSULTA E ATUALIZAÇÃO DE PARTIDAS (SUPABASE)
 // ==========================================
 
 export const buscarPartidas = async (): Promise<TrucoPartida[]> => {
@@ -789,14 +794,13 @@ export const buscarPartidas = async (): Promise<TrucoPartida[]> => {
       .order('numero_jogo', { ascending: true });
 
     if (!error && partidasData) {
-      saveLocalPartidas(partidasData);
       return partidasData;
     }
   } catch (err) {
-    console.warn('Supabase partidas inacessível, usando cache local:', err);
+    console.error('Erro ao buscar partidas no Supabase:', err);
   }
 
-  return getLocalPartidas();
+  return [];
 };
 
 export const registrarResultadoPartida = async (
@@ -805,8 +809,8 @@ export const registrarResultadoPartida = async (
   pontosB: number,
   status: 'agendada' | 'em_andamento' | 'finalizada' = 'finalizada'
 ): Promise<TrucoPartida | null> => {
-  const todasPartidas = getLocalPartidas();
-  const partida = todasPartidas.find(p => p.id === partidaId);
+  const partidas = await buscarPartidas();
+  const partida = partidas.find(p => p.id === partidaId);
   if (!partida) return null;
 
   let vencedorId: string | null = null;
@@ -832,32 +836,18 @@ export const registrarResultadoPartida = async (
       .single();
 
     if (!error && data) {
-      const atualizadas = todasPartidas.map(p => p.id === partidaId ? { ...p, ...data } : p);
-      saveLocalPartidas(atualizadas);
-      
       // Se for partida do mata-mata, atualiza chaveamento subsequente
       if (data.tipo_fase !== 'primeira_fase') {
-        await atualizarChaveamentoMataMata(atualizadas);
+        const todasPartidasAtualizadas = partidas.map(p => p.id === partidaId ? { ...p, ...data } : p);
+        await atualizarChaveamentoMataMata(todasPartidasAtualizadas);
       }
       return data;
     }
   } catch (err) {
-    console.warn('Erro ao atualizar no Supabase, aplicando localmente:', err);
+    console.error('Erro ao registrar resultado da partida no Supabase:', err);
   }
 
-  const atualizadas = todasPartidas.map(p => {
-    if (p.id === partidaId) {
-      return { ...p, ...payload };
-    }
-    return p;
-  });
-  saveLocalPartidas(atualizadas);
-
-  if (partida.tipo_fase !== 'primeira_fase') {
-    await atualizarChaveamentoMataMata(atualizadas);
-  }
-
-  return atualizadas.find(p => p.id === partidaId) || null;
+  return null;
 };
 
 // ==========================================
@@ -1013,24 +1003,14 @@ export const realizarSorteioMataMata = async (top8Equipes: TrucoEquipe[]): Promi
     throw new Error('É necessário ter 8 equipes classificadas para sortear o Mata-Mata.');
   }
 
-  // Embaralha os 8 classificados
   const shuffled = [...top8Equipes];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const grupoA = shuffled.slice(0, 4); // 4 times
-  const grupoB = shuffled.slice(4, 8); // 4 times
-
-  // Estrutura das 7 partidas do Mata-Mata:
-  // 1. Semifinal A1 (A[0] vs A[1])
-  // 2. Semifinal A2 (A[2] vs A[3])
-  // 3. Final do Grupo A (Venc A1 vs Venc A2)
-  // 4. Semifinal B1 (B[0] vs B[1])
-  // 5. Semifinal B2 (B[2] vs B[3])
-  // 6. Final do Grupo B (Venc B1 vs Venc B2)
-  // 7. Grande Final (Finalista A vs Finalista B)
+  const grupoA = shuffled.slice(0, 4);
+  const grupoB = shuffled.slice(4, 8);
 
   const partidasMataMata: TrucoPartida[] = [
     // GRUPO A - SEMIFINAIS
@@ -1143,10 +1123,6 @@ export const confirmarSorteioMataMata = async (
   grupoB: TrucoEquipe[],
   partidasMataMata: TrucoPartida[]
 ): Promise<void> => {
-  const todasPartidas = getLocalPartidas();
-  const partidas1aFase = todasPartidas.filter(p => p.tipo_fase === 'primeira_fase');
-  const partidasAtualizadas = [...partidas1aFase, ...partidasMataMata];
-
   try {
     await supabase.from('truco_partidas').delete().neq('tipo_fase', 'primeira_fase');
     await supabase.from('truco_partidas').insert(partidasMataMata.map(p => ({
@@ -1163,10 +1139,9 @@ export const confirmarSorteioMataMata = async (
       fase_nome: p.fase_nome
     })));
   } catch (e) {
-    console.warn('Erro ao salvar mata-mata no Supabase:', e);
+    console.error('Erro ao salvar mata-mata no Supabase:', e);
   }
 
-  saveLocalPartidas(partidasAtualizadas);
   await salvarStatusTorneio({
     fase_atual: 'mata_mata',
     sorteio_mata_mata_confirmado: true,
@@ -1192,8 +1167,6 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
 
   const grandeFinal = findPartida('grande_final');
 
-  let mudouAlgo = false;
-
   // Atualizar Final do Grupo A
   if (finalA) {
     const timeA = semiA1?.status === 'finalizada' ? semiA1.vencedor_id : null;
@@ -1202,11 +1175,10 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
     if (finalA.time_a_id !== timeA || finalA.time_b_id !== timeB) {
       finalA.time_a_id = timeA;
       finalA.time_b_id = timeB;
-      mudouAlgo = true;
       try {
         await supabase.from('truco_partidas').update({ time_a_id: timeA, time_b_id: timeB }).eq('id', finalA.id);
       } catch (e) {
-        console.warn('Erro ao atualizar Final A no Supabase:', e);
+        console.error('Erro ao atualizar Final A no Supabase:', e);
       }
     }
   }
@@ -1219,11 +1191,10 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
     if (finalB.time_a_id !== timeA || finalB.time_b_id !== timeB) {
       finalB.time_a_id = timeA;
       finalB.time_b_id = timeB;
-      mudouAlgo = true;
       try {
         await supabase.from('truco_partidas').update({ time_a_id: timeA, time_b_id: timeB }).eq('id', finalB.id);
       } catch (e) {
-        console.warn('Erro ao atualizar Final B no Supabase:', e);
+        console.error('Erro ao atualizar Final B no Supabase:', e);
       }
     }
   }
@@ -1236,11 +1207,10 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
     if (grandeFinal.time_a_id !== timeA || grandeFinal.time_b_id !== timeB) {
       grandeFinal.time_a_id = timeA;
       grandeFinal.time_b_id = timeB;
-      mudouAlgo = true;
       try {
         await supabase.from('truco_partidas').update({ time_a_id: timeA, time_b_id: timeB }).eq('id', grandeFinal.id);
       } catch (e) {
-        console.warn('Erro ao atualizar Grande Final no Supabase:', e);
+        console.error('Erro ao atualizar Grande Final no Supabase:', e);
       }
     }
 
@@ -1252,38 +1222,22 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
       });
     }
   }
-
-  if (mudouAlgo) {
-    saveLocalPartidas(todasPartidas);
-  }
 };
 
 // ==========================================
-// REALTIME LISTENER
+// REALTIME LISTENER (SUPABASE)
 // ==========================================
 
 export const subscribeToTrucoChanges = (onUpdate: () => void) => {
   const channel = supabase
-    .channel('truco_realtime_changes_v2')
+    .channel('truco_realtime_changes_v3')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_equipes' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_jogadores' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_torneio_status' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_partidas' }, () => onUpdate())
     .subscribe();
 
-  const handleStorage = (e: StorageEvent) => {
-    if (
-      e.key === STORAGE_KEY_EQUIPES || 
-      e.key === STORAGE_KEY_PARTIDAS || 
-      e.key === STORAGE_KEY_STATUS
-    ) {
-      onUpdate();
-    }
-  };
-  window.addEventListener('storage', handleStorage);
-
   return () => {
     supabase.removeChannel(channel);
-    window.removeEventListener('storage', handleStorage);
   };
 };

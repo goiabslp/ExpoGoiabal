@@ -9,7 +9,6 @@ import {
   buscarPartidas, 
   buscarStatusTorneio,
   calcularDataRodada,
-  popularTimesFicticios,
   subscribeToTrucoChanges 
 } from '../../../services/trucoService';
 import { 
@@ -62,15 +61,11 @@ export const TrucoSorteioRodadasPage: React.FC = () => {
   // Carregar dados e sincronizar via realtime
   const carregarDados = async () => {
     try {
-      let [eqs, parts, st] = await Promise.all([
+      const [eqs, parts, st] = await Promise.all([
         buscarEquipes(),
         buscarPartidas(),
         buscarStatusTorneio()
       ]);
-
-      if (eqs.length < 8) {
-        eqs = await popularTimesFicticios();
-      }
 
       setEquipes(eqs);
       setPartidas(parts);

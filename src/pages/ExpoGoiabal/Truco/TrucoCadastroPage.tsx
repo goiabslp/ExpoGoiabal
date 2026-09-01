@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../../components/Header';
 import { TrucoBackButton } from '../../../components/Truco/TrucoBackButton';
-import { cadastrarEquipe, popularTimesFicticios } from '../../../services/trucoService';
+import { cadastrarEquipe } from '../../../services/trucoService';
 import { 
   Users, 
   MapPin, 
   Upload, 
   UserPlus, 
   Trash2, 
-  CheckCircle2, 
   ArrowRight, 
   Sparkles, 
   AlertCircle,
@@ -17,7 +16,7 @@ import {
   ShieldAlert,
   IdCard,
   Calendar,
-  Zap
+  Clock
 } from 'lucide-react';
 
 interface JogadorForm {
@@ -44,19 +43,6 @@ export const TrucoCadastroPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  const handlePopularFicticios = async () => {
-    setIsSubmitting(true);
-    try {
-      const times = await popularTimesFicticios();
-      setSuccessMsg(`⚡ Sucesso! ${times.length} times fictícios foram cadastrados com 4 jogadores titulares cada.`);
-    } catch (e: any) {
-      setErrorMsg('Erro ao cadastrar times fictícios: ' + (e?.message || ''));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [equipeCriadaNome, setEquipeCriadaNome] = useState('');
 
@@ -206,45 +192,6 @@ export const TrucoCadastroPage: React.FC = () => {
                 <span>{errorMsg}</span>
               </div>
             )}
-
-            {/* Sucesso Banner */}
-            {successMsg && (
-              <div className="mb-8 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-emerald-400 text-sm font-semibold animate-in fade-in duration-300">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={20} className="shrink-0" />
-                  <span>{successMsg}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/ExpoGoiabal/Truco/Sorteio')}
-                  className="px-4 py-2 rounded-xl bg-emerald-500 text-black font-black text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors cursor-pointer"
-                >
-                  Ir para o Sorteio
-                </button>
-              </div>
-            )}
-
-            {/* Atalho Teste: Popular 08 Times Fictícios */}
-            <div className="mb-8 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-left">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-                  <Zap size={18} />
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-black uppercase text-amber-400">Modo Teste Rápido</h4>
-                  <p className="text-[11px] text-zinc-300">Cadastrar automaticamente 08 times completos com 4 titulares e reservas.</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handlePopularFicticios}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black text-xs uppercase tracking-wider hover:scale-105 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Zap size={14} />
-                <span>{isSubmitting ? 'Cadastrando...' : '⚡ Cadastrar 08 Times de Teste'}</span>
-              </button>
-            </div>
 
             {/* SEÇÃO 1: INFORMAÇÕES DA EQUIPE */}
             <div className="mb-10">
@@ -488,16 +435,20 @@ export const TrucoCadastroPage: React.FC = () => {
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-zinc-900 border border-emerald-500/40 rounded-3xl w-full max-w-md p-8 shadow-[0_0_50px_rgba(16,185,129,0.3)] relative text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-              <CheckCircle2 size={36} />
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-500/30">
+              <Clock size={36} />
             </div>
 
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-black uppercase tracking-widest mb-3">
+              🟡 Status: Pendente de Aprovação
+            </span>
+
             <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">
-              Equipe Cadastrada!
+              Inscrição Enviada!
             </h3>
 
             <p className="text-zinc-300 text-sm leading-relaxed mb-6">
-              A equipe <strong className="text-emerald-400 font-bold">{equipeCriadaNome}</strong> foi inscrita com sucesso no 2º Torneio de Truco e já está disponível no Chaveamento e na Tabela de Classificação.
+              A equipe <strong className="text-amber-400 font-bold">{equipeCriadaNome}</strong> foi cadastrada com sucesso e está <strong className="text-amber-400 font-bold">aguardando análise e aprovação</strong> dos organizadores no painel administrativo.
             </p>
 
             <div className="flex flex-col gap-3">
@@ -505,12 +456,12 @@ export const TrucoCadastroPage: React.FC = () => {
                 onClick={() => {
                   setShowSuccessModal(false);
                   window.scrollTo(0, 0);
-                  navigate('/ExpoGoiabal/Truco/Chaveamento');
+                  navigate('/ExpoGoiabal/Truco');
                 }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-black font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
               >
                 <Trophy size={16} />
-                <span>Ir para o Chaveamento</span>
+                <span>Voltar para o Torneio</span>
               </button>
 
               <button

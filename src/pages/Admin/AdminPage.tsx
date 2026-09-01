@@ -15,19 +15,28 @@ import {
   Dices, 
   ExternalLink, 
   RotateCcw,
-  Swords
+  Swords,
+  Check,
+  X,
+  Clock,
+  AlertTriangle,
+  Calendar,
+  BadgeCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  buscarEquipes, 
+  buscarTodasEquipesAdmin,
   buscarStatusTorneio, 
   acionarSorteioPublicoAdmin, 
   resetarTorneio, 
   excluirEquipe,
   excluirTodasEquipes,
   popularTimesFicticios,
+  aprovarEquipe,
+  reprovarEquipe,
   type TrucoEquipe, 
-  type TrucoTorneioStatus 
+  type TrucoTorneioStatus,
+  type TrucoStatusEquipe
 } from '../../services/trucoService';
 
 export const AdminPage: React.FC = () => {
@@ -54,6 +63,13 @@ export const AdminPage: React.FC = () => {
   const [acionandoSorteio, setAcionandoSorteio] = useState(false);
   const [mostrarGerenciadorTimes, setMostrarGerenciadorTimes] = useState(false);
   const [excluindoTimeId, setExcluindoTimeId] = useState<string | null>(null);
+  const [filtroStatusTruco, setFiltroStatusTruco] = useState<'todos' | 'pendente' | 'aprovado' | 'reprovado'>('todos');
+  const [modalConfirmacaoStatus, setModalConfirmacaoStatus] = useState<{
+    isOpen: boolean;
+    equipe: TrucoEquipe | null;
+    novoStatus: 'aprovado' | 'reprovado';
+  }>({ isOpen: false, equipe: null, novoStatus: 'aprovado' });
+  const [processandoStatusId, setProcessandoStatusId] = useState<string | null>(null);
 
   const getRegistrationId = (id: string) => {
     const idStr = String(id);
@@ -398,17 +414,51 @@ export const AdminPage: React.FC = () => {
 
   const fetchTrucoDados = async () => {
     try {
-      let [eqs, st] = await Promise.all([
-        buscarEquipes(),
+      const [eqs, st] = await Promise.all([
+        buscarTodasEquipesAdmin(),
         buscarStatusTorneio()
       ]);
-      if (eqs.length < 8) {
-        eqs = await popularTimesFicticios();
-      }
       setEquipesTruco(eqs);
       setStatusTruco(st);
     } catch (err) {
       console.error('Erro ao buscar dados do truco:', err);
+    }
+  };
+
+  const handleAbrirModalStatus = (equipe: TrucoEquipe, novoStatus: 'aprovado' | 'reprovado') => {
+    setModalConfirmacaoStatus({
+      isOpen: true,
+      equipe,
+      novoStatus
+    });
+  };
+
+  const handleConfirmarStatusEquipe = async () => {
+    if (!modalConfirmacaoStatus.equipe) return;
+    const { equipe, novoStatus } = modalConfirmacaoStatus;
+
+    setProcessandoStatusId(equipe.id);
+    try {
+      if (novoStatus === 'aprovado') {
+        await aprovarEquipe(equipe.id);
+      } else {
+        await reprovarEquipe(equipe.id);
+      }
+      await fetchTrucoDados();
+      setFeedbackModal({
+        isOpen: true,
+        type: 'success',
+        message: `Equipe "${equipe.nome}" ${novoStatus === 'aprovado' ? 'APROVADA com sucesso e adicionada ao torneio!' : 'REPROVADA e desabilitada para o torneio.'}`
+      });
+    } catch (err: any) {
+      setFeedbackModal({
+        isOpen: true,
+        type: 'error',
+        message: 'Erro ao alterar status da equipe: ' + (err?.message || '')
+      });
+    } finally {
+      setProcessandoStatusId(null);
+      setModalConfirmacaoStatus({ isOpen: false, equipe: null, novoStatus: 'aprovado' });
     }
   };
 
@@ -420,18 +470,27 @@ export const AdminPage: React.FC = () => {
   }, []);
 
   const handleAcionarSorteio = async () => {
-    if (equipesTruco.length < 4) {
-      setFeedbackModal({ isOpen: true, type: 'error', message: 'É necessário ter no mínimo 4 equipes cadastradas para realizar o sorteio.' });
+    const equipesAprovadas = equipesTruco.filter(e => (e.status || 'aprovado') === 'aprovado');
+    if (equipesAprovadas.length < 4) {
+      setFeedbackModal({ 
+        isOpen: true, 
+        type: 'error', 
+        message: `É necessário ter no mínimo 4 equipes APROVADAS para realizar o sorteio. (Atualmente aprovadas: ${equipesAprovadas.length})` 
+      });
       return;
     }
-    if (equipesTruco.length % 2 !== 0) {
-      setFeedbackModal({ isOpen: true, type: 'error', message: 'A quantidade de equipes precisa ser PAR para gerar rodadas simultâneas.' });
+    if (equipesAprovadas.length % 2 !== 0) {
+      setFeedbackModal({ 
+        isOpen: true, 
+        type: 'error', 
+        message: `A quantidade de equipes APROVADAS precisa ser PAR para gerar rodadas simultâneas. (Atualmente aprovadas: ${equipesAprovadas.length})` 
+      });
       return;
     }
 
     setAcionandoSorteio(true);
     try {
-      const res = await acionarSorteioPublicoAdmin(equipesTruco);
+      const res = await acionarSorteioPublicoAdmin(equipesAprovadas);
       if (res.sucesso) {
         await fetchTrucoDados();
         setFeedbackModal({ 
@@ -469,6 +528,7 @@ export const AdminPage: React.FC = () => {
     setExcluindoTimeId(equipeId);
     try {
       await excluirEquipe(equipeId);
+      setEquipesTruco(prev => prev.filter(e => e.id !== equipeId));
       await fetchTrucoDados();
       setFeedbackModal({ isOpen: true, type: 'success', message: `Equipe "${equipeNome}" excluída com sucesso!` });
     } catch (err: any) {
@@ -485,6 +545,7 @@ export const AdminPage: React.FC = () => {
     setLoading(true);
     try {
       await excluirTodasEquipes();
+      setEquipesTruco([]);
       await fetchTrucoDados();
       setFeedbackModal({ isOpen: true, type: 'success', message: 'Todas as equipes e confrontos foram excluídos com sucesso.' });
     } catch (err: any) {
@@ -743,236 +804,530 @@ export const AdminPage: React.FC = () => {
             </div>
 
             {/* CARD EXCLUSIVO: 🎲 SORTEIO — 2º TORNEIO DE TRUCO */}
-            <div className="w-full bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.15)] flex flex-col lg:flex-row items-center justify-between gap-6 mt-4">
-              <div className="flex flex-col gap-2.5 max-w-2xl text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 self-center lg:self-start px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
-                  <Dices size={14} className="animate-spin" />
-                  <span>Módulo Oficial • Transmissão ao Vivo</span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-wide">
-                  🎲 SORTEIO — 2º TORNEIO DE TRUCO
-                </h3>
-                
-                {/* Informações Requeridas */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs font-bold text-zinc-300 mt-1">
-                  <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
-                    <Users size={15} className="text-emerald-400" />
-                    <span>
-                      <strong className="text-white">Quantidade de times:</strong> {equipesTruco.length} ({equipesTruco.length % 2 === 0 && equipesTruco.length >= 4 ? 'Par e Apta ✅' : 'Necessário número Par ≥ 4 ⚠️'})
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
-                    <strong className="text-white">Status do sorteio:</strong>
-                    {statusTruco?.sorteio_primeira_fase_confirmado ? (
-                      <span className="text-emerald-400 font-black">🟢 Sorteio Realizado</span>
-                    ) : (
-                      <span className="text-amber-400 font-black">🟡 Aguardando sorteio</span>
-                    )}
-                  </div>
-                </div>
+            {(() => {
+              const equipesAprovadas = equipesTruco.filter(e => (e.status || 'aprovado') === 'aprovado');
+              const equipesPendentes = equipesTruco.filter(e => e.status === 'pendente');
+              const isParEApto = equipesAprovadas.length >= 4 && equipesAprovadas.length % 2 === 0;
 
-                <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
-                  <strong className="text-zinc-300">Situação atual: </strong>
-                  {statusTruco?.sorteio_primeira_fase_confirmado
-                    ? 'O sorteio oficial já foi transmitido. As partidas da 1ª fase estão geradas e disponíveis no calendário.'
-                    : 'Aguardando comando. Ao clicar em "ACIONAR SORTEIO", a tela pública transmitirá imediatamente a apresentação oficial.'}
-                </p>
-              </div>
-
-              {/* Botões de Ação do Administrador */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setMostrarGerenciadorTimes(prev => !prev)}
-                  className={`w-full sm:w-auto px-5 py-3.5 rounded-2xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md ${
-                    mostrarGerenciadorTimes
-                      ? 'bg-zinc-800 text-white border-white/20'
-                      : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border-white/10'
-                  }`}
-                >
-                  <Users size={15} className="text-teal-400" />
-                  <span>{mostrarGerenciadorTimes ? 'Ocultar Equipes' : `Gerenciar Equipes (${equipesTruco.length})`}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Partidas'); }}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black border border-emerald-400/30 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg hover:scale-105"
-                >
-                  <Swords size={15} className="text-black" />
-                  <span>Lançar / Gerenciar Placares</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => window.open('/ExpoGoiabal/Truco/Sorteio', '_blank')}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md"
-                >
-                  <ExternalLink size={15} className="text-emerald-400" />
-                  <span>Tela Pública</span>
-                </button>
-
-                {statusTruco?.sorteio_primeira_fase_confirmado && (
-                  <button
-                    type="button"
-                    onClick={handleResetarSorteio}
-                    className="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                    title="Resetar sorteio para fazer novamente"
-                  >
-                    <RotateCcw size={14} />
-                    <span>Resetar Sorteio</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleAcionarSorteio}
-                  disabled={acionandoSorteio || equipesTruco.length < 4 || equipesTruco.length % 2 !== 0}
-                  className={`w-full sm:w-auto px-7 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
-                    statusTruco?.sorteio_primeira_fase_confirmado
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'
-                      : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-black shadow-amber-500/40 hover:scale-105'
-                  }`}
-                >
-                  <Dices size={18} />
-                  <span>
-                    {acionandoSorteio
-                      ? 'Acionando...'
-                      : statusTruco?.sorteio_primeira_fase_confirmado
-                      ? 'RE-ACIONAR SORTEIO'
-                      : 'ACIONAR SORTEIO'}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* SEÇÃO EXPANSÍVEL: GERENCIADOR E EXCLUSÃO DE EQUIPES */}
-            {mostrarGerenciadorTimes && (
-              <div className="w-full bg-zinc-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                
-                {/* Header do Gerenciador */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                      <h4 className="text-lg font-black uppercase tracking-wider text-white">
-                        Equipes Cadastradas no Torneio de Truco
-                      </h4>
+              return (
+                <div className="w-full bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.15)] flex flex-col lg:flex-row items-center justify-between gap-6 mt-4">
+                  <div className="flex flex-col gap-2.5 max-w-2xl text-center lg:text-left">
+                    <div className="inline-flex items-center gap-2 self-center lg:self-start px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
+                      <Dices size={14} className="animate-spin" />
+                      <span>Módulo Oficial • 2º Torneio de Truco</span>
                     </div>
-                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                      Total de {equipesTruco.length} equipe(s). Remova equipes individualmente ou em lote.
+                    <h3 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-wide">
+                      🎲 SORTEIO — 2º TORNEIO DE TRUCO
+                    </h3>
+                    
+                    {/* Informações Requeridas */}
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs font-bold text-zinc-300 mt-1">
+                      <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
+                        <Users size={15} className="text-emerald-400" />
+                        <span>
+                          <strong className="text-white">Times Aprovados:</strong> {equipesAprovadas.length} ({isParEApto ? 'Par e Apto ✅' : 'Necessário número Par ≥ 4 ⚠️'})
+                        </span>
+                      </div>
+                      
+                      {equipesPendentes.length > 0 && (
+                        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3.5 py-2 rounded-xl text-amber-400 animate-pulse">
+                          <Clock size={14} />
+                          <span><strong>{equipesPendentes.length} time(s) pendente(s) de aprovação</strong></span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
+                        <strong className="text-white">Status do sorteio:</strong>
+                        {statusTruco?.sorteio_primeira_fase_confirmado ? (
+                          <span className="text-emerald-400 font-black">🟢 Sorteio Realizado</span>
+                        ) : (
+                          <span className="text-amber-400 font-black">🟡 Aguardando sorteio</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
+                      <strong className="text-zinc-300">Situação atual: </strong>
+                      {statusTruco?.sorteio_primeira_fase_confirmado
+                        ? 'O sorteio oficial já foi transmitido. As partidas da 1ª fase estão geradas e disponíveis no calendário.'
+                        : 'Aguardando comando. Ao clicar em "ACIONAR SORTEIO", a tela pública transmitirá imediatamente a apresentação oficial dos times aprovados.'}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
+                  {/* Botões de Ação do Administrador */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                     <button
                       type="button"
-                      onClick={handlePopularNovamente}
-                      className="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                      onClick={() => setMostrarGerenciadorTimes(prev => !prev)}
+                      className={`w-full sm:w-auto px-5 py-3.5 rounded-2xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md relative ${
+                        mostrarGerenciadorTimes
+                          ? 'bg-zinc-800 text-white border-white/20'
+                          : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border-white/10'
+                      }`}
                     >
-                      <Dices size={14} />
-                      <span>⚡ Inserir 08 Times de Teste</span>
+                      <Users size={15} className="text-teal-400" />
+                      <span>{mostrarGerenciadorTimes ? 'Ocultar Equipes' : `Gerenciar Equipes (${equipesTruco.length})`}</span>
+                      {equipesPendentes.length > 0 && (
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 absolute -top-1 -right-1 animate-ping"></span>
+                      )}
                     </button>
 
-                    {equipesTruco.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Partidas'); }}
+                      className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black border border-emerald-400/30 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg hover:scale-105"
+                    >
+                      <Swords size={15} className="text-black" />
+                      <span>Lançar / Gerenciar Placares</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => window.open('/ExpoGoiabal/Truco/Sorteio', '_blank')}
+                      className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md"
+                    >
+                      <ExternalLink size={15} className="text-emerald-400" />
+                      <span>Tela Pública</span>
+                    </button>
+
+                    {statusTruco?.sorteio_primeira_fase_confirmado && (
                       <button
                         type="button"
-                        onClick={handleExcluirTodasEquipes}
-                        className="px-4 py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                        onClick={handleResetarSorteio}
+                        className="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        title="Resetar sorteio para fazer novamente"
                       >
-                        <Trash2 size={14} />
-                        <span>Excluir Todas as Equipes</span>
+                        <RotateCcw size={14} />
+                        <span>Resetar Sorteio</span>
                       </button>
                     )}
-                  </div>
-                </div>
 
-                {/* Lista de Equipes Cadastradas */}
-                {equipesTruco.length === 0 ? (
-                  <div className="py-12 text-center flex flex-col items-center gap-3">
-                    <Users size={36} className="text-zinc-600" />
-                    <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
-                      Nenhuma equipe cadastrada no momento
-                    </span>
                     <button
                       type="button"
-                      onClick={handlePopularNovamente}
-                      className="mt-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-black text-xs uppercase tracking-wider cursor-pointer hover:scale-105 transition-all shadow-md"
+                      onClick={handleAcionarSorteio}
+                      disabled={acionandoSorteio || !isParEApto}
+                      className={`w-full sm:w-auto px-7 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                        !isParEApto
+                          ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5'
+                          : statusTruco?.sorteio_primeira_fase_confirmado
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'
+                          : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-black shadow-amber-500/40 hover:scale-105'
+                      }`}
                     >
-                      Cadastrar 08 Equipes Fictícias
+                      <Dices size={18} />
+                      <span>
+                        {acionandoSorteio
+                          ? 'Acionando...'
+                          : statusTruco?.sorteio_primeira_fase_confirmado
+                          ? 'RE-ACIONAR SORTEIO'
+                          : 'ACIONAR SORTEIO'}
+                      </span>
                     </button>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {equipesTruco.map((time, idx) => {
-                      const titulares = (time.jogadores || []).filter(j => j.is_titular !== false);
-                      const reservas = (time.jogadores || []).filter(j => j.is_titular === false);
+                </div>
+              );
+            })()}
 
-                      return (
-                        <div
-                          key={time.id}
-                          className="bg-black/40 border border-white/10 hover:border-emerald-500/30 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-lg transition-colors group"
+            {/* SEÇÃO EXPANSÍVEL: GERENCIADOR E APROVAÇÃO DE EQUIPES */}
+            {mostrarGerenciadorTimes && (() => {
+              const totalCadastrados = equipesTruco.length;
+              const pendentes = equipesTruco.filter(e => e.status === 'pendente');
+              const aprovados = equipesTruco.filter(e => (e.status || 'aprovado') === 'aprovado');
+              const reprovados = equipesTruco.filter(e => e.status === 'reprovado');
+              const disponiveisTorneio = aprovados.length;
+
+              const listaFiltrada = equipesTruco.filter(e => {
+                if (filtroStatusTruco === 'pendente') return e.status === 'pendente';
+                if (filtroStatusTruco === 'aprovado') return (e.status || 'aprovado') === 'aprovado';
+                if (filtroStatusTruco === 'reprovado') return e.status === 'reprovado';
+                return true;
+              });
+
+              return (
+                <div className="w-full bg-zinc-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                  
+                  {/* Header do Gerenciador */}
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-white/10">
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3 h-3 rounded-full bg-emerald-400"></span>
+                        <h4 className="text-xl font-black uppercase tracking-wider text-white">
+                          Gerenciamento & Moderação de Times
+                        </h4>
+                      </div>
+                      <p className="text-xs text-zinc-400 font-medium mt-1">
+                        Aprove ou reprove os cadastros. Somente times <strong className="text-emerald-400">APROVADOS</strong> aparecem publicamente e participam do torneio.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap w-full lg:w-auto">
+                      <button
+                        type="button"
+                        onClick={handlePopularNovamente}
+                        className="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <Dices size={14} />
+                        <span>⚡ Inserir 08 Times de Teste</span>
+                      </button>
+
+                      {equipesTruco.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleExcluirTodasEquipes}
+                          className="px-4 py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <span className="w-6 h-6 rounded-lg bg-zinc-800 text-zinc-400 font-black text-xs flex items-center justify-center shrink-0">
-                                {idx + 1}
-                              </span>
-                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0">
-                                {time.foto_url ? (
-                                  <img src={time.foto_url} alt={time.nome} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                                    <Users size={20} />
-                                  </div>
+                          <Trash2 size={14} />
+                          <span>Excluir Todas</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RESUMO DE STATUS NO TOPO */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex flex-col">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Times Cadastrados</span>
+                      <span className="text-2xl font-black text-white mt-1">{totalCadastrados}</span>
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col">
+                      <div className="flex items-center gap-1.5 text-amber-400">
+                        <Clock size={13} />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Pendentes</span>
+                      </div>
+                      <span className="text-2xl font-black text-amber-400 mt-1">{pendentes.length}</span>
+                    </div>
+
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex flex-col">
+                      <div className="flex items-center gap-1.5 text-emerald-400">
+                        <BadgeCheck size={13} />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Aprovados</span>
+                      </div>
+                      <span className="text-2xl font-black text-emerald-400 mt-1">{aprovados.length}</span>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col">
+                      <div className="flex items-center gap-1.5 text-red-400">
+                        <X size={13} />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Reprovados</span>
+                      </div>
+                      <span className="text-2xl font-black text-red-400 mt-1">{reprovados.length}</span>
+                    </div>
+
+                    <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-emerald-950/60 to-zinc-900 border border-emerald-500/40 rounded-2xl p-4 flex flex-col shadow-inner">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">Disponíveis p/ Torneio</span>
+                      <span className="text-2xl font-black text-emerald-400 mt-1">{disponiveisTorneio}</span>
+                    </div>
+                  </div>
+
+                  {/* ABAS DE FILTRO */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-white/5 no-scrollbar">
+                    <button
+                      type="button"
+                      onClick={() => setFiltroStatusTruco('todos')}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                        filtroStatusTruco === 'todos'
+                          ? 'bg-zinc-700 text-white shadow-md'
+                          : 'bg-zinc-800/60 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Todos ({totalCadastrados})
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFiltroStatusTruco('pendente')}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                        filtroStatusTruco === 'pendente'
+                          ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
+                          : 'bg-zinc-800/60 text-amber-400 hover:bg-zinc-800'
+                      }`}
+                    >
+                      <span>🟡 Pendentes</span>
+                      <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]">{pendentes.length}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFiltroStatusTruco('aprovado')}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                        filtroStatusTruco === 'aprovado'
+                          ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/30'
+                          : 'bg-zinc-800/60 text-emerald-400 hover:bg-zinc-800'
+                      }`}
+                    >
+                      <span>🟢 Aprovados</span>
+                      <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]">{aprovados.length}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFiltroStatusTruco('reprovado')}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                        filtroStatusTruco === 'reprovado'
+                          ? 'bg-red-500 text-white shadow-md shadow-red-500/30'
+                          : 'bg-zinc-800/60 text-red-400 hover:bg-zinc-800'
+                      }`}
+                    >
+                      <span>🔴 Reprovados</span>
+                      <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]">{reprovados.length}</span>
+                    </button>
+                  </div>
+
+                  {/* Lista de Equipes */}
+                  {listaFiltrada.length === 0 ? (
+                    <div className="py-12 text-center flex flex-col items-center gap-3">
+                      <Users size={36} className="text-zinc-600" />
+                      <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                        Nenhuma equipe encontrada com o filtro selecionado
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {listaFiltrada.map((time) => {
+                        const statusAtual = (time.status || 'aprovado') as TrucoStatusEquipe;
+                        const titulares = (time.jogadores || []).filter(j => j.is_titular !== false);
+                        const reservas = (time.jogadores || []).filter(j => j.is_titular === false);
+                        const isProcessando = processandoStatusId === time.id;
+
+                        const dataCadastroFormatada = time.created_at
+                          ? new Date(time.created_at).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : 'Data não informada';
+
+                        return (
+                          <div
+                            key={time.id}
+                            className={`border rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-xl transition-all duration-300 ${
+                              statusAtual === 'pendente'
+                                ? 'bg-amber-500/5 border-amber-500/40 hover:border-amber-500 shadow-amber-500/5'
+                                : statusAtual === 'aprovado'
+                                ? 'bg-black/40 border-emerald-500/30 hover:border-emerald-500/50'
+                                : 'bg-red-950/20 border-red-500/30 hover:border-red-500/50 opacity-80'
+                            }`}
+                          >
+                            {/* Topo do Card */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0 shadow-md">
+                                  {time.foto_url ? (
+                                    <img src={time.foto_url} alt={time.nome} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                                      <Users size={22} />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h5 className="font-black text-base uppercase text-white tracking-wide">
+                                    {time.nome}
+                                  </h5>
+                                  <span className="text-xs text-zinc-300 font-semibold block">
+                                    📍 {time.cidade}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">
+                                    <Calendar size={11} />
+                                    <span>Cadastrado em {dataCadastroFormatada}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Badge de Status */}
+                              <div>
+                                {statusAtual === 'pendente' && (
+                                  <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse shadow-sm">
+                                    <Clock size={11} />
+                                    <span>🟡 PENDENTE</span>
+                                  </span>
+                                )}
+                                {statusAtual === 'aprovado' && (
+                                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <CheckCircle size={11} />
+                                    <span>🟢 APROVADO</span>
+                                  </span>
+                                )}
+                                {statusAtual === 'reprovado' && (
+                                  <span className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <X size={11} />
+                                    <span>🔴 REPROVADO</span>
+                                  </span>
                                 )}
                               </div>
-                              <div>
-                                <h5 className="font-black text-sm uppercase text-white group-hover:text-amber-400 transition-colors">
-                                  {time.nome}
-                                </h5>
-                                <span className="text-[11px] text-zinc-400 font-semibold block">
-                                  📍 {time.cidade}
-                                </span>
-                              </div>
                             </div>
 
-                            {/* Botão Excluir Equipe Individual */}
-                            <button
-                              type="button"
-                              onClick={() => handleExcluirEquipe(time.id, time.nome)}
-                              disabled={excluindoTimeId === time.id}
-                              className="px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/80 text-red-400 hover:text-white border border-red-500/30 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all shrink-0"
-                              title={`Excluir equipe ${time.nome}`}
-                            >
-                              <Trash2 size={13} />
-                              <span>{excluindoTimeId === time.id ? 'Excluindo...' : 'Excluir'}</span>
-                            </button>
-                          </div>
-
-                          {/* Lista de Integrantes */}
-                          <div className="pt-2.5 border-t border-white/5 text-[11px]">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-                                Titulares ({titulares.length}):
-                              </span>
-                              <span className="text-zinc-300 font-medium">
-                                {titulares.map(t => t.nome_completo).join(', ') || 'Nenhum'}
-                              </span>
-                              {reservas.length > 0 && (
-                                <span className="text-[10px] text-amber-400/80 font-medium mt-0.5">
-                                  Reserva(s): {reservas.map(r => r.nome_completo).join(', ')}
+                            {/* Jogadores Cadastrados */}
+                            <div className="bg-black/30 border border-white/5 rounded-xl p-3 text-xs flex flex-col gap-2">
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block mb-1">
+                                  Titulares ({titulares.length}):
                                 </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                                  {titulares.map((t, tIdx) => (
+                                    <div key={t.id || tIdx} className="text-zinc-300">
+                                      <span className="font-bold text-white">{tIdx + 1}. {t.nome_completo}</span>
+                                      <span className="text-[9px] text-zinc-400 block">CPF: {t.cpf} • Nasc: {t.data_nascimento}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {reservas.length > 0 && (
+                                <div className="pt-2 border-t border-white/5">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block mb-1">
+                                    Reserva ({reservas.length}):
+                                  </span>
+                                  <div className="text-[11px] text-zinc-300">
+                                    {reservas.map((r, rIdx) => (
+                                      <div key={r.id || rIdx}>
+                                        <span className="font-bold text-white">• {r.nome_completo}</span>
+                                        <span className="text-[9px] text-zinc-400 block">CPF: {r.cpf} • Nasc: {r.data_nascimento}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
 
+                            {/* Ações Administrativas */}
+                            <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                {statusAtual === 'pendente' && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={isProcessando}
+                                      onClick={() => handleAbrirModalStatus(time, 'aprovado')}
+                                      className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md transition-all hover:scale-105"
+                                    >
+                                      <Check size={14} />
+                                      <span>Aprovar Time</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={isProcessando}
+                                      onClick={() => handleAbrirModalStatus(time, 'reprovado')}
+                                      className="px-3.5 py-2 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
+                                    >
+                                      <X size={14} />
+                                      <span>Reprovar</span>
+                                    </button>
+                                  </>
+                                )}
+
+                                {statusAtual === 'aprovado' && (
+                                  <button
+                                    type="button"
+                                    disabled={isProcessando}
+                                    onClick={() => handleAbrirModalStatus(time, 'reprovado')}
+                                    className="px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900 text-red-300 border border-red-500/30 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+                                    title="Revogar aprovação e reprovar time"
+                                  >
+                                    <X size={12} />
+                                    <span>Reprovar</span>
+                                  </button>
+                                )}
+
+                                {statusAtual === 'reprovado' && (
+                                  <button
+                                    type="button"
+                                    disabled={isProcessando}
+                                    onClick={() => handleAbrirModalStatus(time, 'aprovado')}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+                                    title="Aprovar time reprovado"
+                                  >
+                                    <Check size={12} />
+                                    <span>Re-Aprovar</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Botão Excluir Equipe */}
+                              <button
+                                type="button"
+                                onClick={() => handleExcluirEquipe(time.id, time.nome)}
+                                disabled={excluindoTimeId === time.id}
+                                className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-red-900/80 text-zinc-400 hover:text-white border border-white/10 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+                                title={`Excluir definitivamente ${time.nome}`}
+                              >
+                                <Trash2 size={12} />
+                                <span>{excluindoTimeId === time.id ? 'Excluindo...' : 'Excluir'}</span>
+                              </button>
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+              );
+            })()}
+
+            {/* MODAL DE CONFIRMAÇÃO DE APROVAÇÃO / REPROVAÇÃO */}
+            {modalConfirmacaoStatus.isOpen && modalConfirmacaoStatus.equipe && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="bg-zinc-900 border border-white/20 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border ${
+                    modalConfirmacaoStatus.novoStatus === 'aprovado'
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                      : 'bg-red-500/20 text-red-400 border-red-500/40'
+                  }`}>
+                    {modalConfirmacaoStatus.novoStatus === 'aprovado' ? (
+                      <CheckCircle size={32} />
+                    ) : (
+                      <AlertTriangle size={32} />
+                    )}
+                  </div>
+
+                  <h3 className="text-xl font-black text-white uppercase text-center tracking-wider mb-2">
+                    {modalConfirmacaoStatus.novoStatus === 'aprovado' ? 'Aprovar Equipe?' : 'Reprovar Equipe?'}
+                  </h3>
+
+                  <p className="text-zinc-300 text-xs sm:text-sm text-center leading-relaxed mb-6">
+                    {modalConfirmacaoStatus.novoStatus === 'aprovado' ? (
+                      <>
+                        Deseja confirmar a aprovação da equipe <strong className="text-emerald-400 font-bold">{modalConfirmacaoStatus.equipe.nome}</strong>?
+                        <br /><br />
+                        Ao aprovar, o time se tornará <strong className="text-white">oficialmente participante</strong>, ficará visível publicamente e estará disponível para o sorteio.
+                      </>
+                    ) : (
+                      <>
+                        Deseja reprovar a equipe <strong className="text-red-400 font-bold">{modalConfirmacaoStatus.equipe.nome}</strong>?
+                        <br /><br />
+                        Ao reprovar, o time será <strong className="text-white">impedido de participar</strong> do torneio e ficará oculto da visualização pública.
+                      </>
+                    )}
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setModalConfirmacaoStatus({ isOpen: false, equipe: null, novoStatus: 'aprovado' })}
+                      className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleConfirmarStatusEquipe}
+                      className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg ${
+                        modalConfirmacaoStatus.novoStatus === 'aprovado'
+                          ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30'
+                          : 'bg-red-600 hover:bg-red-500 text-white shadow-red-500/30'
+                      }`}
+                    >
+                      {modalConfirmacaoStatus.novoStatus === 'aprovado' ? 'Sim, Aprovar' : 'Sim, Reprovar'}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 

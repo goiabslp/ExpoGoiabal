@@ -1,4 +1,128 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Simulação em memória do banco Postgres para testes unitários
+const dbEquipes: any[] = [];
+const dbJogadores: any[] = [];
+const dbPartidas: any[] = [];
+let dbStatusTorneio: any = {
+  id: 'main',
+  fase_atual: 'inscricao',
+  sorteio_primeira_fase_confirmado: false,
+  sorteio_mata_mata_confirmado: false,
+  sorteio_iniciado_em: null,
+  sorteio_animacao_ativa: false,
+  top8_equipes_ids: [],
+  grupo_a_equipes_ids: [],
+  grupo_b_equipes_ids: [],
+  campeao_equipe_id: null
+};
+
+vi.mock('./supabase', () => {
+  return {
+    supabase: {
+      from: (table: string) => {
+        let filterEq: { [key: string]: any } = {};
+        return {
+          select: () => {
+            const queryObj: any = {
+              eq: (col: string, val: any) => {
+                filterEq[col] = val;
+                return queryObj;
+              },
+              order: () => queryObj,
+              single: async () => {
+                if (table === 'truco_torneio_status') return { data: dbStatusTorneio, error: null };
+                return { data: null, error: null };
+              },
+              maybeSingle: async () => {
+                if (table === 'truco_torneio_status') return { data: dbStatusTorneio, error: null };
+                return { data: null, error: null };
+              },
+              then: (resolve: any) => {
+                if (table === 'truco_equipes') {
+                  let res = [...dbEquipes];
+                  if (filterEq['status']) res = res.filter(e => e.status === filterEq['status']);
+                  resolve({ data: res, error: null });
+                } else if (table === 'truco_jogadores') {
+                  let res = [...dbJogadores];
+                  if (filterEq['equipe_id']) res = res.filter(j => j.equipe_id === filterEq['equipe_id']);
+                  resolve({ data: res, error: null });
+                } else if (table === 'truco_partidas') {
+                  resolve({ data: [...dbPartidas], error: null });
+                } else {
+                  resolve({ data: [], error: null });
+                }
+              }
+            };
+            return queryObj;
+          },
+          insert: async (data: any) => {
+            const items = Array.isArray(data) ? data : [data];
+            if (table === 'truco_equipes') dbEquipes.push(...items);
+            if (table === 'truco_jogadores') dbJogadores.push(...items);
+            if (table === 'truco_partidas') dbPartidas.push(...items);
+            return { error: null };
+          },
+          upsert: async (data: any) => {
+            if (table === 'truco_torneio_status') {
+              dbStatusTorneio = { ...dbStatusTorneio, ...data };
+            }
+            return { error: null };
+          },
+          update: (data: any) => {
+            return {
+              eq: async (col: string, val: any) => {
+                if (table === 'truco_equipes') {
+                  dbEquipes.forEach(e => {
+                    if (e[col] === val) Object.assign(e, data);
+                  });
+                }
+                return { error: null, select: () => ({ single: async () => ({ data, error: null }) }) };
+              }
+            };
+          },
+          delete: () => {
+            return {
+              neq: async () => {
+                if (table === 'truco_equipes') dbEquipes.length = 0;
+                if (table === 'truco_jogadores') dbJogadores.length = 0;
+                if (table === 'truco_partidas') dbPartidas.length = 0;
+                return { error: null };
+              },
+              eq: async (col: string, val: any) => {
+                if (table === 'truco_equipes') {
+                  const idx = dbEquipes.findIndex(e => e[col] === val);
+                  if (idx !== -1) dbEquipes.splice(idx, 1);
+                }
+                if (table === 'truco_jogadores') {
+                  const toKeep = dbJogadores.filter(j => j[col] !== val);
+                  dbJogadores.length = 0;
+                  dbJogadores.push(...toKeep);
+                }
+                return { error: null };
+              },
+              or: async () => {
+                return { error: null };
+              }
+            };
+          }
+        };
+      },
+      storage: {
+        from: () => ({
+          upload: async () => ({ error: null }),
+          getPublicUrl: (p: string) => ({ data: { publicUrl: `https://mock.storage/${p}` } })
+        })
+      },
+      channel: () => ({
+        on: function() { return this; },
+        subscribe: function() { return this; }
+      }),
+      removeChannel: () => {}
+    }
+  };
+});
+
 import { 
   gerarRoundRobin, 
   calcularClassificacao, 
@@ -84,9 +208,9 @@ describe('Matemática Round-Robin (Circle Method)', () => {
 });
 
 describe('Classificação da 1ª Fase do Truco', () => {
-  const equipeA: TrucoEquipe = { id: '1', nome: 'Valetes de Ouro', cidade: 'São José do Goiabal' };
-  const equipeB: TrucoEquipe = { id: '2', nome: 'Ases do Blefe', cidade: 'Dionísio' };
-  const equipeC: TrucoEquipe = { id: '3', nome: 'Reis da Noite', cidade: 'São Domingos do Prata' };
+  const equipeA: TrucoEquipe = { id: '1', nome: 'Valetes de Ouro', cidade: 'São José do Goiabal', status: 'aprovado' };
+  const equipeB: TrucoEquipe = { id: '2', nome: 'Ases do Blefe', cidade: 'Dionísio', status: 'aprovado' };
+  const equipeC: TrucoEquipe = { id: '3', nome: 'Reis da Noite', cidade: 'São Domingos do Prata', status: 'aprovado' };
 
   it('deve ordenar alfabeticamente antes de haver partidas finalizadas', () => {
     const equipes = [equipeA, equipeB, equipeC];
@@ -138,7 +262,8 @@ describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
     const top8: TrucoEquipe[] = Array.from({ length: 8 }, (_, i) => ({
       id: `team_${i + 1}`,
       nome: `Equipe ${i + 1}`,
-      cidade: 'Goiabal'
+      cidade: 'Goiabal',
+      status: 'aprovado'
     }));
 
     const { grupoA, grupoB, partidasMataMata } = await realizarSorteioMataMata(top8);
@@ -168,7 +293,8 @@ describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
     const top8: TrucoEquipe[] = Array.from({ length: 8 }, (_, i) => ({
       id: `t_${i + 1}`,
       nome: `Time ${i + 1}`,
-      cidade: 'Goiabal'
+      cidade: 'Goiabal',
+      status: 'aprovado'
     }));
 
     const { partidasMataMata } = await realizarSorteioMataMata(top8);
@@ -191,5 +317,74 @@ describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
     const finalA = partidasMataMata.find(p => p.tipo_fase === 'final_a')!;
     expect(finalA.time_a_id).toBe(semiA1.vencedor_id);
     expect(finalA.time_b_id).toBe(semiA2.vencedor_id);
+  });
+});
+
+describe('Sistema de Moderação e Status dos Times (Pendente, Aprovado, Reprovado)', () => {
+  it('novos cadastros de equipes devem iniciar com status PENDENTE', async () => {
+    const { cadastrarEquipe } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Time Teste Pendente', cidade: 'Goiabal' },
+      [
+        { nome_completo: 'J1', cpf: '111', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2', cpf: '222', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3', cpf: '333', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4', cpf: '444', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    expect(equipe.status).toBe('pendente');
+  });
+
+  it('deve aprovar e reprovar equipes corretamente refletindo no status', async () => {
+    const { cadastrarEquipe, aprovarEquipe, reprovarEquipe, buscarTodasEquipesAdmin } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Time Para Aprovar', cidade: 'Goiabal' },
+      [
+        { nome_completo: 'J1', cpf: '111', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2', cpf: '222', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3', cpf: '333', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4', cpf: '444', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    expect(equipe.status).toBe('pendente');
+
+    // Aprovar
+    await aprovarEquipe(equipe.id);
+    let todas = await buscarTodasEquipesAdmin();
+    let eqAtualizada = todas.find(e => e.id === equipe.id);
+    expect(eqAtualizada?.status).toBe('aprovado');
+
+    // Reprovar
+    await reprovarEquipe(equipe.id);
+    todas = await buscarTodasEquipesAdmin();
+    eqAtualizada = todas.find(e => e.id === equipe.id);
+    expect(eqAtualizada?.status).toBe('reprovado');
+  });
+
+  it('deve excluir uma equipe individualmente e não re-popular automaticamente', async () => {
+    const { cadastrarEquipe, excluirEquipe, buscarTodasEquipesAdmin } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Time Para Excluir', cidade: 'Goiabal' },
+      [
+        { nome_completo: 'J1', cpf: '111', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2', cpf: '222', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3', cpf: '333', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4', cpf: '444', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    await excluirEquipe(equipe.id);
+    const todas = await buscarTodasEquipesAdmin();
+    const encontrada = todas.find(e => e.id === equipe.id);
+    expect(encontrada).toBeUndefined();
+  });
+
+  it('deve excluir todas as equipes e manter a lista vazia sem auto-popular', async () => {
+    const { excluirTodasEquipes, buscarTodasEquipesAdmin } = await import('./trucoService');
+    await excluirTodasEquipes();
+    const todas = await buscarTodasEquipesAdmin();
+    expect(todas.length).toBe(0);
   });
 });
