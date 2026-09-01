@@ -1,7 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Shield, Users, Video, ArrowLeft, CheckCircle, Baby, Upload, FileText, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { 
+  Shield, 
+  Users, 
+  Video, 
+  ArrowLeft, 
+  CheckCircle, 
+  Baby, 
+  Upload, 
+  FileText, 
+  ChevronDown, 
+  ChevronUp, 
+  Trash2, 
+  Dices, 
+  ExternalLink, 
+  RotateCcw,
+  Swords
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  buscarEquipes, 
+  buscarStatusTorneio, 
+  acionarSorteioPublicoAdmin, 
+  resetarTorneio, 
+  excluirEquipe,
+  excluirTodasEquipes,
+  popularTimesFicticios,
+  type TrucoEquipe, 
+  type TrucoTorneioStatus 
+} from '../../services/trucoService';
 
 export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +47,13 @@ export const AdminPage: React.FC = () => {
   const [linkDomingo, setLinkDomingo] = useState('');
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; idToDelete: string | null; table: 'expogoiabal' | '3tambores' }>({ isOpen: false, idToDelete: null, table: 'expogoiabal' });
   const [selectedVoucher, setSelectedVoucher] = useState<any | null>(null);
+
+  // Truco States
+  const [equipesTruco, setEquipesTruco] = useState<TrucoEquipe[]>([]);
+  const [statusTruco, setStatusTruco] = useState<TrucoTorneioStatus | null>(null);
+  const [acionandoSorteio, setAcionandoSorteio] = useState(false);
+  const [mostrarGerenciadorTimes, setMostrarGerenciadorTimes] = useState(false);
+  const [excluindoTimeId, setExcluindoTimeId] = useState<string | null>(null);
 
   const getRegistrationId = (id: string) => {
     const idStr = String(id);
@@ -362,11 +396,116 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchTrucoDados = async () => {
+    try {
+      let [eqs, st] = await Promise.all([
+        buscarEquipes(),
+        buscarStatusTorneio()
+      ]);
+      if (eqs.length < 8) {
+        eqs = await popularTimesFicticios();
+      }
+      setEquipesTruco(eqs);
+      setStatusTruco(st);
+    } catch (err) {
+      console.error('Erro ao buscar dados do truco:', err);
+    }
+  };
+
   useEffect(() => {
     fetchInscricoes();
     fetchInscricoesTambores();
     fetchFotosConfig();
+    fetchTrucoDados();
   }, []);
+
+  const handleAcionarSorteio = async () => {
+    if (equipesTruco.length < 4) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'É necessário ter no mínimo 4 equipes cadastradas para realizar o sorteio.' });
+      return;
+    }
+    if (equipesTruco.length % 2 !== 0) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'A quantidade de equipes precisa ser PAR para gerar rodadas simultâneas.' });
+      return;
+    }
+
+    setAcionandoSorteio(true);
+    try {
+      const res = await acionarSorteioPublicoAdmin(equipesTruco);
+      if (res.sucesso) {
+        await fetchTrucoDados();
+        setFeedbackModal({ 
+          isOpen: true, 
+          type: 'success', 
+          message: '🎲 Sorteio acionado com sucesso! A tela pública (/ExpoGoiabal/Truco/Sorteio) já iniciou a transmissão ao vivo.' 
+        });
+      } else {
+        setFeedbackModal({ isOpen: true, type: 'error', message: res.mensagem });
+      }
+    } catch (err: any) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao acionar sorteio: ' + (err?.message || '') });
+    } finally {
+      setAcionandoSorteio(false);
+    }
+  };
+
+  const handleResetarSorteio = async () => {
+    if (!window.confirm('Tem certeza que deseja resetar o sorteio do truco? Isso limpará todas as partidas e voltará ao estado de espera.')) {
+      return;
+    }
+    try {
+      await resetarTorneio();
+      await fetchTrucoDados();
+      setFeedbackModal({ isOpen: true, type: 'success', message: 'Sorteio resetado com sucesso. Status voltou para: Aguardando Sorteio.' });
+    } catch (err: any) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao resetar: ' + (err?.message || '') });
+    }
+  };
+
+  const handleExcluirEquipe = async (equipeId: string, equipeNome: string) => {
+    if (!window.confirm(`Deseja realmente excluir a equipe "${equipeNome}" do torneio?`)) {
+      return;
+    }
+    setExcluindoTimeId(equipeId);
+    try {
+      await excluirEquipe(equipeId);
+      await fetchTrucoDados();
+      setFeedbackModal({ isOpen: true, type: 'success', message: `Equipe "${equipeNome}" excluída com sucesso!` });
+    } catch (err: any) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao excluir equipe: ' + (err?.message || '') });
+    } finally {
+      setExcluindoTimeId(null);
+    }
+  };
+
+  const handleExcluirTodasEquipes = async () => {
+    if (!window.confirm('⚠️ ATENÇÃO: Deseja realmente excluir TODAS as equipes cadastradas no torneio de truco?')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await excluirTodasEquipes();
+      await fetchTrucoDados();
+      setFeedbackModal({ isOpen: true, type: 'success', message: 'Todas as equipes e confrontos foram excluídos com sucesso.' });
+    } catch (err: any) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao excluir equipes: ' + (err?.message || '') });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePopularNovamente = async () => {
+    setLoading(true);
+    try {
+      await popularTimesFicticios();
+      await fetchTrucoDados();
+      setFeedbackModal({ isOpen: true, type: 'success', message: '08 equipes de teste cadastradas com sucesso!' });
+    } catch (err: any) {
+      setFeedbackModal({ isOpen: true, type: 'error', message: 'Erro ao cadastrar equipes: ' + (err?.message || '') });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveFotos = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -602,6 +741,241 @@ export const AdminPage: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {/* CARD EXCLUSIVO: 🎲 SORTEIO — 2º TORNEIO DE TRUCO */}
+            <div className="w-full bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.15)] flex flex-col lg:flex-row items-center justify-between gap-6 mt-4">
+              <div className="flex flex-col gap-2.5 max-w-2xl text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 self-center lg:self-start px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
+                  <Dices size={14} className="animate-spin" />
+                  <span>Módulo Oficial • Transmissão ao Vivo</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-wide">
+                  🎲 SORTEIO — 2º TORNEIO DE TRUCO
+                </h3>
+                
+                {/* Informações Requeridas */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs font-bold text-zinc-300 mt-1">
+                  <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
+                    <Users size={15} className="text-emerald-400" />
+                    <span>
+                      <strong className="text-white">Quantidade de times:</strong> {equipesTruco.length} ({equipesTruco.length % 2 === 0 && equipesTruco.length >= 4 ? 'Par e Apta ✅' : 'Necessário número Par ≥ 4 ⚠️'})
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
+                    <strong className="text-white">Status do sorteio:</strong>
+                    {statusTruco?.sorteio_primeira_fase_confirmado ? (
+                      <span className="text-emerald-400 font-black">🟢 Sorteio Realizado</span>
+                    ) : (
+                      <span className="text-amber-400 font-black">🟡 Aguardando sorteio</span>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
+                  <strong className="text-zinc-300">Situação atual: </strong>
+                  {statusTruco?.sorteio_primeira_fase_confirmado
+                    ? 'O sorteio oficial já foi transmitido. As partidas da 1ª fase estão geradas e disponíveis no calendário.'
+                    : 'Aguardando comando. Ao clicar em "ACIONAR SORTEIO", a tela pública transmitirá imediatamente a apresentação oficial.'}
+                </p>
+              </div>
+
+              {/* Botões de Ação do Administrador */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setMostrarGerenciadorTimes(prev => !prev)}
+                  className={`w-full sm:w-auto px-5 py-3.5 rounded-2xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md ${
+                    mostrarGerenciadorTimes
+                      ? 'bg-zinc-800 text-white border-white/20'
+                      : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border-white/10'
+                  }`}
+                >
+                  <Users size={15} className="text-teal-400" />
+                  <span>{mostrarGerenciadorTimes ? 'Ocultar Equipes' : `Gerenciar Equipes (${equipesTruco.length})`}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Partidas'); }}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black border border-emerald-400/30 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg hover:scale-105"
+                >
+                  <Swords size={15} className="text-black" />
+                  <span>Lançar / Gerenciar Placares</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.open('/ExpoGoiabal/Truco/Sorteio', '_blank')}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-white/10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md"
+                >
+                  <ExternalLink size={15} className="text-emerald-400" />
+                  <span>Tela Pública</span>
+                </button>
+
+                {statusTruco?.sorteio_primeira_fase_confirmado && (
+                  <button
+                    type="button"
+                    onClick={handleResetarSorteio}
+                    className="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    title="Resetar sorteio para fazer novamente"
+                  >
+                    <RotateCcw size={14} />
+                    <span>Resetar Sorteio</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleAcionarSorteio}
+                  disabled={acionandoSorteio || equipesTruco.length < 4 || equipesTruco.length % 2 !== 0}
+                  className={`w-full sm:w-auto px-7 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    statusTruco?.sorteio_primeira_fase_confirmado
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'
+                      : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-black shadow-amber-500/40 hover:scale-105'
+                  }`}
+                >
+                  <Dices size={18} />
+                  <span>
+                    {acionandoSorteio
+                      ? 'Acionando...'
+                      : statusTruco?.sorteio_primeira_fase_confirmado
+                      ? 'RE-ACIONAR SORTEIO'
+                      : 'ACIONAR SORTEIO'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* SEÇÃO EXPANSÍVEL: GERENCIADOR E EXCLUSÃO DE EQUIPES */}
+            {mostrarGerenciadorTimes && (
+              <div className="w-full bg-zinc-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                
+                {/* Header do Gerenciador */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                      <h4 className="text-lg font-black uppercase tracking-wider text-white">
+                        Equipes Cadastradas no Torneio de Truco
+                      </h4>
+                    </div>
+                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                      Total de {equipesTruco.length} equipe(s). Remova equipes individualmente ou em lote.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={handlePopularNovamente}
+                      className="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <Dices size={14} />
+                      <span>⚡ Inserir 08 Times de Teste</span>
+                    </button>
+
+                    {equipesTruco.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleExcluirTodasEquipes}
+                        className="px-4 py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <Trash2 size={14} />
+                        <span>Excluir Todas as Equipes</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lista de Equipes Cadastradas */}
+                {equipesTruco.length === 0 ? (
+                  <div className="py-12 text-center flex flex-col items-center gap-3">
+                    <Users size={36} className="text-zinc-600" />
+                    <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                      Nenhuma equipe cadastrada no momento
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handlePopularNovamente}
+                      className="mt-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-black text-xs uppercase tracking-wider cursor-pointer hover:scale-105 transition-all shadow-md"
+                    >
+                      Cadastrar 08 Equipes Fictícias
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {equipesTruco.map((time, idx) => {
+                      const titulares = (time.jogadores || []).filter(j => j.is_titular !== false);
+                      const reservas = (time.jogadores || []).filter(j => j.is_titular === false);
+
+                      return (
+                        <div
+                          key={time.id}
+                          className="bg-black/40 border border-white/10 hover:border-emerald-500/30 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-lg transition-colors group"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-lg bg-zinc-800 text-zinc-400 font-black text-xs flex items-center justify-center shrink-0">
+                                {idx + 1}
+                              </span>
+                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0">
+                                {time.foto_url ? (
+                                  <img src={time.foto_url} alt={time.nome} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                                    <Users size={20} />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <h5 className="font-black text-sm uppercase text-white group-hover:text-amber-400 transition-colors">
+                                  {time.nome}
+                                </h5>
+                                <span className="text-[11px] text-zinc-400 font-semibold block">
+                                  📍 {time.cidade}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Botão Excluir Equipe Individual */}
+                            <button
+                              type="button"
+                              onClick={() => handleExcluirEquipe(time.id, time.nome)}
+                              disabled={excluindoTimeId === time.id}
+                              className="px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/80 text-red-400 hover:text-white border border-red-500/30 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all shrink-0"
+                              title={`Excluir equipe ${time.nome}`}
+                            >
+                              <Trash2 size={13} />
+                              <span>{excluindoTimeId === time.id ? 'Excluindo...' : 'Excluir'}</span>
+                            </button>
+                          </div>
+
+                          {/* Lista de Integrantes */}
+                          <div className="pt-2.5 border-t border-white/5 text-[11px]">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                                Titulares ({titulares.length}):
+                              </span>
+                              <span className="text-zinc-300 font-medium">
+                                {titulares.map(t => t.nome_completo).join(', ') || 'Nenhum'}
+                              </span>
+                              {reservas.length > 0 && (
+                                <span className="text-[10px] text-amber-400/80 font-medium mt-0.5">
+                                  Reserva(s): {reservas.map(r => r.nome_completo).join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </div>
+            )}
+
           </div>
         )}
 

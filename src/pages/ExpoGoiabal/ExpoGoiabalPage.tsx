@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
-import { Camera } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 export const ExpoGoiabalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -161,18 +161,19 @@ export const ExpoGoiabalPage: React.FC = () => {
             </div>
           ) : (
             <div className="animate-in fade-in duration-1000 flex flex-col items-center gap-5 cursor-pointer" onClick={() => {
-              const el = document.getElementById('fotos-destaque');
+              const el = document.getElementById('truco-destaque');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
+              else { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco'); }
             }}>
-              <span className="text-white text-xs md:text-sm font-black uppercase tracking-widest bg-gradient-to-r from-yellow-500 to-orange-500 border border-yellow-500/20 px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.3)] flex items-center gap-2 animate-bounce">
-                📸 Fotos Oficiais Disponíveis!
+              <span className="text-white text-xs md:text-sm font-black uppercase tracking-widest bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 border border-emerald-500/30 px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center gap-2 animate-bounce">
+                2º Torneio de Truco
               </span>
               <div className="flex flex-col items-center gap-2">
                 <p className="text-zinc-200 text-lg md:text-xl font-black uppercase tracking-widest text-center max-w-md drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)] animate-pulse">
-                  Arraste para baixo e acesse as fotos!
+                  Arraste para baixo e acesse ao torneio
                 </p>
                 <div className="flex justify-center mt-2 animate-bounce">
-                  <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"></path>
                   </svg>
                 </div>
@@ -184,44 +185,35 @@ export const ExpoGoiabalPage: React.FC = () => {
 
 
 
-          {/* Seção Destaque de Fotos */}
-          <div id="fotos-destaque" className="w-full max-w-4xl mt-16 md:mt-24 px-4">
+          {/* Seção Destaque 2º Torneio de Truco */}
+          <div id="truco-destaque" className="w-full max-w-4xl mt-8 px-4 scroll-mt-24">
             <div 
-              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/fotos'); }}
-              className="cursor-pointer group relative overflow-hidden bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-yellow-500/20 rounded-[2rem] p-6 md:p-10 shadow-2xl hover:shadow-[0_0_40px_rgba(245,158,11,0.15)] hover:border-yellow-500/40 transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-8"
+              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco'); }}
+              className="cursor-pointer group relative overflow-hidden bg-gradient-to-r from-zinc-950 via-emerald-950/40 to-zinc-950 border border-emerald-500/30 hover:border-emerald-400 rounded-[2rem] p-6 md:p-10 shadow-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.2)] transition-all duration-500 flex flex-col items-center justify-center text-center"
             >
               {/* Glow background effect */}
-              <div className="absolute inset-0 bg-yellow-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"></div>
+              <div className="absolute inset-0 bg-emerald-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"></div>
 
               {/* Text content */}
-              <div className="flex flex-col gap-4 text-center md:text-left relative z-10 max-w-lg flex-1">
-                <span className="self-center md:self-start bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
-                  <Camera size={12} />
-                  Galeria de Fotos
+              <div className="flex flex-col items-center gap-4 text-center relative z-10 max-w-xl">
+                <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
+                  <Trophy size={14} className="text-amber-400" />
+                  Torneio Oficial
                 </span>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-wider text-white">
-                  Fotos Oficiais <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">EXPOGOIABAL 2026</span>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-wider text-white">
+                  2º Torneio de <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400">TRUCO EXPOGOIABAL</span>
                 </h2>
-                <p className="text-zinc-400 font-medium text-sm md:text-base leading-relaxed">
-                  Confira a cobertura completa do evento! Acesse as galerias com as melhores fotos das montarias, shows e da movimentação do público.
+                <p className="text-zinc-300 font-medium text-sm md:text-base leading-relaxed max-w-lg">
+                  Inscreva sua equipe, acompanhe as rodadas simultâneas, confira a tabela de classificação e dispute o título no mata-mata em tempo real!
                 </p>
                 <div className="pt-2">
                   <div
-                    className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 group-hover:from-yellow-400 group-hover:to-amber-500 text-black font-black text-sm py-4 px-8 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] group-hover:scale-105 transition-all duration-300 uppercase tracking-widest"
+                    className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 group-hover:from-emerald-400 group-hover:to-teal-500 text-black font-black text-sm py-4 px-8 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] group-hover:scale-105 transition-all duration-300 uppercase tracking-widest"
                   >
-                    Ver Fotos
+                    Acessar Torneio de Truco
                   </div>
                 </div>
-              </div>
-
-              {/* Image banner */}
-              <div className="w-full md:w-[280px] h-[180px] rounded-2xl overflow-hidden border border-white/10 group-hover:border-yellow-500/30 transition-colors duration-500 shrink-0 relative z-10 shadow-lg">
-                <img 
-                  src="/banner-fotos.png" 
-                  alt="Cobertura de Fotos" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 group-hover:brightness-110"
-                />
               </div>
             </div>
           </div>

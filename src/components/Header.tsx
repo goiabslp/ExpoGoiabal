@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Shield } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -27,10 +28,7 @@ export const Header: React.FC = () => {
 
   const navItems = [
     { label: 'Início', path: '/ExpoGoiabal/Inicio' },
-    { label: 'Fotos', path: '/ExpoGoiabal/fotos' },
-    { label: 'Embaixadora', path: '/ExpoGoiabal/Embaixadora' },
-    { label: 'Patrocinador', path: '/ExpoGoiabal/Patrocinador' },
-    { label: 'Show', path: '/ExpoGoiabal/show' },
+    { label: 'Torneio de Truco', path: '/ExpoGoiabal/Truco', isPrefixMatch: true },
   ];
 
   return (
@@ -56,22 +54,26 @@ export const Header: React.FC = () => {
 
         {/* Menu Centralizado (Desktop) */}
         <nav className="hidden lg:flex items-center justify-center gap-4 xl:gap-6 shrink-0 z-10">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => window.scrollTo(0, 0)}
-              className={({ isActive }) => 
-                `text-[10px] xl:text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                  isActive 
-                    ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" 
-                    : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] hover:text-cyan-300 hover:drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const isCurrentlyActive = location.pathname === item.path || (item.isPrefixMatch && location.pathname.startsWith(item.path));
+            return (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                  navigate(item.path);
+                }}
+                className={`text-[10px] xl:text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                  isCurrentlyActive 
+                    ? "text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" 
+                    : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] hover:text-emerald-300 hover:drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Lado Direito (Logo 2 no Desktop, Hamburger no Mobile) */}
@@ -113,22 +115,27 @@ export const Header: React.FC = () => {
       {/* Menu Mobile Overlay */}
       {isMobileMenuOpen && (
         <div className="lg:hidden absolute top-20 left-0 w-full bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 shadow-2xl flex flex-col items-center py-6 gap-6 animate-in slide-in-from-top-4 duration-300 z-50">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => { setIsMobileMenuOpen(false); window.scrollTo(0, 0); }}
-              className={({ isActive }) => 
-                `text-sm font-bold uppercase tracking-widest transition-all duration-300 ${
-                  isActive 
-                    ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" 
-                    : "text-white hover:text-cyan-300"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const isCurrentlyActive = location.pathname === item.path || (item.isPrefixMatch && location.pathname.startsWith(item.path));
+            return (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  window.scrollTo(0, 0);
+                  navigate(item.path);
+                }}
+                className={`text-sm font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                  isCurrentlyActive 
+                    ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" 
+                    : "text-white hover:text-emerald-300"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
           <button 
             onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
             className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-zinc-500 hover:text-yellow-500 transition-colors mt-4"
