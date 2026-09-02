@@ -21,7 +21,8 @@ import {
   Clock,
   AlertTriangle,
   Calendar,
-  BadgeCheck
+  BadgeCheck,
+  Trophy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -935,6 +936,8 @@ export const AdminPage: React.FC = () => {
               const aprovados = equipesTruco.filter(e => (e.status || 'aprovado') === 'aprovado');
               const reprovados = equipesTruco.filter(e => e.status === 'reprovado');
               const disponiveisTorneio = aprovados.length;
+              const regularizados = equipesTruco.filter(e => e.cadastro_regularizado !== false);
+              const semCpf = equipesTruco.filter(e => e.cadastro_regularizado === false);
 
               const listaFiltrada = equipesTruco.filter(e => {
                 if (filtroStatusTruco === 'pendente') return e.status === 'pendente';
@@ -984,7 +987,7 @@ export const AdminPage: React.FC = () => {
                   </div>
 
                   {/* RESUMO DE STATUS NO TOPO */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex flex-col">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Times Cadastrados</span>
                       <span className="text-2xl font-black text-white mt-1">{totalCadastrados}</span>
@@ -1006,12 +1009,22 @@ export const AdminPage: React.FC = () => {
                       <span className="text-2xl font-black text-emerald-400 mt-1">{aprovados.length}</span>
                     </div>
 
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col">
-                      <div className="flex items-center gap-1.5 text-red-400">
-                        <X size={13} />
-                        <span className="text-[10px] font-black uppercase tracking-wider">Reprovados</span>
+                    <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 flex flex-col">
+                      <div className="flex items-center gap-1.5 text-emerald-400">
+                        <Trophy size={13} className="text-amber-400" />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Com Bônus</span>
                       </div>
-                      <span className="text-2xl font-black text-red-400 mt-1">{reprovados.length}</span>
+                      <span className="text-2xl font-black text-emerald-300 mt-1">{regularizados.length}</span>
+                      <span className="text-[9px] text-zinc-400">Regularizados</span>
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col">
+                      <div className="flex items-center gap-1.5 text-amber-400">
+                        <AlertTriangle size={13} />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Sem Bônus</span>
+                      </div>
+                      <span className="text-2xl font-black text-amber-400 mt-1">{semCpf.length}</span>
+                      <span className="text-[9px] text-zinc-400">Sem CPF</span>
                     </div>
 
                     <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-emerald-950/60 to-zinc-900 border border-emerald-500/40 rounded-2xl p-4 flex flex-col shadow-inner">
@@ -1086,6 +1099,7 @@ export const AdminPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {listaFiltrada.map((time) => {
                         const statusAtual = (time.status || 'aprovado') as TrucoStatusEquipe;
+                        const isRegularizado = time.cadastro_regularizado !== false;
                         const titulares = (time.jogadores || []).filter(j => j.is_titular !== false);
                         const reservas = (time.jogadores || []).filter(j => j.is_titular === false);
                         const isProcessando = processandoStatusId === time.id;
@@ -1130,7 +1144,23 @@ export const AdminPage: React.FC = () => {
                                   <span className="text-xs text-zinc-300 font-semibold block">
                                     📍 {time.cidade}
                                   </span>
-                                  <span className="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">
+                                  
+                                  {/* Badge de Elegibilidade ao Bônus */}
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    {isRegularizado ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+                                        <Trophy size={11} className="text-amber-400" />
+                                        <span>Regularizado • Elegível ao Bônus</span>
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+                                        <AlertTriangle size={11} className="text-amber-400" />
+                                        <span>Sem CPF • Inelegível ao Bônus</span>
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <span className="text-[10px] text-zinc-500 flex items-center gap-1 mt-1">
                                     <Calendar size={11} />
                                     <span>Cadastrado em {dataCadastroFormatada}</span>
                                   </span>
@@ -1170,7 +1200,14 @@ export const AdminPage: React.FC = () => {
                                   {titulares.map((t, tIdx) => (
                                     <div key={t.id || tIdx} className="text-zinc-300">
                                       <span className="font-bold text-white">{tIdx + 1}. {t.nome_completo}</span>
-                                      <span className="text-[9px] text-zinc-400 block">CPF: {t.cpf} • Nasc: {t.data_nascimento}</span>
+                                      <span className="text-[9px] block">
+                                        {t.cpf ? (
+                                          <span className="text-zinc-400">CPF: {t.cpf}</span>
+                                        ) : (
+                                          <span className="text-amber-400 font-bold">⚠️ CPF: Não informado</span>
+                                        )}
+                                        <span className="text-zinc-500"> • Nasc: {t.data_nascimento || 'Não informada'}</span>
+                                      </span>
                                     </div>
                                   ))}
                                 </div>
@@ -1185,7 +1222,14 @@ export const AdminPage: React.FC = () => {
                                     {reservas.map((r, rIdx) => (
                                       <div key={r.id || rIdx}>
                                         <span className="font-bold text-white">• {r.nome_completo}</span>
-                                        <span className="text-[9px] text-zinc-400 block">CPF: {r.cpf} • Nasc: {r.data_nascimento}</span>
+                                        <span className="text-[9px] block">
+                                          {r.cpf ? (
+                                            <span className="text-zinc-400">CPF: {r.cpf}</span>
+                                          ) : (
+                                            <span className="text-amber-400 font-bold">⚠️ CPF: Não informado</span>
+                                          )}
+                                          <span className="text-zinc-500"> • Nasc: {r.data_nascimento || 'Não informada'}</span>
+                                        </span>
                                       </div>
                                     ))}
                                   </div>

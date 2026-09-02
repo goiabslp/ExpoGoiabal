@@ -18,6 +18,7 @@ export interface TrucoEquipe {
   cidade: string;
   foto_url?: string;
   status: TrucoStatusEquipe;
+  cadastro_regularizado?: boolean;
   created_at?: string;
   jogadores?: TrucoJogador[];
 }
@@ -235,6 +236,7 @@ export const popularTimesFicticios = async (): Promise<TrucoEquipe[]> => {
       cidade: seed.cidade,
       foto_url: seed.foto_url,
       status: 'aprovado',
+      cadastro_regularizado: true,
       created_at: new Date().toISOString(),
       jogadores: seed.jogadores.map(j => ({
         id: crypto.randomUUID(),
@@ -253,7 +255,8 @@ export const popularTimesFicticios = async (): Promise<TrucoEquipe[]> => {
         nome: novaEq.nome,
         cidade: novaEq.cidade,
         foto_url: novaEq.foto_url,
-        status: novaEq.status
+        status: novaEq.status,
+        cadastro_regularizado: true
       });
 
       if (novaEq.jogadores && novaEq.jogadores.length > 0) {
@@ -314,6 +317,7 @@ export const buscarEquipes = async (apenasAprovados: boolean = true): Promise<Tr
       cidade: eq.cidade,
       foto_url: eq.foto_url,
       status: (eq.status || 'aprovado') as TrucoStatusEquipe,
+      cadastro_regularizado: eq.cadastro_regularizado !== false,
       created_at: eq.created_at,
       jogadores: (jogadoresData || []).filter((j: any) => j.equipe_id === eq.id)
     }));
@@ -349,8 +353,8 @@ export const excluirTodasEquipes = async (): Promise<void> => {
  * OBRIGATÓRIO: Toda nova equipe entra com status 'pendente' aguardando moderação admin.
  */
 export const cadastrarEquipe = async (
-  dados: { nome: string; cidade: string; foto_url?: string },
-  jogadores: { nome_completo: string; cpf: string; data_nascimento: string; is_titular?: boolean }[],
+  dados: { nome: string; cidade: string; foto_url?: string; cadastro_regularizado?: boolean },
+  jogadores: { nome_completo: string; cpf?: string; data_nascimento: string; is_titular?: boolean }[],
   fotoFile?: File | null
 ): Promise<TrucoEquipe> => {
   let fotoUrlFinal = dados.foto_url || '';
@@ -387,12 +391,17 @@ export const cadastrarEquipe = async (
   const novaEquipeId = crypto.randomUUID();
   const statusInicial: TrucoStatusEquipe = 'pendente';
 
+  // Se cadastro_regularizado não for passado explicitamente, verifica se todos os jogadores possuem CPF completo informado
+  const todosJogadoresComCpf = jogadores.length > 0 && jogadores.every(j => Boolean(j.cpf && j.cpf.replace(/\D/g, '').length === 11));
+  const isRegularizado = dados.cadastro_regularizado !== undefined ? dados.cadastro_regularizado : todosJogadoresComCpf;
+
   const novaEquipe: TrucoEquipe = {
     id: novaEquipeId,
     nome: dados.nome.trim(),
     cidade: dados.cidade.trim(),
     foto_url: fotoUrlFinal,
     status: statusInicial,
+    cadastro_regularizado: isRegularizado,
     created_at: new Date().toISOString()
   };
 
@@ -404,7 +413,8 @@ export const cadastrarEquipe = async (
         nome: novaEquipe.nome,
         cidade: novaEquipe.cidade,
         foto_url: novaEquipe.foto_url,
-        status: novaEquipe.status
+        status: novaEquipe.status,
+        cadastro_regularizado: novaEquipe.cadastro_regularizado
       });
 
     if (equipeError) {
@@ -416,7 +426,7 @@ export const cadastrarEquipe = async (
       id: crypto.randomUUID(),
       equipe_id: novaEquipeId,
       nome_completo: j.nome_completo.trim(),
-      cpf: j.cpf.trim(),
+      cpf: j.cpf ? j.cpf.trim() : '',
       data_nascimento: j.data_nascimento,
       is_titular: j.is_titular !== undefined ? j.is_titular : idx < 4,
       created_at: new Date().toISOString()

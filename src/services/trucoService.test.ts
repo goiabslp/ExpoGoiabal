@@ -388,3 +388,44 @@ describe('Sistema de Moderação e Status dos Times (Pendente, Aprovado, Reprova
     expect(todas.length).toBe(0);
   });
 });
+
+describe('Regra de CPF Opcional e Bônus de Premiação no Cadastro', () => {
+  it('deve cadastrar equipe com todos CPFs e definir cadastro_regularizado como TRUE', async () => {
+    const { cadastrarEquipe, buscarTodasEquipesAdmin } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Time Regularizado', cidade: 'Goiabal' },
+      [
+        { nome_completo: 'J1', cpf: '123.456.789-01', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2', cpf: '234.567.890-12', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3', cpf: '345.678.901-23', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4', cpf: '456.789.012-34', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    expect(equipe.cadastro_regularizado).toBe(true);
+
+    const todas = await buscarTodasEquipesAdmin();
+    const encontrada = todas.find(e => e.id === equipe.id);
+    expect(encontrada?.cadastro_regularizado).toBe(true);
+  });
+
+  it('deve cadastrar equipe sem CPF e definir cadastro_regularizado como FALSE quando explicitado ou inferido', async () => {
+    const { cadastrarEquipe, buscarTodasEquipesAdmin } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Time Sem CPF', cidade: 'Goiabal', cadastro_regularizado: false },
+      [
+        { nome_completo: 'J1', cpf: '', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2', cpf: '', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3', cpf: '', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4', cpf: '', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    expect(equipe.cadastro_regularizado).toBe(false);
+
+    const todas = await buscarTodasEquipesAdmin();
+    const encontrada = todas.find(e => e.id === equipe.id);
+    expect(encontrada?.cadastro_regularizado).toBe(false);
+  });
+});
+

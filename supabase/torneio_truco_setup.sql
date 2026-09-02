@@ -10,24 +10,34 @@ CREATE TABLE IF NOT EXISTS public.truco_equipes (
     cidade VARCHAR(255) NOT NULL,
     foto_url TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'pendente', -- 'pendente', 'aprovado', 'reprovado'
+    cadastro_regularizado BOOLEAN NOT NULL DEFAULT TRUE, -- TRUE = elegível ao bônus de premiação, FALSE = sem CPF / inelegível ao bônus
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Garantir coluna status caso a tabela já tenha sido criada anteriormente
+-- Garantir colunas caso a tabela já tenha sido criada anteriormente
 ALTER TABLE IF EXISTS public.truco_equipes 
 ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'pendente';
+
+ALTER TABLE IF EXISTS public.truco_equipes 
+ADD COLUMN IF NOT EXISTS cadastro_regularizado BOOLEAN NOT NULL DEFAULT TRUE;
 
 -- 2. TABELA DE JOGADORES (4 Titulares + Reservas)
 CREATE TABLE IF NOT EXISTS public.truco_jogadores (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     equipe_id UUID REFERENCES public.truco_equipes(id) ON DELETE CASCADE,
     nome_completo VARCHAR(255) NOT NULL,
-    cpf VARCHAR(20) NOT NULL,
+    cpf VARCHAR(20) DEFAULT '',
     data_nascimento VARCHAR(20),
     is_titular BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE IF EXISTS public.truco_jogadores 
+ALTER COLUMN cpf DROP NOT NULL;
+
+ALTER TABLE IF EXISTS public.truco_jogadores 
+ALTER COLUMN cpf SET DEFAULT '';
 
 -- 3. TABELA DE STATUS GERAL DO TORNEIO (Inscrição, Sorteio, Grupos, Mata-mata)
 CREATE TABLE IF NOT EXISTS public.truco_torneio_status (

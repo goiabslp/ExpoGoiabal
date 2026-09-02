@@ -12,6 +12,7 @@ import {
   ArrowRight, 
   Sparkles, 
   AlertCircle,
+  AlertTriangle,
   Trophy,
   ShieldAlert,
   IdCard,
@@ -43,6 +44,7 @@ export const TrucoCadastroPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showSemCpfModal, setShowSemCpfModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [equipeCriadaNome, setEquipeCriadaNome] = useState('');
 
@@ -95,18 +97,17 @@ export const TrucoCadastroPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validarCamposBase = () => {
     setErrorMsg(null);
 
     if (!nomeEquipe.trim()) {
       setErrorMsg('Informe o nome da equipe.');
-      return;
+      return false;
     }
 
     if (!cidadeEquipe.trim()) {
       setErrorMsg('Informe a cidade da equipe.');
-      return;
+      return false;
     }
 
     // Validar jogadores
@@ -114,23 +115,49 @@ export const TrucoCadastroPage: React.FC = () => {
       const j = jogadores[i];
       if (!j.nome_completo.trim()) {
         setErrorMsg(`Preencha o nome do Jogador ${i + 1}.`);
-        return;
-      }
-      if (!j.cpf.trim() || j.cpf.replace(/\D/g, '').length !== 11) {
-        setErrorMsg(`Informe um CPF válido para o Jogador ${i + 1} (${j.nome_completo || 'Jogador'}).`);
-        return;
+        return false;
       }
       if (!j.data_nascimento.trim()) {
         setErrorMsg(`Informe a data de nascimento do Jogador ${i + 1}.`);
-        return;
+        return false;
+      }
+      // CPF é opcional, mas se informado deve conter 11 dígitos
+      if (j.cpf.trim() && j.cpf.replace(/\D/g, '').length !== 11) {
+        setErrorMsg(`O CPF informado para o Jogador ${i + 1} (${j.nome_completo || 'Jogador'}) está incompleto. Digite os 11 dígitos ou deixe em branco para continuar sem CPF.`);
+        return false;
       }
     }
 
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validarCamposBase()) return;
+
+    // Checar se algum jogador está sem CPF informado
+    const temJogadorSemCpf = jogadores.some(j => !j.cpf.trim() || j.cpf.replace(/\D/g, '').length !== 11);
+
+    if (temJogadorSemCpf) {
+      // Exibir modal de aviso sobre a renúncia ao bônus de premiação
+      setShowSemCpfModal(true);
+    } else {
+      // Todos com CPF informado -> cadastro regularizado e elegível ao bônus
+      executarEnvioCadastro(true);
+    }
+  };
+
+  const executarEnvioCadastro = async (regularizado: boolean) => {
     setIsSubmitting(true);
+    setErrorMsg(null);
 
     try {
       await cadastrarEquipe(
-        { nome: nomeEquipe, cidade: cidadeEquipe },
+        { 
+          nome: nomeEquipe, 
+          cidade: cidadeEquipe,
+          cadastro_regularizado: regularizado
+        },
         jogadores.map(j => ({
           nome_completo: j.nome_completo,
           cpf: j.cpf,
@@ -140,6 +167,7 @@ export const TrucoCadastroPage: React.FC = () => {
       );
 
       setEquipeCriadaNome(nomeEquipe);
+      setShowSemCpfModal(false);
       setShowSuccessModal(true);
     } catch (err: any) {
       console.error('Erro no cadastro:', err);
@@ -364,17 +392,21 @@ export const TrucoCadastroPage: React.FC = () => {
                           />
                         </div>
 
-                        {/* CPF */}
+                        {/* CPF (Opcional) */}
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                            <ShieldAlert size={12} className={isTitular ? "text-emerald-400" : "text-amber-400"} />
-                            CPF *
-                          </label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                              <ShieldAlert size={12} className={isTitular ? "text-emerald-400" : "text-amber-400"} />
+                              CPF (Opcional)
+                            </label>
+                            <span className="text-[9px] text-amber-400 font-semibold uppercase tracking-wider">
+                              Bônus 🏆
+                            </span>
+                          </div>
                           <input
                             type="text"
-                            required
                             maxLength={14}
-                            placeholder="000.000.000-00"
+                            placeholder="000.000.000-00 (Opcional)"
                             value={jogador.cpf}
                             onChange={e => handleJogadorChange(index, 'cpf', e.target.value)}
                             className="w-full bg-zinc-900 border border-zinc-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none text-sm font-medium"
@@ -405,13 +437,13 @@ export const TrucoCadastroPage: React.FC = () => {
             {/* SUBMIT BUTTON */}
             <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-zinc-500 font-semibold">
-                * Equipe com 4 titulares obrigatórios + reservas opcionais
+                * Equipe com 4 titulares obrigatórios + reservas opcionais. CPF opcional (necessário p/ bônus de premiação).
               </span>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-sm uppercase tracking-widest shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-sm uppercase tracking-widest shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -430,6 +462,76 @@ export const TrucoCadastroPage: React.FC = () => {
 
         </div>
       </main>
+
+      {/* MODAL DE CONFIRMAÇÃO: CADASTRO SEM CPF */}
+      {showSemCpfModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.25)] relative text-center animate-in zoom-in-95 duration-300">
+            
+            {/* Ícone de Alerta */}
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-500/40 shadow-inner">
+              <AlertTriangle size={36} className="animate-pulse" />
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 text-xs font-black uppercase tracking-widest mb-3">
+              <span>⚠️ Cadastro sem CPF</span>
+            </div>
+
+            <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight mb-4">
+              Aviso de Premiação
+            </h3>
+
+            <div className="bg-zinc-950/70 border border-white/10 rounded-2xl p-4 text-left text-zinc-300 text-sm flex flex-col gap-3 mb-6">
+              <p className="leading-relaxed">
+                O cadastro do seu time será finalizado mesmo sem o CPF.
+              </p>
+
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium leading-relaxed">
+                Porém, ao optar por continuar sem informar o CPF, o time <strong>abre mão do bônus da premiação</strong>.
+              </div>
+
+              <div className="flex items-start gap-2.5 text-zinc-300 text-xs sm:text-sm">
+                <Trophy size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  🏆 O bônus será concedido somente aos <strong className="text-emerald-400">05 melhores colocados com cadastro regularizado</strong>.
+                </span>
+              </div>
+
+              <p className="text-zinc-400 text-xs font-semibold text-center pt-2 border-t border-white/10">
+                Deseja continuar mesmo assim?
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => setShowSemCpfModal(false)}
+                className="w-full py-3.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-all border border-white/10 hover:border-white/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Voltar e informar CPF</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => executarEnvioCadastro(false)}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-black font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                    <span>Enviando...</span>
+                  </>
+                ) : (
+                  <span>Continuar sem CPF</span>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE SUCESSO */}
       {showSuccessModal && (
