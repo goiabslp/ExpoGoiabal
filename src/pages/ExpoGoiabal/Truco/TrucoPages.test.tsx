@@ -27,9 +27,36 @@ describe('Renderização das páginas completas de Truco', () => {
     expect(container).toBeTruthy();
   });
 
-  it('deve renderizar TrucoSorteioRodadasPage sem erros', () => {
+  it('deve renderizar TrucoSorteioRodadasPage na rota principal sem erros', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Sorteio']}>
+        <TrucoSorteioRodadasPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoSorteioRodadasPage na rota de Resumo sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Sorteio/Resumo']}>
+        <TrucoSorteioRodadasPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoSorteioRodadasPage na rota de TV sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Sorteio/TV']}>
+        <TrucoSorteioRodadasPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoSorteioRodadasPage na rota AoVivo sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Sorteio/AoVivo']}>
         <TrucoSorteioRodadasPage />
       </MemoryRouter>
     );

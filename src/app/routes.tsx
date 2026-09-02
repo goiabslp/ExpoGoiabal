@@ -69,6 +69,30 @@ export const router = createBrowserRouter([
     element: <TrucoSorteioRodadasPage />,
   },
   {
+    path: '/ExpoGoiabal/Truco/Sorteio/AoVivo',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/sorteio/aovivo',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Sorteio/Resumo',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/sorteio/resumo',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Sorteio/TV',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/sorteio/tv',
+    element: <TrucoSorteioRodadasPage />,
+  },
+  {
     path: '/ExpoGoiabal/Truco/Partidas',
     element: <TrucoPartidasPage />,
   },
