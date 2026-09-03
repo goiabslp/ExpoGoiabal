@@ -164,7 +164,94 @@ export const TrucoTabelaPage: React.FC = () => {
             </div>
           )}
 
-          {/* PAINEL DOS 08 CLASSIFICADOS (TOP 8) */}
+          {/* PAINEL DE PREMIAÇÃO AUTOMÁTICA EM TEMPO REAL (TOP 5 ELEGÍVEIS - R$ 2.500,00) */}
+          <div className="w-full mb-8 bg-gradient-to-r from-zinc-900 via-zinc-950 to-zinc-900 border-2 border-amber-500/40 rounded-3xl p-5 sm:p-7 shadow-[0_0_40px_rgba(245,158,11,0.12)] flex flex-col gap-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 text-black flex items-center justify-center font-black shadow-lg shadow-amber-500/30 shrink-0">
+                  <Trophy size={24} />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest mb-1">
+                    <span>Bônus Especial: R$ 2.500,00 + Pote Acumulado</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-wide">
+                    🏆 Top 5 Times Premiados (Bônus com Cadastro Completo)
+                  </h2>
+                </div>
+              </div>
+
+              <span className="text-xs text-zinc-400 font-semibold bg-zinc-900/90 px-3.5 py-1.5 rounded-xl border border-white/10">
+                ⚡ Atualização Automática em Tempo Real
+              </span>
+            </div>
+
+            <p className="text-zinc-300 text-xs sm:text-sm font-medium leading-relaxed">
+              O <strong>bônus de R$ 2.500,00</strong> é concedido <strong>exclusivamente aos 05 melhores times com cadastro regularizado (com CPF)</strong>. Times sem CPF são automaticamente ignorados na premiação, transferindo o bônus para o próximo time elegível.
+            </p>
+
+            {/* Aviso do Pote Acumulado de Inscrições + Patrocínios */}
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs text-amber-200">
+              <div className="flex items-center gap-2">
+                <span className="text-base">💰</span>
+                <span><strong>Premiação Extra Acumulada:</strong> 100% do valor das inscrições + patrocínios arrecadados serão retidos e distribuídos como premiação em dinheiro para os <strong>03 primeiros colocados</strong>.</span>
+              </div>
+            </div>
+
+            {/* Grid dos 5 Premiados Elegíveis */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {[
+                { pos: 1, label: '1º Premiado', valor: 'R$ 1.000,00', emoji: '🥇', border: 'border-amber-400/60', bg: 'bg-amber-500/10', text: 'text-amber-400' },
+                { pos: 2, label: '2º Premiado', valor: 'R$ 600,00', emoji: '🥈', border: 'border-slate-300/60', bg: 'bg-slate-300/10', text: 'text-slate-200' },
+                { pos: 3, label: '3º Premiado', valor: 'R$ 400,00', emoji: '🥉', border: 'border-amber-700/60', bg: 'bg-amber-700/10', text: 'text-amber-500' },
+                { pos: 4, label: '4º Premiado', valor: 'R$ 300,00', emoji: '🏅', border: 'border-teal-500/40', bg: 'bg-teal-500/10', text: 'text-teal-300' },
+                { pos: 5, label: '5º Premiado', valor: 'R$ 200,00', emoji: '🏅', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', text: 'text-emerald-300' },
+              ].map((p) => {
+                const premiado = classificacao.find(c => c.premiacaoPosicao === p.pos);
+
+                return (
+                  <div
+                    key={p.pos}
+                    className={`rounded-2xl border ${p.border} ${p.bg} p-4 flex flex-col justify-between gap-3 shadow-md relative overflow-hidden`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xl">{p.emoji}</span>
+                        <span className={`text-xs font-black uppercase tracking-wider ${p.text}`}>
+                          {p.label}
+                        </span>
+                      </div>
+                      <span className="text-lg sm:text-xl font-black text-white block">
+                        {p.valor}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10">
+                      {premiado ? (
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs uppercase text-white truncate" title={premiado.equipe.nome}>
+                            {premiado.equipe.nome}
+                          </span>
+                          <span className="text-[10px] text-zinc-400">
+                            {premiado.posicao}º Geral • {premiado.pontos} pts
+                          </span>
+                          <span className="text-[9px] font-black uppercase text-emerald-400 mt-1 flex items-center gap-1">
+                            ✅ Elegível
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-zinc-500 italic">
+                          Aguardando definição
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* PAINEL DOS 08 CLASSIFICADOS (TOP 8 MATA-MATA) */}
           {isFaseEncerrada && top8Classificados.length > 0 && (
             <div className="w-full mb-10 bg-gradient-to-b from-zinc-900/90 via-zinc-900/70 to-zinc-950/90 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-amber-500/10">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10">
@@ -193,7 +280,7 @@ export const TrucoTabelaPage: React.FC = () => {
                   const medalha = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
                   return (
                     <div 
-                      key={row.equipe.id}
+                      key={row.equipe.id} 
                       className="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center gap-3 hover:border-amber-500/40 transition-colors"
                     >
                       <span className="text-xl font-black">{medalha}</span>
@@ -242,7 +329,7 @@ export const TrucoTabelaPage: React.FC = () => {
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Calculando classificação...</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Calculando classificação e premiações...</span>
             </div>
           ) : classificacao.length === 0 ? (
             <div className="w-full bg-zinc-900/60 border border-dashed border-zinc-800 rounded-3xl p-12 text-center flex flex-col items-center">
@@ -274,11 +361,11 @@ export const TrucoTabelaPage: React.FC = () => {
                       <th className="py-4 px-4 text-center w-16 cursor-help" title="POS — Posição da equipe na classificação geral">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">POS</span>
                       </th>
-                      <th className="py-4 px-4 cursor-help" title="EQUIPE — Nome do time cadastrado no torneio">
-                        <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">EQUIPE</span>
+                      <th className="py-4 px-4 text-center font-black text-amber-400 bg-white/5 cursor-help" title="PTS — Pontos Totais acumulados na classificação geral">
+                        <span className="hover:text-amber-300 transition-colors border-b border-dotted border-amber-400">PTS</span>
                       </th>
-                      <th className="py-4 px-4 cursor-help" title="CIDADE — Município de origem da equipe">
-                        <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">CIDADE</span>
+                      <th className="py-4 px-4 cursor-help" title="EQUIPE — Nome do time cadastrado e status de premiação">
+                        <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">EQUIPE</span>
                       </th>
                       <th className="py-4 px-3 text-center cursor-help" title="J — Quantidade de jogos realizados na primeira fase">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">J</span>
@@ -298,34 +385,51 @@ export const TrucoTabelaPage: React.FC = () => {
                       <th className="py-4 px-3 text-center text-amber-400 cursor-help" title="SG — Saldo de Pontos (Pontos Marcados menos Pontos Sofridos)">
                         <span className="hover:text-amber-300 transition-colors border-b border-dotted border-amber-500">SG</span>
                       </th>
-                      <th className="py-4 px-4 text-center font-black text-amber-400 bg-white/5 cursor-help" title="PTS — Pontos Totais acumulados na classificação geral">
-                        <span className="hover:text-amber-300 transition-colors border-b border-dotted border-amber-400">PTS</span>
+                      <th className="py-4 px-4 cursor-help" title="CIDADE — Município de origem da equipe">
+                        <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">CIDADE</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-sm">
                     {classificacao.map((item) => {
+                      const isTop1 = item.posicao === 1;
+                      const isTop2 = item.posicao === 2;
+                      const isTop3 = item.posicao === 3;
+                      const isTop4 = item.posicao === 4;
+                      const isTop5 = item.posicao === 5;
                       const isTop8 = item.posicao <= 8;
-                      const isTop1 = item.posicao === 1 && concluidos1aFase > 0;
-                      const isTop2 = item.posicao === 2 && concluidos1aFase > 0;
-                      const isTop3 = item.posicao === 3 && concluidos1aFase > 0;
+
+                      // Cores e estilos de linha para cada faixa
+                      const rowStyle = isTop1
+                        ? 'bg-gradient-to-r from-amber-500/20 via-yellow-500/5 to-transparent border-l-4 border-l-amber-400'
+                        : isTop2
+                        ? 'bg-gradient-to-r from-slate-300/20 via-slate-400/5 to-transparent border-l-4 border-l-slate-300'
+                        : isTop3
+                        ? 'bg-gradient-to-r from-amber-700/20 via-amber-800/5 to-transparent border-l-4 border-l-amber-600'
+                        : isTop4
+                        ? 'bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-l-4 border-l-teal-400'
+                        : isTop5
+                        ? 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border-l-4 border-l-emerald-400'
+                        : isTop8
+                        ? 'bg-emerald-500/[0.03] border-l-4 border-l-emerald-600/60'
+                        : 'hover:bg-white/[0.02] border-l-4 border-l-transparent';
 
                       return (
                         <tr 
                           key={item.equipe.id} 
-                          className={`hover:bg-white/[0.03] transition-colors group ${
-                            isTop8 ? 'bg-emerald-500/[0.015]' : ''
-                          }`}
+                          className={`transition-all group ${rowStyle}`}
                         >
-                          {/* Posição */}
+                          {/* 1. Posição */}
                           <td className="py-4 px-4 text-center font-black">
-                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-xs ${
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black shadow-md ${
                               isTop1 
-                                ? 'bg-amber-400 text-black shadow-md shadow-amber-400/30' 
+                                ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-amber-400/40 ring-2 ring-amber-300/80 scale-105' 
                                 : isTop2 
-                                ? 'bg-slate-300 text-black' 
+                                ? 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-400 text-black ring-2 ring-slate-200/60' 
                                 : isTop3 
-                                ? 'bg-amber-700 text-white' 
+                                ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-2 ring-amber-600/60' 
+                                : isTop4 || isTop5
+                                ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40'
                                 : isTop8
                                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-zinc-800 text-zinc-400'
@@ -334,71 +438,106 @@ export const TrucoTabelaPage: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Foto e Nome */}
+                          {/* 2. Pontos Totais (PTS) */}
+                          <td className="py-4 px-4 text-center font-black text-base text-amber-400 bg-white/5">
+                            {item.pontos}
+                          </td>
+
+                          {/* 3. Foto, Nome da Equipe e Badges de Premiação */}
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0">
+                              <div className={`w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 shrink-0 border ${
+                                isTop1 ? 'border-amber-400 ring-2 ring-amber-400/30' : isTop2 ? 'border-slate-300' : isTop3 ? 'border-amber-600' : 'border-white/10'
+                              }`}>
                                 {item.equipe.foto_url ? (
                                   <img src={item.equipe.foto_url} alt={item.equipe.nome} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                                    <Users size={18} />
+                                    <Users size={20} />
                                   </div>
                                 )}
                               </div>
-                              <div>
-                                <span className="font-bold text-white uppercase group-hover:text-emerald-400 transition-colors block">
-                                  {item.equipe.nome}
-                                </span>
-                                {isTop8 && (
-                                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">
-                                    Zona de Classificação (Top 8)
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-white uppercase group-hover:text-amber-300 transition-colors text-sm">
+                                    {item.equipe.nome}
                                   </span>
-                                )}
+                                  {isTop1 && <span className="text-xs">👑</span>}
+                                </div>
+                                
+                                {/* Badges Detalhadas de Premiação do Torneio */}
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  {/* Indicação Especial do Pote Acumulado para Top 3 */}
+                                  {(isTop1 || isTop2 || isTop3) && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                      <span>💰 Pote 100% Inscrições + Patrocínios</span>
+                                    </span>
+                                  )}
+
+                                  {/* Badge de Premiação Bônus */}
+                                  {item.premiacaoPosicao ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                      <span>{item.premiacaoEmoji}</span>
+                                      <span>Bônus Prefeitura: {item.premiacaoFormatada}</span>
+                                    </span>
+                                  ) : null}
+
+                                  {item.isElegivelPremiacao ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
+                                      <span>✅ Cadastro Regularizado</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-300 text-[9px] font-black uppercase tracking-wider" title={item.motivoInelegibilidade}>
+                                      <AlertCircle size={10} className="text-red-400" />
+                                      <span>⚠️ Sem CPF (Abre mão do Bônus)</span>
+                                    </span>
+                                  )}
+
+                                  {isTop8 && !isTop1 && !isTop2 && !isTop3 && (
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">
+                                      Top 8 • Mata-Mata
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
 
-                          {/* Cidade */}
-                          <td className="py-4 px-4 text-zinc-400 text-xs font-medium">
-                            {item.equipe.cidade}
-                          </td>
-
-                          {/* Jogos */}
+                          {/* 4. Jogos (J) */}
                           <td className="py-4 px-3 text-center text-zinc-300 font-semibold">
                             {item.jogos}
                           </td>
 
-                          {/* Vitórias */}
+                          {/* 5. Vitórias (V) */}
                           <td className="py-4 px-3 text-center text-emerald-400 font-bold">
                             {item.vitorias}
                           </td>
 
-                          {/* Derrotas */}
+                          {/* 6. Derrotas (D) */}
                           <td className="py-4 px-3 text-center text-red-400/80 font-semibold">
                             {item.derrotas}
                           </td>
 
-                          {/* Pontos Marcados */}
+                          {/* 7. Pontos Marcados (PM) */}
                           <td className="py-4 px-3 text-center text-zinc-300 font-semibold">
                             {item.pontosMarcados}
                           </td>
 
-                          {/* Pontos Sofridos */}
+                          {/* 8. Pontos Sofridos (PS) */}
                           <td className="py-4 px-3 text-center text-zinc-400 font-semibold">
                             {item.pontosSofridos}
                           </td>
 
-                          {/* Saldo de Pontos */}
+                          {/* 9. Saldo de Pontos (SG) */}
                           <td className="py-4 px-3 text-center font-bold">
                             <span className={item.saldoPontos > 0 ? 'text-emerald-400' : item.saldoPontos < 0 ? 'text-red-400' : 'text-zinc-400'}>
                               {item.saldoPontos > 0 ? `+${item.saldoPontos}` : item.saldoPontos}
                             </span>
                           </td>
 
-                          {/* Pontos Totais */}
-                          <td className="py-4 px-4 text-center font-black text-base text-amber-400 bg-white/5">
-                            {item.pontos}
+                          {/* 10. Cidade */}
+                          <td className="py-4 px-4 text-zinc-400 text-xs font-medium">
+                            {item.equipe.cidade}
                           </td>
                         </tr>
                       );
@@ -410,31 +549,76 @@ export const TrucoTabelaPage: React.FC = () => {
               {/* Mobile Card View */}
               <div className="md:hidden flex flex-col gap-3">
                 {classificacao.map((item) => {
+                  const isTop1 = item.posicao === 1;
+                  const isTop2 = item.posicao === 2;
+                  const isTop3 = item.posicao === 3;
+                  const isTop4 = item.posicao === 4;
+                  const isTop5 = item.posicao === 5;
                   const isTop8 = item.posicao <= 8;
-                  const isTop1 = item.posicao === 1 && concluidos1aFase > 0;
-                  const isTop2 = item.posicao === 2 && concluidos1aFase > 0;
-                  const isTop3 = item.posicao === 3 && concluidos1aFase > 0;
+
+                  const cardStyle = isTop1
+                    ? 'border-amber-400/70 bg-gradient-to-b from-amber-500/15 via-zinc-900 to-zinc-950 shadow-amber-500/10'
+                    : isTop2
+                    ? 'border-slate-300/70 bg-gradient-to-b from-slate-300/15 via-zinc-900 to-zinc-950'
+                    : isTop3
+                    ? 'border-amber-600/70 bg-gradient-to-b from-amber-700/15 via-zinc-900 to-zinc-950'
+                    : isTop4 || isTop5
+                    ? 'border-teal-500/40 bg-zinc-900/90'
+                    : isTop8
+                    ? 'border-emerald-500/30 bg-zinc-900/90'
+                    : 'border-white/10 bg-zinc-900/90';
 
                   return (
                     <div 
-                      key={item.equipe.id}
-                      className={`bg-zinc-900/90 border rounded-2xl p-4 shadow-lg transition-all ${
-                        isTop1 
-                          ? 'border-amber-500/50 bg-amber-500/[0.03]' 
-                          : isTop8 
-                          ? 'border-emerald-500/30' 
-                          : 'border-white/10'
-                      }`}
+                      key={item.equipe.id} 
+                      className={`border rounded-2xl p-4 shadow-xl transition-all ${cardStyle}`}
                     >
+                      {/* Faixa Superior de Pote Acumulado e Bônus */}
+                      {(isTop1 || isTop2 || isTop3) && (
+                        <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/40 flex items-center justify-between text-xs">
+                          <span className="font-black text-amber-300 flex items-center gap-1.5 uppercase">
+                            <span>{isTop1 ? '🥇 1º Colocado' : isTop2 ? '🥈 2º Colocado' : '🥉 3º Colocado'}</span>
+                            <span className="text-[10px] text-amber-200">• Pote Extra</span>
+                          </span>
+                          {item.premiacaoFormatada && (
+                            <span className="font-black text-white bg-black/50 px-2 py-0.5 rounded-md text-[11px]">
+                              Bônus: {item.premiacaoFormatada}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {!isTop1 && !isTop2 && !isTop3 && item.premiacaoPosicao && (
+                        <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/40 flex items-center justify-between text-xs">
+                          <span className="font-black text-teal-300 flex items-center gap-1.5 uppercase">
+                            <span>{item.premiacaoEmoji}</span>
+                            <span>{item.premiacaoTitulo}</span>
+                          </span>
+                          <span className="font-black text-white bg-black/50 px-2 py-0.5 rounded-md text-[11px]">
+                            Bônus: {item.premiacaoFormatada}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5 mb-3">
                         <div className="flex items-center gap-3">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-xl font-black text-xs ${
-                            isTop1 ? 'bg-amber-400 text-black' : isTop2 ? 'bg-slate-300 text-black' : isTop3 ? 'bg-amber-700 text-white' : isTop8 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-400'
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl font-black text-xs shadow-md ${
+                            isTop1 
+                              ? 'bg-gradient-to-br from-yellow-300 to-amber-500 text-black ring-2 ring-amber-300/80 scale-105' 
+                              : isTop2 
+                              ? 'bg-gradient-to-br from-slate-100 to-slate-400 text-black ring-2 ring-slate-200/60' 
+                              : isTop3 
+                              ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-2 ring-amber-600/60' 
+                              : isTop8 
+                              ? 'bg-emerald-500/20 text-emerald-400' 
+                              : 'bg-zinc-800 text-zinc-400'
                           }`}>
                             {item.posicao}º
                           </span>
 
-                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0">
+                          <div className={`w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 shrink-0 border ${
+                            isTop1 ? 'border-amber-400' : isTop2 ? 'border-slate-300' : isTop3 ? 'border-amber-600' : 'border-white/10'
+                          }`}>
                             {item.equipe.foto_url ? (
                               <img src={item.equipe.foto_url} alt={item.equipe.nome} className="w-full h-full object-cover" />
                             ) : (
@@ -445,6 +629,14 @@ export const TrucoTabelaPage: React.FC = () => {
                           <div>
                             <h4 className="font-black text-sm uppercase text-white line-clamp-1">{item.equipe.nome}</h4>
                             <span className="text-[11px] text-zinc-400 line-clamp-1">{item.equipe.cidade}</span>
+                            
+                            <div className="mt-1">
+                              {item.isElegivelPremiacao ? (
+                                <span className="text-[9px] font-bold text-emerald-400">✅ Regularizado</span>
+                              ) : (
+                                <span className="text-[9px] font-bold text-red-400">⚠️ Sem CPF (Sem Bônus)</span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -506,6 +698,10 @@ export const TrucoTabelaPage: React.FC = () => {
                   <span className="font-black text-white text-sm">POS</span>
                   <span className="text-[10px] text-zinc-400">Posição</span>
                 </div>
+                <div className="p-2.5 rounded-xl bg-white/5 border border-amber-500/30 text-center flex flex-col items-center">
+                  <span className="font-black text-amber-400 text-sm">PTS</span>
+                  <span className="text-[10px] text-amber-300 font-bold">Pontos Totais</span>
+                </div>
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center flex flex-col items-center">
                   <span className="font-black text-white text-sm">J</span>
                   <span className="text-[10px] text-zinc-400">Jogos</span>
@@ -530,10 +726,6 @@ export const TrucoTabelaPage: React.FC = () => {
                   <span className="font-black text-amber-400 text-sm">SG</span>
                   <span className="text-[10px] text-zinc-400">Saldo Pontos</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white/5 border border-amber-500/30 text-center flex flex-col items-center">
-                  <span className="font-black text-amber-400 text-sm">PTS</span>
-                  <span className="text-[10px] text-amber-300 font-bold">Pontos Totais</span>
-                </div>
               </div>
             </div>
 
@@ -550,12 +742,43 @@ export const TrucoTabelaPage: React.FC = () => {
 
                 <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
                   <span className="font-bold text-white block mb-1">⚖️ Critérios de Desempate</span>
-                  <p>1º Vitórias (V) $\to$ 2º Saldo de Pontos (SG) $\to$ 3º Pontos Marcados (PM)</p>
+                  <p>1º Vitórias (V) &rarr; 2º Saldo de Pontos (SG) &rarr; 3º Pontos Marcados (PM)</p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
                   <span className="font-bold text-white block mb-1">🏆 Avanço para o Mata-Mata</span>
                   <p>Os <strong className="text-amber-400">08 primeiros colocados</strong> avançam para o sorteio do Mata-Mata (Grupos A e B).</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bloco 3: Regras de Premiação Automática (Bônus R$ 2.500,00 + Pote Acumulado) */}
+            <div className="pt-4 border-t border-white/5">
+              <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
+                <span>💰 Regras de Premiação: Bônus Prefeitura (R$ 2.500,00) & Pote Acumulado</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs text-zinc-400">
+                <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <span className="font-bold text-amber-300 block mb-1">🎁 Bônus Exclusivo (Top 5 com CPF)</span>
+                  <p className="leading-relaxed">
+                    1º: <strong className="text-white">R$ 1.000,00</strong> • 2º: <strong className="text-white">R$ 600,00</strong><br />
+                    3º: <strong className="text-white">R$ 400,00</strong> • 4º: <strong className="text-white">R$ 300,00</strong><br />
+                    5º: <strong className="text-white">R$ 200,00</strong> (somente cadastro completo).
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <span className="font-bold text-amber-300 block mb-1">🏆 Pote Acumulado (Top 3 Colocados)</span>
+                  <p className="leading-relaxed">
+                    <strong className="text-white">100% das inscrições + patrocínios</strong> arrecadados serão retidos e destinados como premiação em dinheiro extra para os <strong className="text-amber-400">03 primeiros colocados</strong>.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <span className="font-bold text-amber-300 block mb-1">🔄 Regra de Elegibilidade e Pulo</span>
+                  <p className="leading-relaxed">
+                    O bônus é exclusivo para times com cadastro regularizado. Times sem CPF são ignorados no bônus e o valor transfere para o próximo elegível.
+                  </p>
                 </div>
               </div>
             </div>

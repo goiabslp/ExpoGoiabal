@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../../../components/Header';
 import { TrucoBackButton } from '../../../components/Truco/TrucoBackButton';
 import { cadastrarEquipe } from '../../../services/trucoService';
+import { SelectCidadeMG } from '../../../components/Truco/SelectCidadeMG';
+import { CIDADE_PADRAO_MG } from '../../../data/cidadesMG';
 import { 
   Users, 
-  MapPin, 
   Upload, 
   UserPlus, 
   Trash2, 
@@ -31,7 +32,7 @@ export const TrucoCadastroPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [nomeEquipe, setNomeEquipe] = useState('');
-  const [cidadeEquipe, setCidadeEquipe] = useState('');
+  const [cidadeEquipe, setCidadeEquipe] = useState(CIDADE_PADRAO_MG);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
 
@@ -221,6 +222,21 @@ export const TrucoCadastroPage: React.FC = () => {
               </div>
             )}
 
+            {/* Banner Informativo da Taxa de Inscrição */}
+            <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 text-xs text-amber-200">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg font-black shrink-0">
+                💵
+              </div>
+              <div className="flex-1">
+                <strong className="text-white block mb-0.5 uppercase tracking-wide text-xs">
+                  Taxa de Inscrição: R$ 160,00 por Equipe
+                </strong>
+                <span className="text-zinc-300 leading-relaxed block">
+                  A taxa de inscrição de <strong>R$ 160,00</strong> deve ser acertada diretamente com o organizador <strong className="text-amber-300">Ricardo Moraes</strong>. <strong>100% dos valores das inscrições + patrocínios arrecadados</strong> serão convertidos integralmente em premiação para os primeiros colocados!
+                </span>
+              </div>
+            </div>
+
             {/* SEÇÃO 1: INFORMAÇÕES DA EQUIPE */}
             <div className="mb-10">
               <div className="flex items-center gap-3 pb-3 border-b border-white/10 mb-6">
@@ -249,21 +265,14 @@ export const TrucoCadastroPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Cidade do Time */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-                    <MapPin size={14} className="text-emerald-400" />
-                    Cidade do Time *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: São José do Goiabal - MG"
-                    value={cidadeEquipe}
-                    onChange={e => setCidadeEquipe(e.target.value)}
-                    className="w-full bg-zinc-950/70 border border-zinc-700/80 focus:border-emerald-500 rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-sm"
-                  />
-                </div>
+                {/* Cidade do Time (Select das Cidades de MG) */}
+                <SelectCidadeMG
+                  id="cidade-equipe"
+                  label="Cidade do Time"
+                  value={cidadeEquipe}
+                  onChange={setCidadeEquipe}
+                  required
+                />
               </div>
 
               {/* Foto do Time */}

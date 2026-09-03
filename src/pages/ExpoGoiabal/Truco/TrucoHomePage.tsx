@@ -265,10 +265,10 @@ export const TrucoHomePage: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Sorteio'); }}
+              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Regulamento'); }}
               className="shrink-0 px-6 py-3 rounded-xl bg-amber-500 text-black font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all cursor-pointer"
             >
-              Acessar Sorteio
+              Acessar Regulamento
             </button>
           </div>
 

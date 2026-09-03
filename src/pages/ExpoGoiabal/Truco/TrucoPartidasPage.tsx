@@ -134,8 +134,8 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
         <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
           
           <TrucoBackButton 
-            to={isAdmin ? "/Admin" : "/ExpoGoiabal/Truco"} 
-            label={isAdmin ? "Voltar para o Painel Admin" : "Voltar para o Torneio"} 
+            to={isAdmin ? "/Admin/Truco" : "/ExpoGoiabal/Truco"} 
+            label={isAdmin ? "Voltar para o Hub do Truco" : "Voltar para o Torneio"} 
           />
 
           {/* Header Section */}

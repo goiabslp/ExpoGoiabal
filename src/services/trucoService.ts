@@ -79,17 +79,32 @@ export const DEFAULT_STATUS: TrucoTorneioStatus = {
 };
 
 /**
- * Calcula a data de cada rodada iniciando em agosto de 2026
+ * Calcula a data de cada rodada iniciando em 03/09/2026 (Quinta-feira)
  * Realizadas sempre às Terças e Quintas-feiras
  */
 export const calcularDataRodada = (rodadaNumero: number): { dataFormatada: string; diaSemana: string; textoCompleto: string } => {
   const r = Math.max(1, rodadaNumero);
-  const semanaIndex = Math.floor((r - 1) / 2);
-  const isQuinta = (r - 1) % 2 === 1;
 
-  // Base: 04 de Agosto de 2026 (Primeira Terça-feira de Agosto/2026)
-  const baseDate = new Date(2026, 7, 4); // Agosto é mês 7 (0-indexed)
-  const diasAdicionais = (semanaIndex * 7) + (isQuinta ? 2 : 0);
+  // Base: 03 de Setembro de 2026 (Quinta-feira)
+  const baseDate = new Date(2026, 8, 3); // Setembro é mês 8 (0-indexed)
+
+  let diasAdicionais = 0;
+  let isQuinta = true;
+
+  if (r === 1) {
+    diasAdicionais = 0;
+    isQuinta = true;
+  } else if (r % 2 === 1) {
+    // Rodadas ímpares (3, 5, 7...): Quintas-feiras
+    const k = Math.floor((r - 1) / 2);
+    diasAdicionais = k * 7;
+    isQuinta = true;
+  } else {
+    // Rodadas pares (2, 4, 6...): Terças-feiras
+    const k = Math.floor(r / 2);
+    diasAdicionais = (k * 7) - 2;
+    isQuinta = false;
+  }
 
   const targetDate = new Date(baseDate);
   targetDate.setDate(baseDate.getDate() + diasAdicionais);
@@ -106,6 +121,25 @@ export const calcularDataRodada = (rodadaNumero: number): { dataFormatada: strin
   };
 };
 
+export interface TrucoPremiacaoInfo {
+  posicaoPremiado: number;
+  titulo: string;
+  emoji: string;
+  valor: number;
+  valorFormatado: string;
+}
+
+export const TABELA_PREMIACOES_TRUCO: TrucoPremiacaoInfo[] = [
+  { posicaoPremiado: 1, titulo: '1º Premiado', emoji: '🥇', valor: 1000, valorFormatado: 'R$ 1.000,00' },
+  { posicaoPremiado: 2, titulo: '2º Premiado', emoji: '🥈', valor: 600, valorFormatado: 'R$ 600,00' },
+  { posicaoPremiado: 3, titulo: '3º Premiado', emoji: '🥉', valor: 400, valorFormatado: 'R$ 400,00' },
+  { posicaoPremiado: 4, titulo: '4º Premiado', emoji: '🏅', valor: 300, valorFormatado: 'R$ 300,00' },
+  { posicaoPremiado: 5, titulo: '5º Premiado', emoji: '🏅', valor: 200, valorFormatado: 'R$ 200,00' }
+];
+
+export const TOTAL_PREMIACAO_TRUCO_FORMATADO = 'R$ 2.500,00';
+export const TOTAL_PREMIACAO_TRUCO_VALOR = 2500;
+
 export interface TrucoClassificacaoRow {
   posicao: number;
   equipe: TrucoEquipe;
@@ -116,6 +150,14 @@ export interface TrucoClassificacaoRow {
   pontosMarcados: number;
   pontosSofridos: number;
   saldoPontos: number;
+  // Campos de Premiação Automática & Elegibilidade
+  isElegivelPremiacao: boolean;
+  motivoInelegibilidade?: string;
+  premiacaoPosicao?: number;
+  premiacaoTitulo?: string;
+  premiacaoEmoji?: string;
+  premiacaoValor?: number;
+  premiacaoFormatada?: string;
 }
 
 export const TIMES_FICTICIOS_SEED: {
@@ -448,6 +490,117 @@ export const cadastrarEquipe = async (
     };
   } catch (err: any) {
     console.error('Falha de inserção no Supabase:', err);
+    throw err;
+  }
+};
+
+/**
+ * Atualiza todas as informações de uma equipe e de seus jogadores no banco de dados.
+ */
+export const atualizarEquipeCompleta = async (
+  equipeId: string,
+  dados: {
+    nome: string;
+    cidade: string;
+    foto_url?: string;
+    status: TrucoStatusEquipe;
+    cadastro_regularizado?: boolean;
+  },
+  jogadores: {
+    id?: string;
+    nome_completo: string;
+    cpf?: string;
+    data_nascimento: string;
+    is_titular?: boolean;
+  }[],
+  fotoFile?: File | null
+): Promise<TrucoEquipe> => {
+  let fotoUrlFinal = dados.foto_url || '';
+
+  // Upload no Supabase Storage se houver arquivo novo
+  if (fotoFile) {
+    try {
+      const fileExt = fotoFile.name.split('.').pop() || 'png';
+      const fileName = `truco_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `truco-equipes/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('expogoiabal')
+        .upload(filePath, fotoFile, { cacheControl: '3600', upsert: true });
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('expogoiabal')
+          .getPublicUrl(filePath);
+        fotoUrlFinal = publicUrl;
+      } else {
+        fotoUrlFinal = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(fotoFile);
+        });
+      }
+    } catch (e) {
+      console.warn('Falha no upload de imagem:', e);
+    }
+  }
+
+  const todosJogadoresComCpf = jogadores.length > 0 && jogadores.every(j => Boolean(j.cpf && j.cpf.replace(/\D/g, '').length === 11));
+  const isRegularizado = dados.cadastro_regularizado !== undefined ? dados.cadastro_regularizado : todosJogadoresComCpf;
+
+  // 1. Atualiza dados da equipe
+  const { error: eqError } = await supabase
+    .from('truco_equipes')
+    .update({
+      nome: dados.nome.trim(),
+      cidade: dados.cidade.trim(),
+      foto_url: fotoUrlFinal,
+      status: dados.status,
+      cadastro_regularizado: isRegularizado,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', equipeId);
+
+  if (eqError) {
+    console.error('Erro ao atualizar equipe no Supabase:', eqError);
+    throw new Error(`Erro ao salvar alterações da equipe: ${eqError.message}`);
+  }
+
+  // 2. Atualiza a lista de jogadores
+  try {
+    await supabase.from('truco_jogadores').delete().eq('equipe_id', equipeId);
+
+    const jogadoresFormatados: TrucoJogador[] = jogadores.map((j, idx) => ({
+      id: j.id && !j.id.startsWith('temp_') ? j.id : crypto.randomUUID(),
+      equipe_id: equipeId,
+      nome_completo: j.nome_completo.trim(),
+      cpf: j.cpf ? j.cpf.trim() : '',
+      data_nascimento: j.data_nascimento,
+      is_titular: j.is_titular !== undefined ? j.is_titular : idx < 4,
+      created_at: new Date().toISOString()
+    }));
+
+    if (jogadoresFormatados.length > 0) {
+      const { error: jogError } = await supabase
+        .from('truco_jogadores')
+        .insert(jogadoresFormatados);
+
+      if (jogError) {
+        console.warn('Erro ao atualizar jogadores no Supabase:', jogError);
+      }
+    }
+
+    return {
+      id: equipeId,
+      nome: dados.nome.trim(),
+      cidade: dados.cidade.trim(),
+      foto_url: fotoUrlFinal,
+      status: dados.status,
+      cadastro_regularizado: isRegularizado,
+      jogadores: jogadoresFormatados
+    };
+  } catch (err: any) {
+    console.error('Falha de sincronização de jogadores:', err);
     throw err;
   }
 };
@@ -943,6 +1096,7 @@ export const calcularClassificacao = (
     return {
       posicao: 1,
       equipe,
+      isElegivelPremiacao: equipe.cadastro_regularizado !== false,
       ...stats
     };
   });
@@ -964,10 +1118,45 @@ export const calcularClassificacao = (
     return a.equipe.nome.localeCompare(b.equipe.nome, 'pt-BR');
   });
 
-  return listaClassificacao.map((item, index) => ({
-    ...item,
-    posicao: index + 1
-  }));
+  let contadorPremiadosElegiveis = 0;
+
+  return listaClassificacao.map((item, index) => {
+    const posicaoGeral = index + 1;
+    const isElegivel = item.equipe.cadastro_regularizado !== false;
+
+    let motivoInelegibilidade: string | undefined = undefined;
+    let premiacaoPosicao: number | undefined = undefined;
+    let premiacaoTitulo: string | undefined = undefined;
+    let premiacaoEmoji: string | undefined = undefined;
+    let premiacaoValor: number | undefined = undefined;
+    let premiacaoFormatada: string | undefined = undefined;
+
+    if (!isElegivel) {
+      motivoInelegibilidade = 'Cadastro sem CPF / Não regularizado';
+    } else {
+      if (contadorPremiadosElegiveis < TABELA_PREMIACOES_TRUCO.length) {
+        const premio = TABELA_PREMIACOES_TRUCO[contadorPremiadosElegiveis];
+        premiacaoPosicao = premio.posicaoPremiado;
+        premiacaoTitulo = premio.titulo;
+        premiacaoEmoji = premio.emoji;
+        premiacaoValor = premio.valor;
+        premiacaoFormatada = premio.valorFormatado;
+        contadorPremiadosElegiveis++;
+      }
+    }
+
+    return {
+      ...item,
+      posicao: posicaoGeral,
+      isElegivelPremiacao: isElegivel,
+      motivoInelegibilidade,
+      premiacaoPosicao,
+      premiacaoTitulo,
+      premiacaoEmoji,
+      premiacaoValor,
+      premiacaoFormatada
+    };
+  });
 };
 
 // ==========================================

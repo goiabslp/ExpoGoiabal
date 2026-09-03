@@ -13,12 +13,56 @@ import { TrucoSorteioRodadasPage } from '../pages/ExpoGoiabal/Truco/TrucoSorteio
 import { TrucoPartidasPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasPage';
 import { TrucoTabelaPage } from '../pages/ExpoGoiabal/Truco/TrucoTabelaPage';
 import { TrucoMataMataPage } from '../pages/ExpoGoiabal/Truco/TrucoMataMataPage';
+import { TrucoRegulamentoPage } from '../pages/ExpoGoiabal/Truco/TrucoRegulamentoPage';
 import { AdminTrucoPartidasPage } from '../pages/Admin/AdminTrucoPartidasPage';
+import { AdminTrucoHomePage } from '../pages/Admin/Truco/AdminTrucoHomePage';
+import { AdminTrucoEquipesPage } from '../pages/Admin/Truco/AdminTrucoEquipesPage';
+import { AdminTrucoSorteioPage } from '../pages/Admin/Truco/AdminTrucoSorteioPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to="/ExpoGoiabal/Inicio" replace />,
+  },
+  {
+    path: '/Admin/Truco',
+    element: <AdminTrucoHomePage />,
+  },
+  {
+    path: '/Admin/truco',
+    element: <AdminTrucoHomePage />,
+  },
+  {
+    path: '/Admin/Truco/Inicio',
+    element: <AdminTrucoHomePage />,
+  },
+  {
+    path: '/Admin/truco/inicio',
+    element: <AdminTrucoHomePage />,
+  },
+  {
+    path: '/Admin/Truco/Equipes',
+    element: <AdminTrucoEquipesPage />,
+  },
+  {
+    path: '/Admin/truco/equipes',
+    element: <AdminTrucoEquipesPage />,
+  },
+  {
+    path: '/Admin/Truco/Times',
+    element: <AdminTrucoEquipesPage />,
+  },
+  {
+    path: '/Admin/truco/times',
+    element: <AdminTrucoEquipesPage />,
+  },
+  {
+    path: '/Admin/Truco/Sorteio',
+    element: <AdminTrucoSorteioPage />,
+  },
+  {
+    path: '/Admin/truco/sorteio',
+    element: <AdminTrucoSorteioPage />,
   },
   {
     path: '/Admin/Truco/Partidas',
@@ -141,8 +185,16 @@ export const router = createBrowserRouter([
     element: <TrucoMataMataPage />,
   },
   {
-    path: '/ExpoGoiabal/truco/tabela',
-    element: <TrucoTabelaPage />,
+    path: '/ExpoGoiabal/Truco/Regulamento',
+    element: <TrucoRegulamentoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/regulamento',
+    element: <TrucoRegulamentoPage />,
+  },
+  {
+    path: '/truco/regulamento',
+    element: <Navigate to="/ExpoGoiabal/Truco/Regulamento" replace />,
   },
   {
     path: '/truco',

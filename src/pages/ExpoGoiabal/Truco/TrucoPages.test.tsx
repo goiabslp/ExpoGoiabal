@@ -7,6 +7,10 @@ import { TrucoSorteioRodadasPage } from './TrucoSorteioRodadasPage';
 import { TrucoPartidasPage } from './TrucoPartidasPage';
 import { TrucoTabelaPage } from './TrucoTabelaPage';
 import { TrucoMataMataPage } from './TrucoMataMataPage';
+import { TrucoRegulamentoPage } from './TrucoRegulamentoPage';
+import { AdminTrucoHomePage } from '../../Admin/Truco/AdminTrucoHomePage';
+import { AdminTrucoEquipesPage } from '../../Admin/Truco/AdminTrucoEquipesPage';
+import { AdminTrucoSorteioPage } from '../../Admin/Truco/AdminTrucoSorteioPage';
 
 describe('Renderização das páginas completas de Truco', () => {
   it('deve renderizar TrucoHomePage sem erros', () => {
@@ -85,6 +89,42 @@ describe('Renderização das páginas completas de Truco', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/MataMata']}>
         <TrucoMataMataPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar AdminTrucoHomePage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco']}>
+        <AdminTrucoHomePage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar AdminTrucoEquipesPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco/Equipes']}>
+        <AdminTrucoEquipesPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar AdminTrucoSorteioPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco/Sorteio']}>
+        <AdminTrucoSorteioPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoRegulamentoPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Regulamento']}>
+        <TrucoRegulamentoPage />
       </MemoryRouter>
     );
     expect(container).toBeTruthy();

@@ -427,5 +427,156 @@ describe('Regra de CPF Opcional e Bônus de Premiação no Cadastro', () => {
     const encontrada = todas.find(e => e.id === equipe.id);
     expect(encontrada?.cadastro_regularizado).toBe(false);
   });
+
+  it('deve editar todos os dados de uma equipe existente e seus jogadores via atualizarEquipeCompleta', async () => {
+    const { cadastrarEquipe, atualizarEquipeCompleta, buscarTodasEquipesAdmin } = await import('./trucoService');
+    const equipe = await cadastrarEquipe(
+      { nome: 'Nome Antigo', cidade: 'Cidade Antiga' },
+      [
+        { nome_completo: 'J1 Antigo', cpf: '111', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J2 Antigo', cpf: '222', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J3 Antigo', cpf: '333', data_nascimento: '1990-01-01', is_titular: true },
+        { nome_completo: 'J4 Antigo', cpf: '444', data_nascimento: '1990-01-01', is_titular: true }
+      ]
+    );
+
+    const editada = await atualizarEquipeCompleta(
+      equipe.id,
+      {
+        nome: 'Nome Novo e Atualizado',
+        cidade: 'Goiabal Nova',
+        status: 'aprovado',
+        cadastro_regularizado: true
+      },
+      [
+        { nome_completo: 'J1 Novo', cpf: '123.456.789-00', data_nascimento: '1995-05-10', is_titular: true },
+        { nome_completo: 'J2 Novo', cpf: '234.567.890-11', data_nascimento: '1996-06-11', is_titular: true },
+        { nome_completo: 'J3 Novo', cpf: '345.678.901-22', data_nascimento: '1997-07-12', is_titular: true },
+        { nome_completo: 'J4 Novo', cpf: '456.789.012-33', data_nascimento: '1998-08-13', is_titular: true },
+        { nome_completo: 'Reserva Novo', cpf: '567.890.123-44', data_nascimento: '1999-09-14', is_titular: false }
+      ]
+    );
+
+    expect(editada.nome).toBe('Nome Novo e Atualizado');
+    expect(editada.cidade).toBe('Goiabal Nova');
+    expect(editada.status).toBe('aprovado');
+    expect(editada.cadastro_regularizado).toBe(true);
+    expect(editada.jogadores?.length).toBe(5);
+
+    const todas = await buscarTodasEquipesAdmin();
+    const noBanco = todas.find(e => e.id === equipe.id);
+    expect(noBanco?.nome).toBe('Nome Novo e Atualizado');
+    expect(noBanco?.status).toBe('aprovado');
+  });
+
+  it('deve distribuir a premiação de R$ 2.500,00 exclusivamente para os 5 melhores times elegíveis pulando times sem CPF', async () => {
+    const { calcularClassificacao } = await import('./trucoService');
+
+    const mockEquipes = [
+      { id: '1', nome: 'Time A', cidade: 'Cidade A', status: 'aprovado' as const, cadastro_regularizado: true },
+      { id: '2', nome: 'Time B', cidade: 'Cidade B', status: 'aprovado' as const, cadastro_regularizado: false }, // Sem CPF
+      { id: '3', nome: 'Time C', cidade: 'Cidade C', status: 'aprovado' as const, cadastro_regularizado: true },
+      { id: '4', nome: 'Time D', cidade: 'Cidade D', status: 'aprovado' as const, cadastro_regularizado: true },
+      { id: '5', nome: 'Time E', cidade: 'Cidade E', status: 'aprovado' as const, cadastro_regularizado: false }, // Sem CPF
+      { id: '6', nome: 'Time F', cidade: 'Cidade F', status: 'aprovado' as const, cadastro_regularizado: true },
+      { id: '7', nome: 'Time G', cidade: 'Cidade G', status: 'aprovado' as const, cadastro_regularizado: true },
+      { id: '8', nome: 'Time H', cidade: 'Cidade H', status: 'aprovado' as const, cadastro_regularizado: true },
+    ];
+
+    // Simulação de partidas para ordenar A > B > C > D > E > F > G > H
+    const mockPartidas = [
+      { id: 'p1', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 1, time_a_id: '1', time_b_id: '8', pontos_time_a: 12, pontos_time_b: 0, vencedor_id: '1', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p2', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 2, time_a_id: '2', time_b_id: '8', pontos_time_a: 11, pontos_time_b: 0, vencedor_id: '2', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p3', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 3, time_a_id: '3', time_b_id: '8', pontos_time_a: 10, pontos_time_b: 0, vencedor_id: '3', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p4', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 4, time_a_id: '4', time_b_id: '8', pontos_time_a: 9, pontos_time_b: 0, vencedor_id: '4', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p5', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 5, time_a_id: '5', time_b_id: '8', pontos_time_a: 8, pontos_time_b: 0, vencedor_id: '5', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p6', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 6, time_a_id: '6', time_b_id: '8', pontos_time_a: 7, pontos_time_b: 0, vencedor_id: '6', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+      { id: 'p7', tipo_fase: 'primeira_fase' as const, rodada: 1, numero_jogo: 7, time_a_id: '7', time_b_id: '8', pontos_time_a: 6, pontos_time_b: 0, vencedor_id: '7', status: 'finalizada' as const, fase_nome: '1ª Fase' },
+    ];
+
+    const ranking = calcularClassificacao(mockEquipes, mockPartidas);
+
+    // Verificação de Posição Geral Esportiva
+    expect(ranking[0].equipe.nome).toBe('Time A');
+    expect(ranking[0].posicao).toBe(1);
+    expect(ranking[0].premiacaoPosicao).toBe(1);
+    expect(ranking[0].premiacaoValor).toBe(1000);
+    expect(ranking[0].premiacaoFormatada).toBe('R$ 1.000,00');
+
+    // Time B é 2º Geral, mas não elegível
+    expect(ranking[1].equipe.nome).toBe('Time B');
+    expect(ranking[1].posicao).toBe(2);
+    expect(ranking[1].isElegivelPremiacao).toBe(false);
+    expect(ranking[1].premiacaoPosicao).toBeUndefined();
+    expect(ranking[1].premiacaoValor).toBeUndefined();
+
+    // Time C é 3º Geral, mas é o 2º Elegível -> Recebe R$ 600
+    expect(ranking[2].equipe.nome).toBe('Time C');
+    expect(ranking[2].posicao).toBe(3);
+    expect(ranking[2].isElegivelPremiacao).toBe(true);
+    expect(ranking[2].premiacaoPosicao).toBe(2);
+    expect(ranking[2].premiacaoValor).toBe(600);
+    expect(ranking[2].premiacaoFormatada).toBe('R$ 600,00');
+
+    // Time D é 4º Geral, 3º Elegível -> Recebe R$ 400
+    expect(ranking[3].equipe.nome).toBe('Time D');
+    expect(ranking[3].posicao).toBe(4);
+    expect(ranking[3].isElegivelPremiacao).toBe(true);
+    expect(ranking[3].premiacaoPosicao).toBe(3);
+    expect(ranking[3].premiacaoValor).toBe(400);
+
+    // Time E é 5º Geral, mas não elegível
+    expect(ranking[4].equipe.nome).toBe('Time E');
+    expect(ranking[4].posicao).toBe(5);
+    expect(ranking[4].isElegivelPremiacao).toBe(false);
+    expect(ranking[4].premiacaoPosicao).toBeUndefined();
+
+    // Time F é 6º Geral, 4º Elegível -> Recebe R$ 300
+    expect(ranking[5].equipe.nome).toBe('Time F');
+    expect(ranking[5].posicao).toBe(6);
+    expect(ranking[5].isElegivelPremiacao).toBe(true);
+    expect(ranking[5].premiacaoPosicao).toBe(4);
+    expect(ranking[5].premiacaoValor).toBe(300);
+
+    // Time G é 7º Geral, 5º Elegível -> Recebe R$ 200
+    expect(ranking[6].equipe.nome).toBe('Time G');
+    expect(ranking[6].posicao).toBe(7);
+    expect(ranking[6].isElegivelPremiacao).toBe(true);
+    expect(ranking[6].premiacaoPosicao).toBe(5);
+    expect(ranking[6].premiacaoValor).toBe(200);
+
+    // Time H é 8º Geral, 6º Elegível -> Fora dos 5 premiados
+    expect(ranking[7].equipe.nome).toBe('Time H');
+    expect(ranking[7].posicao).toBe(8);
+    expect(ranking[7].isElegivelPremiacao).toBe(true);
+    expect(ranking[7].premiacaoPosicao).toBeUndefined();
+  });
+
+  it('deve calcular corretamente as datas das rodadas iniciando em 03/09/2026 em terças e quintas', async () => {
+    const { calcularDataRodada } = await import('./trucoService');
+
+    const r1 = calcularDataRodada(1);
+    expect(r1.dataFormatada).toBe('03/09/2026');
+    expect(r1.diaSemana).toBe('Quinta-feira');
+    expect(r1.textoCompleto).toBe('Quinta-feira, 03/09/2026');
+
+    const r2 = calcularDataRodada(2);
+    expect(r2.dataFormatada).toBe('08/09/2026');
+    expect(r2.diaSemana).toBe('Terça-feira');
+    expect(r2.textoCompleto).toBe('Terça-feira, 08/09/2026');
+
+    const r3 = calcularDataRodada(3);
+    expect(r3.dataFormatada).toBe('10/09/2026');
+    expect(r3.diaSemana).toBe('Quinta-feira');
+    expect(r3.textoCompleto).toBe('Quinta-feira, 10/09/2026');
+
+    const r4 = calcularDataRodada(4);
+    expect(r4.dataFormatada).toBe('15/09/2026');
+    expect(r4.diaSemana).toBe('Terça-feira');
+
+    const r5 = calcularDataRodada(5);
+    expect(r5.dataFormatada).toBe('17/09/2026');
+    expect(r5.diaSemana).toBe('Quinta-feira');
+  });
 });
 
