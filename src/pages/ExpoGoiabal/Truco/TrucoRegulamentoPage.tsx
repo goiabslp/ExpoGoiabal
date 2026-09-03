@@ -210,38 +210,38 @@ export const TrucoRegulamentoPage: React.FC = () => {
                   <AlertTriangle size={20} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Capítulo IV • Regra Principal</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Capítulo IV • Regra de Premiação</span>
                   <h2 className="text-lg sm:text-xl font-black uppercase text-white">
-                    Inscrição sem CPF & Elegibilidade à Premiação
+                    Pote Geral (Top 4) vs Bônus da Prefeitura (Top 5 com CPF)
                   </h2>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4 text-xs sm:text-sm text-zinc-300">
-                <div className="p-4 rounded-2xl bg-black/40 border border-amber-500/30">
-                  <h4 className="font-black text-amber-400 uppercase text-xs mb-1.5 flex items-center gap-2">
-                    <span>⚠️ Cadastro Flexível (Participação Esportiva Garantida)</span>
+                <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/40">
+                  <h4 className="font-black text-emerald-400 uppercase text-xs mb-1.5 flex items-center gap-2">
+                    <span>💰 1. Pote de Inscrições + Patrocínios (Garantido para os 4 Primeiros)</span>
                   </h4>
-                  <p className="leading-relaxed">
-                    O sistema permite que qualquer responsável finalize a inscrição do time <strong>mesmo sem informar o CPF dos atletas</strong>, garantindo que nenhuma equipe fique de fora das mesas e dos confrontos da ExpoGoiabal.
+                  <p className="leading-relaxed text-zinc-200">
+                    A premiação do pote arrecadado (100% das inscrições + patrocínios) será entregue aos <strong>04 primeiros colocados (1º, 2º, 3º e 4º lugares)</strong> da competição, <strong>independentemente do cadastro estar completo com CPF ou não</strong>.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/30">
-                  <h4 className="font-black text-emerald-400 uppercase text-xs mb-1.5 flex items-center gap-2">
-                    <span>🏆 Condição Exclusiva para Premiação em Dinheiro</span>
+                <div className="p-4 rounded-2xl bg-black/40 border border-amber-500/40">
+                  <h4 className="font-black text-amber-400 uppercase text-xs mb-1.5 flex items-center gap-2">
+                    <span>🎁 2. BÔNUS Especial da Prefeitura (R$ 2.500,00 - Exclusivo com CPF)</span>
                   </h4>
-                  <p className="leading-relaxed">
-                    A premiação em dinheiro (R$ 2.500,00) será concedida <strong>exclusivamente aos 05 melhores times que estiverem com o cadastro 100% regularizado e com os CPFs informados</strong>.
+                  <p className="leading-relaxed text-zinc-200">
+                    O bônus financeiro garantido pela Prefeitura (R$ 2.500,00) será concedido <strong>exclusivamente aos 05 melhores times com cadastro 100% regularizado (com CPF informado)</strong>.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200">
                   <strong className="block text-amber-400 uppercase text-xs font-black mb-1">
-                    🔄 Regra de Pulo e Transferência Automática de Bônus:
+                    🔄 Regra de Pulo e Transferência do Bônus:
                   </strong>
                   <p className="leading-relaxed">
-                    Caso uma equipe finalize a 1ª Fase entre as melhores posições da classificação esportiva, porém <strong>sem CPF</strong> (cadastro não regularizado), ela será <strong>automaticamente ignorada para fins de premiação financeira</strong>, e o prêmio passará imediatamente para a próxima equipe elegível da classificação geral.
+                    Se um time terminar entre os melhores colocados sem CPF, ele <strong>recebe normalmente sua premiação do Pote de Inscrições + Patrocínios (se estiver no Top 4)</strong>, mas abre mão do <strong>Bônus da Prefeitura</strong>, o qual é transferido automaticamente para o próximo time elegível com cadastro completo.
                   </p>
                 </div>
               </div>
@@ -256,18 +256,34 @@ export const TrucoRegulamentoPage: React.FC = () => {
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Capítulo V</span>
                   <h2 className="text-lg sm:text-xl font-black uppercase text-white">
-                    Premiação Oficial: Bônus da Prefeitura & Pote Acumulado
+                    Premiação Oficial: Pote Acumulado (Top 4) & Bônus da Prefeitura
                   </h2>
                 </div>
               </div>
 
-              {/* Bloco A: Premiação BÔNUS da Prefeitura (R$ 2.500,00 - Cadastro Completo) */}
-              <div className="mb-6">
+              {/* Bloco A: Pote Acumulado Extra (100% Inscrições + Patrocínios para os 4 Primeiros - Geral) */}
+              <div className="p-5 mb-6 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border border-emerald-500/40 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-emerald-300 font-black text-xs uppercase tracking-wide">
+                    <Award size={16} className="text-emerald-400" />
+                    <span>💰 Pote Adicional Acumulado: 100% Inscrições + Patrocínios</span>
+                  </div>
+                  <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 rounded-full uppercase">
+                    Para os 4 Primeiros • Com ou Sem CPF
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium">
+                  <strong>100% do valor arrecadado nas inscrições</strong> mais <strong>todos os patrocínios adquiridos</strong> serão retidos e convertidos integralmente em premiação em dinheiro para os <strong>04 primeiros colocados (1º, 2º, 3º e 4º lugares)</strong>, <strong>independentemente do cadastro estar completo ou não</strong>!
+                </p>
+              </div>
+
+              {/* Bloco B: Premiação BÔNUS da Prefeitura (R$ 2.500,00 - Cadastro Completo) */}
+              <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                     <span>🎁 Premiação BÔNUS Garantida pela Prefeitura (Total: R$ 2.500,00)</span>
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase">
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 border border-amber-500/40 px-2.5 py-0.5 rounded-full uppercase">
                     Exclusivo Cadastro Completo
                   </span>
                 </div>
@@ -307,20 +323,6 @@ export const TrucoRegulamentoPage: React.FC = () => {
                     <span className="text-xl font-black text-white">R$ 200,00</span>
                     <span className="text-[10px] text-zinc-400">Bônus Especial</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Bloco B: Pote Acumulado Extra (100% Inscrições + Patrocínios para os 3 Primeiros) */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/40 flex flex-col gap-2.5">
-                <div className="flex items-center gap-2 text-amber-300 font-black text-xs uppercase tracking-wide">
-                  <Award size={16} className="text-amber-400" />
-                  <span>💰 Pote Adicional Acumulado: 100% das Inscrições + Patrocínios (Top 3 Colocados)</span>
-                </div>
-                <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium">
-                  Além do bônus garantido pela Prefeitura (que necessita do cadastro completo), está sendo levantado um <strong>montante adicional acumulado</strong> composto por <strong>100% do valor arrecadado nas inscrições</strong> mais <strong>todos os valores de patrocínio do torneio</strong>.
-                </p>
-                <div className="p-3 bg-black/40 rounded-xl border border-white/10 text-xs text-amber-200">
-                  🏆 <strong>Destinação do Pote Acumulado:</strong> Esse montante integral será retido e repassado como premiação em dinheiro extra para os <strong>03 primeiros colocados (1º, 2º e 3º lugares)</strong> da competição!
                 </div>
               </div>
             </div>

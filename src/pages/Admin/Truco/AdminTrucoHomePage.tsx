@@ -200,7 +200,7 @@ export const AdminTrucoHomePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1: Gerenciamento de Equipes */}
             <div 
               onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Equipes'); }}
@@ -225,7 +225,7 @@ export const AdminTrucoHomePage: React.FC = () => {
                   Gerenciar Equipes
                 </h4>
                 <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
-                  Modere cadastros (aprovar/reprovar), <strong>edite todos os dados dos times e jogadores</strong> (nome, cidade, foto, status, CPF, datas de nascimento e reservas) e controle a elegibilidade ao bônus.
+                  Modere cadastros (aprovar/reprovar), <strong>edite todos os dados dos times e jogadores</strong> e controle a elegibilidade ao bônus.
                 </p>
               </div>
 
@@ -257,7 +257,7 @@ export const AdminTrucoHomePage: React.FC = () => {
                   Lançar Placares
                 </h4>
                 <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
-                  Acompanhe os confrontos rodada a rodada, insira e edite os pontos das equipes, defina vencedores e atualize a classificação do torneio ao vivo.
+                  Acompanhe os confrontos rodada a rodada, insira e edite os pontos das equipes, defina vencedores e atualize a classificação ao vivo.
                 </p>
               </div>
 
@@ -289,12 +289,44 @@ export const AdminTrucoHomePage: React.FC = () => {
                   Controle do Sorteio
                 </h4>
                 <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
-                  Acione o sorteio matemático oficial dos confrontos para transmissão em tempo real nos telões públicos ou resete as rodadas para novo sorteio.
+                  Acione o sorteio matemático oficial dos confrontos para transmissão em tempo real nos telões públicos ou resete as rodadas.
                 </p>
               </div>
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between text-amber-400 font-black text-xs uppercase tracking-wider group-hover:text-amber-300">
                 <span>Acessar Sorteio</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 4: Partida do Dia & Cronômetro Oficial */}
+            <div 
+              onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/ControlePartidas'); }}
+              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-yellow-500/40 hover:border-yellow-400 rounded-3xl p-6 sm:p-7 shadow-xl hover:shadow-[0_0_30px_rgba(234,179,8,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-yellow-400 flex items-center justify-center border border-yellow-500/40 shadow-inner group-hover:scale-110 transition-transform">
+                    <Clock size={28} />
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-black uppercase tracking-wider">
+                    02:00 Horas
+                  </span>
+                </div>
+
+                <span className="text-[10px] font-black uppercase tracking-widest text-yellow-400 block mb-1">
+                  Módulo 4
+                </span>
+                <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-yellow-300 transition-colors">
+                  Partidas do Dia
+                </h4>
+                <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
+                  Inicie a contagem oficial das <strong>02:00 horas</strong> (com contagem de 5s), acione o alerta de <strong>Queda Saídeira</strong> e encerre as partidas.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-white/10 flex items-center justify-between text-yellow-400 font-black text-xs uppercase tracking-wider group-hover:text-yellow-300">
+                <span>Controlar Cronômetro</span>
                 <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
               </div>
             </div>

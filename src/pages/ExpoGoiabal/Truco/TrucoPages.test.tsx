@@ -8,9 +8,21 @@ import { TrucoPartidasPage } from './TrucoPartidasPage';
 import { TrucoTabelaPage } from './TrucoTabelaPage';
 import { TrucoMataMataPage } from './TrucoMataMataPage';
 import { TrucoRegulamentoPage } from './TrucoRegulamentoPage';
+import { TrucoPartidasDoDiaPage } from './TrucoPartidasDoDiaPage';
 import { AdminTrucoHomePage } from '../../Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../../Admin/Truco/AdminTrucoEquipesPage';
 import { AdminTrucoSorteioPage } from '../../Admin/Truco/AdminTrucoSorteioPage';
+import { AdminTrucoPartidasDoDiaPage } from '../../Admin/Truco/AdminTrucoPartidasDoDiaPage';
+import { 
+  obterEstadoCronometro, 
+  dispararInicioPartidaCom5s, 
+  pausarCronometro, 
+  retomarCronometro, 
+  acionarQuedaSaideira, 
+  encerrarPartidasDoDia, 
+  reiniciarCronometro,
+  formatarTempoHHMMSS
+} from '../../../services/trucoCronometroService';
 
 describe('Renderização das páginas completas de Truco', () => {
   it('deve renderizar TrucoHomePage sem erros', () => {
@@ -128,5 +140,68 @@ describe('Renderização das páginas completas de Truco', () => {
       </MemoryRouter>
     );
     expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoPartidasDoDiaPage pública sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/PartidasDoDia']}>
+        <TrucoPartidasDoDiaPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar AdminTrucoPartidasDoDiaPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco/PartidasDoDia']}>
+        <AdminTrucoPartidasDoDiaPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+});
+
+describe('Serviço de Cronômetro de Truco (trucoCronometroService)', () => {
+  it('deve inicializar estado e formatar 02:00:00 corretamente', () => {
+    const formatado = formatarTempoHHMMSS(7200);
+    expect(formatado.horas).toBe('02');
+    expect(formatado.minutos).toBe('00');
+    expect(formatado.segundos).toBe('00');
+    expect(formatado.texto).toBe('02:00:00');
+  });
+
+  it('deve disparar pré-contagem de 5 segundos', () => {
+    const est = dispararInicioPartidaCom5s(1);
+    expect(est.status).toBe('pre_inicio_5s');
+    expect(est.preInicioRestante).toBe(5);
+  });
+
+  it('deve acionar Queda Saideira', () => {
+    const est = acionarQuedaSaideira();
+    expect(est.status).toBe('queda_saideira');
+    expect(est.tempoRestanteSegundos).toBe(0);
+  });
+
+  it('deve pausar, retomar e obter estado do cronômetro', () => {
+    const estInicial = obterEstadoCronometro();
+    expect(estInicial).toBeTruthy();
+
+    const estPausado = pausarCronometro();
+    expect(estPausado).toBeTruthy();
+
+    const estRetomado = retomarCronometro();
+    expect(estRetomado).toBeTruthy();
+  });
+
+  it('deve encerrar partidas do dia', () => {
+    const est = encerrarPartidasDoDia();
+    expect(est.status).toBe('encerrado');
+  });
+
+  it('deve reiniciar cronômetro para 02:00:00', () => {
+    const est = reiniciarCronometro(2);
+    expect(est.status).toBe('parado');
+    expect(est.tempoRestanteSegundos).toBe(7200);
+    expect(est.rodada).toBe(2);
   });
 });

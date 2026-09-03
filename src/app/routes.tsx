@@ -14,10 +14,12 @@ import { TrucoPartidasPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasPage'
 import { TrucoTabelaPage } from '../pages/ExpoGoiabal/Truco/TrucoTabelaPage';
 import { TrucoMataMataPage } from '../pages/ExpoGoiabal/Truco/TrucoMataMataPage';
 import { TrucoRegulamentoPage } from '../pages/ExpoGoiabal/Truco/TrucoRegulamentoPage';
+import { TrucoPartidasDoDiaPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasDoDiaPage';
 import { AdminTrucoPartidasPage } from '../pages/Admin/AdminTrucoPartidasPage';
 import { AdminTrucoHomePage } from '../pages/Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../pages/Admin/Truco/AdminTrucoEquipesPage';
 import { AdminTrucoSorteioPage } from '../pages/Admin/Truco/AdminTrucoSorteioPage';
+import { AdminTrucoPartidasDoDiaPage } from '../pages/Admin/Truco/AdminTrucoPartidasDoDiaPage';
 
 export const router = createBrowserRouter([
   {
@@ -75,6 +77,30 @@ export const router = createBrowserRouter([
   {
     path: '/Admin/Truco/partidas',
     element: <AdminTrucoPartidasPage />,
+  },
+  {
+    path: '/Admin/Truco/PartidasDoDia',
+    element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/truco/partidasdodia',
+    element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/Truco/ControlePartidas',
+    element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/truco/controlepartidas',
+    element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/Truco/Cronometro',
+    element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/truco/cronometro',
+    element: <AdminTrucoPartidasDoDiaPage />,
   },
   {
     path: '/ExpoGoiabal/Inicio',
@@ -191,6 +217,38 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/truco/regulamento',
     element: <TrucoRegulamentoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/PartidasDoDia',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/partidasdodia',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/PartidaDoDia',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/partidadodia',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Cronometro',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/cronometro',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/AoVivo',
+    element: <TrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/aovivo',
+    element: <TrucoPartidasDoDiaPage />,
   },
   {
     path: '/truco/regulamento',

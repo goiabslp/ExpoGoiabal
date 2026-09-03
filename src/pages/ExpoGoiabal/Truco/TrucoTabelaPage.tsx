@@ -194,7 +194,7 @@ export const TrucoTabelaPage: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs text-amber-200">
               <div className="flex items-center gap-2">
                 <span className="text-base">💰</span>
-                <span><strong>Premiação Extra Acumulada:</strong> 100% do valor das inscrições + patrocínios arrecadados serão retidos e distribuídos como premiação em dinheiro para os <strong>03 primeiros colocados</strong>.</span>
+                <span><strong>Premiação Extra Acumulada:</strong> 100% do valor das inscrições + patrocínios arrecadados serão retidos e distribuídos como premiação em dinheiro para os <strong>04 primeiros colocados (1º, 2º, 3º e 4º lugares)</strong>.</span>
               </div>
             </div>
 
@@ -352,45 +352,44 @@ export const TrucoTabelaPage: React.FC = () => {
             </div>
           ) : (
             <div className="w-full flex flex-col gap-4">
-              
-              {/* Desktop Table View */}
-              <div className="hidden md:block w-full overflow-hidden bg-zinc-900/80 border border-emerald-500/20 rounded-3xl shadow-2xl">
+              {/* Desktop Table View Compacta */}
+              <div className="hidden md:block w-full overflow-hidden bg-zinc-900/85 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-zinc-950/80 border-b border-white/10 text-[11px] font-black uppercase tracking-wider text-zinc-400">
-                      <th className="py-4 px-4 text-center w-16 cursor-help" title="POS — Posição da equipe na classificação geral">
+                    <tr className="bg-zinc-950/90 border-b border-white/10 text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                      <th className="py-2.5 px-3 text-center w-12 cursor-help" title="POS — Posição na classificação geral">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">POS</span>
                       </th>
-                      <th className="py-4 px-4 text-center font-black text-amber-400 bg-white/5 cursor-help" title="PTS — Pontos Totais acumulados na classificação geral">
+                      <th className="py-2.5 px-3 text-center font-black text-amber-400 bg-white/5 cursor-help w-14" title="PTS — Pontos Totais">
                         <span className="hover:text-amber-300 transition-colors border-b border-dotted border-amber-400">PTS</span>
                       </th>
-                      <th className="py-4 px-4 cursor-help" title="EQUIPE — Nome do time cadastrado e status de premiação">
+                      <th className="py-2.5 px-3 cursor-help" title="EQUIPE — Time e premiações">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">EQUIPE</span>
                       </th>
-                      <th className="py-4 px-3 text-center cursor-help" title="J — Quantidade de jogos realizados na primeira fase">
+                      <th className="py-2.5 px-2 text-center w-10 cursor-help" title="J — Jogos">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">J</span>
                       </th>
-                      <th className="py-4 px-3 text-center text-emerald-400 cursor-help" title="V — Número de vitórias conquistadas (3 pontos por vitória)">
+                      <th className="py-2.5 px-2 text-center text-emerald-400 w-10 cursor-help" title="V — Vitórias">
                         <span className="hover:text-emerald-300 transition-colors border-b border-dotted border-emerald-500">V</span>
                       </th>
-                      <th className="py-4 px-3 text-center text-red-400 cursor-help" title="D — Número de derrotas sofridas (0 pontos)">
+                      <th className="py-2.5 px-2 text-center text-red-400 w-10 cursor-help" title="D — Derrotas">
                         <span className="hover:text-red-300 transition-colors border-b border-dotted border-red-500">D</span>
                       </th>
-                      <th className="py-4 px-3 text-center text-teal-400 cursor-help" title="PM — Pontos Marcados (Total de tentos/pontos feitos)">
+                      <th className="py-2.5 px-2 text-center text-teal-400 w-12 cursor-help" title="PM — Pontos Marcados">
                         <span className="hover:text-teal-300 transition-colors border-b border-dotted border-teal-500">PM</span>
                       </th>
-                      <th className="py-4 px-3 text-center text-rose-400 cursor-help" title="PS — Pontos Sofridos (Total de tentos/pontos levados)">
+                      <th className="py-2.5 px-2 text-center text-rose-400 w-12 cursor-help" title="PS — Pontos Sofridos">
                         <span className="hover:text-rose-300 transition-colors border-b border-dotted border-rose-500">PS</span>
                       </th>
-                      <th className="py-4 px-3 text-center text-amber-400 cursor-help" title="SG — Saldo de Pontos (Pontos Marcados menos Pontos Sofridos)">
+                      <th className="py-2.5 px-2 text-center text-amber-400 w-12 cursor-help" title="SG — Saldo de Pontos">
                         <span className="hover:text-amber-300 transition-colors border-b border-dotted border-amber-500">SG</span>
                       </th>
-                      <th className="py-4 px-4 cursor-help" title="CIDADE — Município de origem da equipe">
+                      <th className="py-2.5 px-3 cursor-help w-44" title="CIDADE — Origem da equipe">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">CIDADE</span>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-sm">
+                  <tbody className="divide-y divide-white/5 text-xs sm:text-sm">
                     {classificacao.map((item) => {
                       const isTop1 = item.posicao === 1;
                       const isTop2 = item.posicao === 2;
@@ -399,35 +398,35 @@ export const TrucoTabelaPage: React.FC = () => {
                       const isTop5 = item.posicao === 5;
                       const isTop8 = item.posicao <= 8;
 
-                      // Cores e estilos de linha para cada faixa
+                      // Linhas com cores refinadas e esguias
                       const rowStyle = isTop1
-                        ? 'bg-gradient-to-r from-amber-500/20 via-yellow-500/5 to-transparent border-l-4 border-l-amber-400'
+                        ? 'bg-gradient-to-r from-amber-500/15 via-yellow-500/5 to-transparent border-l-3 border-l-amber-400'
                         : isTop2
-                        ? 'bg-gradient-to-r from-slate-300/20 via-slate-400/5 to-transparent border-l-4 border-l-slate-300'
+                        ? 'bg-gradient-to-r from-slate-300/15 via-slate-400/5 to-transparent border-l-3 border-l-slate-300'
                         : isTop3
-                        ? 'bg-gradient-to-r from-amber-700/20 via-amber-800/5 to-transparent border-l-4 border-l-amber-600'
+                        ? 'bg-gradient-to-r from-amber-700/15 via-amber-800/5 to-transparent border-l-3 border-l-amber-600'
                         : isTop4
-                        ? 'bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-l-4 border-l-teal-400'
+                        ? 'bg-gradient-to-r from-teal-500/10 via-teal-500/5 to-transparent border-l-3 border-l-teal-400'
                         : isTop5
-                        ? 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border-l-4 border-l-emerald-400'
+                        ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-l-3 border-l-emerald-400'
                         : isTop8
-                        ? 'bg-emerald-500/[0.03] border-l-4 border-l-emerald-600/60'
-                        : 'hover:bg-white/[0.02] border-l-4 border-l-transparent';
+                        ? 'bg-emerald-500/[0.02] border-l-3 border-l-emerald-600/50'
+                        : 'hover:bg-white/[0.02] border-l-3 border-l-transparent';
 
                       return (
                         <tr 
                           key={item.equipe.id} 
-                          className={`transition-all group ${rowStyle}`}
+                          className={`transition-colors group ${rowStyle}`}
                         >
                           {/* 1. Posição */}
-                          <td className="py-4 px-4 text-center font-black">
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black shadow-md ${
+                          <td className="py-2.5 px-3 text-center font-black">
+                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-black shadow-sm ${
                               isTop1 
-                                ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-amber-400/40 ring-2 ring-amber-300/80 scale-105' 
+                                ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-black shadow-amber-400/30 ring-1 ring-amber-300' 
                                 : isTop2 
-                                ? 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-400 text-black ring-2 ring-slate-200/60' 
+                                ? 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-400 text-black ring-1 ring-slate-200/50' 
                                 : isTop3 
-                                ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-2 ring-amber-600/60' 
+                                ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-1 ring-amber-600/50' 
                                 : isTop4 || isTop5
                                 ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40'
                                 : isTop8
@@ -439,104 +438,97 @@ export const TrucoTabelaPage: React.FC = () => {
                           </td>
 
                           {/* 2. Pontos Totais (PTS) */}
-                          <td className="py-4 px-4 text-center font-black text-base text-amber-400 bg-white/5">
+                          <td className="py-2.5 px-3 text-center font-black text-sm text-amber-400 bg-white/5">
                             {item.pontos}
                           </td>
 
-                          {/* 3. Foto, Nome da Equipe e Badges de Premiação */}
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 shrink-0 border ${
-                                isTop1 ? 'border-amber-400 ring-2 ring-amber-400/30' : isTop2 ? 'border-slate-300' : isTop3 ? 'border-amber-600' : 'border-white/10'
+                          {/* 3. Equipe com Badges Inline Compactas */}
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className={`w-8 h-8 rounded-lg overflow-hidden bg-zinc-800 shrink-0 border ${
+                                isTop1 ? 'border-amber-400' : isTop2 ? 'border-slate-300' : isTop3 ? 'border-amber-600' : 'border-white/10'
                               }`}>
                                 {item.equipe.foto_url ? (
                                   <img src={item.equipe.foto_url} alt={item.equipe.nome} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                                    <Users size={20} />
+                                    <Users size={14} />
                                   </div>
                                 )}
                               </div>
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-black text-white uppercase group-hover:text-amber-300 transition-colors text-sm">
-                                    {item.equipe.nome}
+
+                              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                <span className="font-black text-white uppercase group-hover:text-amber-300 transition-colors text-xs truncate">
+                                  {item.equipe.nome}
+                                </span>
+
+                                {/* Badges Compactas em Linha */}
+                                {(isTop1 || isTop2 || isTop3 || isTop4) && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[9px] font-black uppercase shrink-0">
+                                    💰 Pote Top {item.posicao}
                                   </span>
-                                  {isTop1 && <span className="text-xs">👑</span>}
-                                </div>
-                                
-                                {/* Badges Detalhadas de Premiação do Torneio */}
-                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                  {/* Indicação Especial do Pote Acumulado para Top 3 */}
-                                  {(isTop1 || isTop2 || isTop3) && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                      <span>💰 Pote 100% Inscrições + Patrocínios</span>
-                                    </span>
-                                  )}
+                                )}
 
-                                  {/* Badge de Premiação Bônus */}
-                                  {item.premiacaoPosicao ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                      <span>{item.premiacaoEmoji}</span>
-                                      <span>Bônus Prefeitura: {item.premiacaoFormatada}</span>
-                                    </span>
-                                  ) : null}
+                                {item.premiacaoPosicao && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[9px] font-black uppercase shrink-0">
+                                    <span>{item.premiacaoEmoji}</span>
+                                    <span>Bônus: {item.premiacaoFormatada}</span>
+                                  </span>
+                                )}
 
-                                  {item.isElegivelPremiacao ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
-                                      <span>✅ Cadastro Regularizado</span>
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-300 text-[9px] font-black uppercase tracking-wider" title={item.motivoInelegibilidade}>
-                                      <AlertCircle size={10} className="text-red-400" />
-                                      <span>⚠️ Sem CPF (Abre mão do Bônus)</span>
-                                    </span>
-                                  )}
+                                {item.isElegivelPremiacao ? (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-bold uppercase shrink-0">
+                                    ✓ Regularizado
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-red-500/15 border border-red-500/30 text-red-300 text-[8px] font-black uppercase shrink-0" title={item.motivoInelegibilidade}>
+                                    ⚠️ Sem CPF
+                                  </span>
+                                )}
 
-                                  {isTop8 && !isTop1 && !isTop2 && !isTop3 && (
-                                    <span className="text-[9px] font-black uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">
-                                      Top 8 • Mata-Mata
-                                    </span>
-                                  )}
-                                </div>
+                                {isTop8 && !isTop1 && !isTop2 && !isTop3 && !isTop4 && (
+                                  <span className="text-[8px] font-black uppercase text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded border border-teal-500/20 shrink-0">
+                                    Top 8
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </td>
 
                           {/* 4. Jogos (J) */}
-                          <td className="py-4 px-3 text-center text-zinc-300 font-semibold">
+                          <td className="py-2.5 px-2 text-center text-zinc-300 font-semibold text-xs">
                             {item.jogos}
                           </td>
 
                           {/* 5. Vitórias (V) */}
-                          <td className="py-4 px-3 text-center text-emerald-400 font-bold">
+                          <td className="py-2.5 px-2 text-center text-emerald-400 font-bold text-xs">
                             {item.vitorias}
                           </td>
 
                           {/* 6. Derrotas (D) */}
-                          <td className="py-4 px-3 text-center text-red-400/80 font-semibold">
+                          <td className="py-2.5 px-2 text-center text-red-400/80 font-semibold text-xs">
                             {item.derrotas}
                           </td>
 
                           {/* 7. Pontos Marcados (PM) */}
-                          <td className="py-4 px-3 text-center text-zinc-300 font-semibold">
+                          <td className="py-2.5 px-2 text-center text-zinc-300 font-semibold text-xs">
                             {item.pontosMarcados}
                           </td>
 
                           {/* 8. Pontos Sofridos (PS) */}
-                          <td className="py-4 px-3 text-center text-zinc-400 font-semibold">
+                          <td className="py-2.5 px-2 text-center text-zinc-400 font-semibold text-xs">
                             {item.pontosSofridos}
                           </td>
 
                           {/* 9. Saldo de Pontos (SG) */}
-                          <td className="py-4 px-3 text-center font-bold">
+                          <td className="py-2.5 px-2 text-center font-bold text-xs">
                             <span className={item.saldoPontos > 0 ? 'text-emerald-400' : item.saldoPontos < 0 ? 'text-red-400' : 'text-zinc-400'}>
                               {item.saldoPontos > 0 ? `+${item.saldoPontos}` : item.saldoPontos}
                             </span>
                           </td>
 
                           {/* 10. Cidade */}
-                          <td className="py-4 px-4 text-zinc-400 text-xs font-medium">
+                          <td className="py-2.5 px-3 text-zinc-400 text-xs font-medium truncate max-w-[150px]">
                             {item.equipe.cidade}
                           </td>
                         </tr>
@@ -546,8 +538,8 @@ export const TrucoTabelaPage: React.FC = () => {
                 </table>
               </div>
 
-              {/* Mobile Card View */}
-              <div className="md:hidden flex flex-col gap-3">
+              {/* Mobile Card View Compacto */}
+              <div className="md:hidden flex flex-col gap-2.5">
                 {classificacao.map((item) => {
                   const isTop1 = item.posicao === 1;
                   const isTop2 = item.posicao === 2;
@@ -571,44 +563,44 @@ export const TrucoTabelaPage: React.FC = () => {
                   return (
                     <div 
                       key={item.equipe.id} 
-                      className={`border rounded-2xl p-4 shadow-xl transition-all ${cardStyle}`}
+                      className={`border rounded-2xl p-3 shadow-lg transition-all ${cardStyle}`}
                     >
-                      {/* Faixa Superior de Pote Acumulado e Bônus */}
-                      {(isTop1 || isTop2 || isTop3) && (
-                        <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/40 flex items-center justify-between text-xs">
-                          <span className="font-black text-amber-300 flex items-center gap-1.5 uppercase">
-                            <span>{isTop1 ? '🥇 1º Colocado' : isTop2 ? '🥈 2º Colocado' : '🥉 3º Colocado'}</span>
-                            <span className="text-[10px] text-amber-200">• Pote Extra</span>
+                      {/* Faixa Superior Compacta de Pote Acumulado e Bônus */}
+                      {(isTop1 || isTop2 || isTop3 || isTop4) && (
+                        <div className="mb-2 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/40 flex items-center justify-between text-xs">
+                          <span className="font-black text-amber-300 flex items-center gap-1 uppercase text-[11px]">
+                            <span>{isTop1 ? '🥇 1º' : isTop2 ? '🥈 2º' : isTop3 ? '🥉 3º' : '🏅 4º'}</span>
+                            <span className="text-[10px] text-amber-200">• Pote Top {item.posicao}</span>
                           </span>
                           {item.premiacaoFormatada && (
-                            <span className="font-black text-white bg-black/50 px-2 py-0.5 rounded-md text-[11px]">
+                            <span className="font-black text-white bg-black/50 px-1.5 py-0.5 rounded text-[10px]">
                               Bônus: {item.premiacaoFormatada}
                             </span>
                           )}
                         </div>
                       )}
 
-                      {!isTop1 && !isTop2 && !isTop3 && item.premiacaoPosicao && (
-                        <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/40 flex items-center justify-between text-xs">
-                          <span className="font-black text-teal-300 flex items-center gap-1.5 uppercase">
+                      {!isTop1 && !isTop2 && !isTop3 && !isTop4 && item.premiacaoPosicao && (
+                        <div className="mb-2 px-2.5 py-1 rounded-lg bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/40 flex items-center justify-between text-xs">
+                          <span className="font-black text-teal-300 flex items-center gap-1 uppercase text-[11px]">
                             <span>{item.premiacaoEmoji}</span>
                             <span>{item.premiacaoTitulo}</span>
                           </span>
-                          <span className="font-black text-white bg-black/50 px-2 py-0.5 rounded-md text-[11px]">
+                          <span className="font-black text-white bg-black/50 px-1.5 py-0.5 rounded text-[10px]">
                             Bônus: {item.premiacaoFormatada}
                           </span>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5 mb-3">
-                        <div className="flex items-center gap-3">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl font-black text-xs shadow-md ${
+                      <div className="flex items-center justify-between gap-2.5 pb-2.5 border-b border-white/5 mb-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg font-black text-xs shrink-0 shadow-sm ${
                             isTop1 
-                              ? 'bg-gradient-to-br from-yellow-300 to-amber-500 text-black ring-2 ring-amber-300/80 scale-105' 
+                              ? 'bg-gradient-to-br from-yellow-300 to-amber-500 text-black ring-1 ring-amber-300' 
                               : isTop2 
-                              ? 'bg-gradient-to-br from-slate-100 to-slate-400 text-black ring-2 ring-slate-200/60' 
+                              ? 'bg-gradient-to-br from-slate-100 to-slate-400 text-black ring-1 ring-slate-200/50' 
                               : isTop3 
-                              ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-2 ring-amber-600/60' 
+                              ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white ring-1 ring-amber-600/50' 
                               : isTop8 
                               ? 'bg-emerald-500/20 text-emerald-400' 
                               : 'bg-zinc-800 text-zinc-400'
@@ -616,60 +608,52 @@ export const TrucoTabelaPage: React.FC = () => {
                             {item.posicao}º
                           </span>
 
-                          <div className={`w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 shrink-0 border ${
+                          <div className={`w-8 h-8 rounded-lg overflow-hidden bg-zinc-800 shrink-0 border ${
                             isTop1 ? 'border-amber-400' : isTop2 ? 'border-slate-300' : isTop3 ? 'border-amber-600' : 'border-white/10'
                           }`}>
                             {item.equipe.foto_url ? (
                               <img src={item.equipe.foto_url} alt={item.equipe.nome} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-500"><Users size={18} /></div>
+                              <div className="w-full h-full flex items-center justify-center text-zinc-500"><Users size={14} /></div>
                             )}
                           </div>
 
-                          <div>
-                            <h4 className="font-black text-sm uppercase text-white line-clamp-1">{item.equipe.nome}</h4>
-                            <span className="text-[11px] text-zinc-400 line-clamp-1">{item.equipe.cidade}</span>
-                            
-                            <div className="mt-1">
-                              {item.isElegivelPremiacao ? (
-                                <span className="text-[9px] font-bold text-emerald-400">✅ Regularizado</span>
-                              ) : (
-                                <span className="text-[9px] font-bold text-red-400">⚠️ Sem CPF (Sem Bônus)</span>
-                              )}
-                            </div>
+                          <div className="min-w-0">
+                            <h4 className="font-black text-xs uppercase text-white truncate">{item.equipe.nome}</h4>
+                            <span className="text-[10px] text-zinc-400 truncate block">{item.equipe.cidade}</span>
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block">Pontos</span>
-                          <span className="text-2xl font-black text-amber-400 leading-none">{item.pontos}</span>
+                        <div className="text-right shrink-0">
+                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block">Pontos</span>
+                          <span className="text-xl font-black text-amber-400 leading-none">{item.pontos}</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-6 gap-2 text-center bg-black/40 p-2.5 rounded-xl border border-white/5 text-xs">
-                        <div title="J — Jogos Disputados">
-                          <span className="text-[9px] font-bold text-zinc-500 block uppercase cursor-help border-b border-dotted border-zinc-700">J</span>
-                          <span className="font-bold text-white">{item.jogos}</span>
+                      <div className="grid grid-cols-6 gap-1.5 text-center bg-black/40 p-2 rounded-xl border border-white/5 text-xs">
+                        <div title="J — Jogos">
+                          <span className="text-[8px] font-bold text-zinc-500 block uppercase">J</span>
+                          <span className="font-bold text-white text-xs">{item.jogos}</span>
                         </div>
-                        <div title="V — Vitórias (3 pontos)">
-                          <span className="text-[9px] font-bold text-emerald-500 block uppercase cursor-help border-b border-dotted border-emerald-700">V</span>
-                          <span className="font-bold text-emerald-400">{item.vitorias}</span>
+                        <div title="V — Vitórias">
+                          <span className="text-[8px] font-bold text-emerald-500 block uppercase">V</span>
+                          <span className="font-bold text-emerald-400 text-xs">{item.vitorias}</span>
                         </div>
-                        <div title="D — Derrotas (0 pontos)">
-                          <span className="text-[9px] font-bold text-red-500 block uppercase cursor-help border-b border-dotted border-red-700">D</span>
-                          <span className="font-bold text-red-400">{item.derrotas}</span>
+                        <div title="D — Derrotas">
+                          <span className="text-[8px] font-bold text-red-500 block uppercase">D</span>
+                          <span className="font-bold text-red-400 text-xs">{item.derrotas}</span>
                         </div>
-                        <div title="PM — Pontos Marcados (Goiabadas/tentos)">
-                          <span className="text-[9px] font-bold text-teal-400 block uppercase cursor-help border-b border-dotted border-teal-700">PM</span>
-                          <span className="font-semibold text-zinc-300">{item.pontosMarcados}</span>
+                        <div title="PM — Pontos Marcados">
+                          <span className="text-[8px] font-bold text-teal-400 block uppercase">PM</span>
+                          <span className="font-semibold text-zinc-300 text-xs">{item.pontosMarcados}</span>
                         </div>
-                        <div title="PS — Pontos Sofridos (Tentos levados)">
-                          <span className="text-[9px] font-bold text-rose-400 block uppercase cursor-help border-b border-dotted border-rose-700">PS</span>
-                          <span className="font-semibold text-zinc-400">{item.pontosSofridos}</span>
+                        <div title="PS — Pontos Sofridos">
+                          <span className="text-[8px] font-bold text-rose-400 block uppercase">PS</span>
+                          <span className="font-semibold text-zinc-400 text-xs">{item.pontosSofridos}</span>
                         </div>
-                        <div title="SG — Saldo de Pontos (PM - PS)">
-                          <span className="text-[9px] font-bold text-amber-500 block uppercase cursor-help border-b border-dotted border-amber-700">SG</span>
-                          <span className={`font-bold ${item.saldoPontos > 0 ? 'text-emerald-400' : item.saldoPontos < 0 ? 'text-red-400' : 'text-zinc-400'}`}>
+                        <div title="SG — Saldo de Pontos">
+                          <span className="text-[8px] font-bold text-amber-500 block uppercase">SG</span>
+                          <span className={`font-bold text-xs ${item.saldoPontos > 0 ? 'text-emerald-400' : item.saldoPontos < 0 ? 'text-red-400' : 'text-zinc-400'}`}>
                             {item.saldoPontos > 0 ? `+${item.saldoPontos}` : item.saldoPontos}
                           </span>
                         </div>
@@ -768,9 +752,9 @@ export const TrucoTabelaPage: React.FC = () => {
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                  <span className="font-bold text-amber-300 block mb-1">🏆 Pote Acumulado (Top 3 Colocados)</span>
+                  <span className="font-bold text-amber-300 block mb-1">🏆 Pote Acumulado (Top 4 Colocados)</span>
                   <p className="leading-relaxed">
-                    <strong className="text-white">100% das inscrições + patrocínios</strong> arrecadados serão retidos e destinados como premiação em dinheiro extra para os <strong className="text-amber-400">03 primeiros colocados</strong>.
+                    <strong className="text-white">100% das inscrições + patrocínios</strong> arrecadados serão retidos e destinados como premiação em dinheiro extra para os <strong className="text-amber-400">04 primeiros colocados (1º ao 4º lugar)</strong>, independentemente do cadastro estar completo ou não.
                   </p>
                 </div>
 

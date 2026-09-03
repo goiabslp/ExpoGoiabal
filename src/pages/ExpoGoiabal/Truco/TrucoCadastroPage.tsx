@@ -232,7 +232,7 @@ export const TrucoCadastroPage: React.FC = () => {
                   Taxa de Inscrição: R$ 160,00 por Equipe
                 </strong>
                 <span className="text-zinc-300 leading-relaxed block">
-                  A taxa de inscrição de <strong>R$ 160,00</strong> deve ser acertada diretamente com o organizador <strong className="text-amber-300">Ricardo Moraes</strong>. <strong>100% dos valores das inscrições + patrocínios arrecadados</strong> serão convertidos integralmente em premiação para os primeiros colocados!
+                  A taxa de inscrição de <strong>R$ 160,00</strong> deve ser acertada diretamente com o organizador <strong className="text-amber-300">Ricardo Moraes</strong>. <strong>100% dos valores das inscrições + patrocínios arrecadados</strong> serão convertidos integralmente em premiação para os <strong>04 primeiros colocados (1º, 2º, 3º e 4º lugares)</strong>!
                 </span>
               </div>
             </div>
@@ -492,22 +492,19 @@ export const TrucoCadastroPage: React.FC = () => {
 
             <div className="bg-zinc-950/70 border border-white/10 rounded-2xl p-4 text-left text-zinc-300 text-sm flex flex-col gap-3 mb-6">
               <p className="leading-relaxed">
-                O cadastro do seu time será finalizado mesmo sem o CPF.
+                O cadastro do seu time será finalizado normalmente mesmo sem informar o CPF.
               </p>
 
-              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium leading-relaxed">
-                Porém, ao optar por continuar sem informar o CPF, o time <strong>abre mão do bônus da premiação</strong>.
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed">
+                💰 <strong>Pote de Inscrições + Patrocínios Garantido:</strong> Seu time concorre normalmente à premiação em dinheiro do pote se terminar entre os <strong>04 primeiros colocados (1º ao 4º lugar)</strong>, independente do CPF!
               </div>
 
-              <div className="flex items-start gap-2.5 text-zinc-300 text-xs sm:text-sm">
-                <Trophy size={18} className="text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  🏆 O bônus será concedido somente aos <strong className="text-emerald-400">05 melhores colocados com cadastro regularizado</strong>.
-                </span>
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium leading-relaxed">
+                ⚠️ <strong>Bônus da Prefeitura:</strong> Ao prosseguir sem CPF, o time abre mão apenas do <strong>Bônus Especial de R$ 2.500,00 da Prefeitura</strong>, que é destinado exclusivamente aos 05 melhores colocados com cadastro 100% regularizado.
               </div>
 
               <p className="text-zinc-400 text-xs font-semibold text-center pt-2 border-t border-white/10">
-                Deseja continuar mesmo assim?
+                Deseja continuar e finalizar a inscrição sem CPF?
               </p>
             </div>
 
