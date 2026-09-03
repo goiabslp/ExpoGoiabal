@@ -350,6 +350,7 @@ export const TrucoRegulamentoPage: React.FC = () => {
                   <ul className="space-y-2 list-disc list-inside leading-relaxed text-zinc-300">
                     <li>Todas as equipes se enfrentam em rodadas simultâneas geradas pelo algoritmo do sorteio.</li>
                     <li><strong>Vitória:</strong> 3 pontos na tabela geral.</li>
+                    <li><strong>Empate:</strong> 1 ponto na tabela geral (partidas finalizadas com a mesma pontuação/saldo).</li>
                     <li><strong>Derrota:</strong> 0 pontos na tabela geral.</li>
                     <li><strong>Critérios de Desempate:</strong> 1º Vitórias (V) &rarr; 2º Saldo de Pontos/Goiabadas (SG) &rarr; 3º Pontos Marcados (PM) &rarr; 4º Confronto Direto &rarr; 5º Sorteio.</li>
                   </ul>

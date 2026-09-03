@@ -330,13 +330,16 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
 
                           const vitoriaA = isFinalizada && pontosA > pontosB;
                           const vitoriaB = isFinalizada && pontosB > pontosA;
+                          const isEmpate = isFinalizada && pontosA === pontosB;
 
                           return (
                             <div
                               key={partida.id}
                               className={`relative overflow-hidden bg-zinc-900/90 border rounded-3xl p-5 shadow-xl transition-all duration-300 ${
                                 isFinalizada 
-                                  ? 'border-zinc-800' 
+                                  ? isEmpate
+                                    ? 'border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.08)]'
+                                    : 'border-zinc-800' 
                                   : isEmAndamento 
                                   ? 'border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30' 
                                   : 'border-white/10 hover:border-amber-500/40'
@@ -357,10 +360,16 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
 
                                 <div className="flex items-center gap-2">
                                   {isFinalizada ? (
-                                    <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                                      <CheckCircle2 size={11} className="text-emerald-400" />
-                                      🟢 Concluída
-                                    </span>
+                                    isEmpate ? (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                        🤝 Empate (1 pt)
+                                      </span>
+                                    ) : (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <CheckCircle2 size={11} className="text-emerald-400" />
+                                        🟢 Concluída
+                                      </span>
+                                    )
                                   ) : isEmAndamento ? (
                                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
                                       <Play size={10} />
@@ -390,7 +399,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                                 
                                 {/* Time A */}
                                 <div className={`col-span-2 flex flex-col items-center text-center p-2.5 rounded-2xl ${
-                                  vitoriaA ? 'bg-emerald-500/10 border border-emerald-500/30' : ''
+                                  vitoriaA ? 'bg-emerald-500/10 border border-emerald-500/30' : isEmpate ? 'bg-yellow-500/5 border border-yellow-500/20' : ''
                                 }`}>
                                   <div className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center mb-1.5 shadow-md relative">
                                     {timeA?.foto_url ? (
@@ -410,7 +419,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                                   {/* Saldo Time A */}
                                   {isFinalizada && (
                                     <span className={`text-[10px] font-bold mt-1 px-1.5 py-0.2 rounded ${
-                                      saldoA > 0 ? 'text-emerald-400 bg-emerald-500/10' : saldoA < 0 ? 'text-red-400 bg-red-500/10' : 'text-zinc-400'
+                                      saldoA > 0 ? 'text-emerald-400 bg-emerald-500/10' : saldoA < 0 ? 'text-red-400 bg-red-500/10' : 'text-yellow-400 bg-yellow-500/10'
                                     }`}>
                                       Saldo: {saldoA > 0 ? `+${saldoA}` : saldoA}
                                     </span>
@@ -419,21 +428,25 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
 
                                 {/* Placar Central */}
                                 <div className="col-span-1 flex flex-col items-center justify-center">
-                                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/60 border border-white/10 shadow-inner">
-                                    <span className={`text-xl font-black ${vitoriaA ? 'text-emerald-400' : 'text-white'}`}>
+                                  <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/60 border shadow-inner ${
+                                    isEmpate ? 'border-yellow-500/40' : 'border-white/10'
+                                  }`}>
+                                    <span className={`text-xl font-black ${vitoriaA ? 'text-emerald-400' : isEmpate ? 'text-yellow-400' : 'text-white'}`}>
                                       {pontosA}
                                     </span>
                                     <span className="text-xs font-bold text-zinc-600">x</span>
-                                    <span className={`text-xl font-black ${vitoriaB ? 'text-emerald-400' : 'text-white'}`}>
+                                    <span className={`text-xl font-black ${vitoriaB ? 'text-emerald-400' : isEmpate ? 'text-yellow-400' : 'text-white'}`}>
                                       {pontosB}
                                     </span>
                                   </div>
-                                  <span className="text-[9px] font-bold text-zinc-500 uppercase mt-1">Placar</span>
+                                  <span className="text-[9px] font-bold text-zinc-500 uppercase mt-1">
+                                    {isEmpate ? '🤝 Empate' : 'Placar'}
+                                  </span>
                                 </div>
 
                                 {/* Time B */}
                                 <div className={`col-span-2 flex flex-col items-center text-center p-2.5 rounded-2xl ${
-                                  vitoriaB ? 'bg-emerald-500/10 border border-emerald-500/30' : ''
+                                  vitoriaB ? 'bg-emerald-500/10 border border-emerald-500/30' : isEmpate ? 'bg-yellow-500/5 border border-yellow-500/20' : ''
                                 }`}>
                                   <div className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center mb-1.5 shadow-md relative">
                                     {timeB?.foto_url ? (
@@ -453,7 +466,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                                   {/* Saldo Time B */}
                                   {isFinalizada && (
                                     <span className={`text-[10px] font-bold mt-1 px-1.5 py-0.2 rounded ${
-                                      saldoB > 0 ? 'text-emerald-400 bg-emerald-500/10' : saldoB < 0 ? 'text-red-400 bg-red-500/10' : 'text-zinc-400'
+                                      saldoB > 0 ? 'text-emerald-400 bg-emerald-500/10' : saldoB < 0 ? 'text-red-400 bg-red-500/10' : 'text-yellow-400 bg-yellow-500/10'
                                     }`}>
                                       Saldo: {saldoB > 0 ? `+${saldoB}` : saldoB}
                                     </span>

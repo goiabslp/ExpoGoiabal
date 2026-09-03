@@ -299,6 +299,8 @@ export const TrucoTabelaPage: React.FC = () => {
                           <span className="text-zinc-500">•</span>
                           <span className="text-emerald-400">{row.vitorias}V</span>
                           <span className="text-zinc-500">•</span>
+                          <span className="text-yellow-400">{row.empates}E</span>
+                          <span className="text-zinc-500">•</span>
                           <span className="text-zinc-400">SG: {row.saldoPontos > 0 ? `+${row.saldoPontos}` : row.saldoPontos}</span>
                         </div>
                       </div>
@@ -369,10 +371,13 @@ export const TrucoTabelaPage: React.FC = () => {
                       <th className="py-2.5 px-2 text-center w-10 cursor-help" title="J — Jogos">
                         <span className="hover:text-white transition-colors border-b border-dotted border-zinc-500">J</span>
                       </th>
-                      <th className="py-2.5 px-2 text-center text-emerald-400 w-10 cursor-help" title="V — Vitórias">
+                      <th className="py-2.5 px-2 text-center text-emerald-400 w-10 cursor-help" title="V — Vitórias (3 pontos)">
                         <span className="hover:text-emerald-300 transition-colors border-b border-dotted border-emerald-500">V</span>
                       </th>
-                      <th className="py-2.5 px-2 text-center text-red-400 w-10 cursor-help" title="D — Derrotas">
+                      <th className="py-2.5 px-2 text-center text-yellow-400 w-10 cursor-help" title="E — Empates (1 ponto)">
+                        <span className="hover:text-yellow-300 transition-colors border-b border-dotted border-yellow-500">E</span>
+                      </th>
+                      <th className="py-2.5 px-2 text-center text-red-400 w-10 cursor-help" title="D — Derrotas (0 ponto)">
                         <span className="hover:text-red-300 transition-colors border-b border-dotted border-red-500">D</span>
                       </th>
                       <th className="py-2.5 px-2 text-center text-teal-400 w-12 cursor-help" title="PM — Pontos Marcados">
@@ -505,29 +510,34 @@ export const TrucoTabelaPage: React.FC = () => {
                             {item.vitorias}
                           </td>
 
-                          {/* 6. Derrotas (D) */}
+                          {/* 6. Empates (E) */}
+                          <td className="py-2.5 px-2 text-center text-yellow-400 font-bold text-xs">
+                            {item.empates}
+                          </td>
+
+                          {/* 7. Derrotas (D) */}
                           <td className="py-2.5 px-2 text-center text-red-400/80 font-semibold text-xs">
                             {item.derrotas}
                           </td>
 
-                          {/* 7. Pontos Marcados (PM) */}
+                          {/* 8. Pontos Marcados (PM) */}
                           <td className="py-2.5 px-2 text-center text-zinc-300 font-semibold text-xs">
                             {item.pontosMarcados}
                           </td>
 
-                          {/* 8. Pontos Sofridos (PS) */}
+                          {/* 9. Pontos Sofridos (PS) */}
                           <td className="py-2.5 px-2 text-center text-zinc-400 font-semibold text-xs">
                             {item.pontosSofridos}
                           </td>
 
-                          {/* 9. Saldo de Pontos (SG) */}
+                          {/* 10. Saldo de Pontos (SG) */}
                           <td className="py-2.5 px-2 text-center font-bold text-xs">
                             <span className={item.saldoPontos > 0 ? 'text-emerald-400' : item.saldoPontos < 0 ? 'text-red-400' : 'text-zinc-400'}>
                               {item.saldoPontos > 0 ? `+${item.saldoPontos}` : item.saldoPontos}
                             </span>
                           </td>
 
-                          {/* 10. Cidade */}
+                          {/* 11. Cidade */}
                           <td className="py-2.5 px-3 text-zinc-400 text-xs font-medium truncate max-w-[150px]">
                             {item.equipe.cidade}
                           </td>
@@ -630,7 +640,7 @@ export const TrucoTabelaPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-6 gap-1.5 text-center bg-black/40 p-2 rounded-xl border border-white/5 text-xs">
+                      <div className="grid grid-cols-7 gap-1 text-center bg-black/40 p-2 rounded-xl border border-white/5 text-xs">
                         <div title="J — Jogos">
                           <span className="text-[8px] font-bold text-zinc-500 block uppercase">J</span>
                           <span className="font-bold text-white text-xs">{item.jogos}</span>
@@ -638,6 +648,10 @@ export const TrucoTabelaPage: React.FC = () => {
                         <div title="V — Vitórias">
                           <span className="text-[8px] font-bold text-emerald-500 block uppercase">V</span>
                           <span className="font-bold text-emerald-400 text-xs">{item.vitorias}</span>
+                        </div>
+                        <div title="E — Empates">
+                          <span className="text-[8px] font-bold text-yellow-400 block uppercase">E</span>
+                          <span className="font-bold text-yellow-400 text-xs">{item.empates}</span>
                         </div>
                         <div title="D — Derrotas">
                           <span className="text-[8px] font-bold text-red-500 block uppercase">D</span>
@@ -677,7 +691,7 @@ export const TrucoTabelaPage: React.FC = () => {
                   Legenda das Siglas da Tabela
                 </h4>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-9 gap-2.5 text-xs">
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center flex flex-col items-center">
                   <span className="font-black text-white text-sm">POS</span>
                   <span className="text-[10px] text-zinc-400">Posição</span>
@@ -692,11 +706,15 @@ export const TrucoTabelaPage: React.FC = () => {
                 </div>
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center flex flex-col items-center">
                   <span className="font-black text-emerald-400 text-sm">V</span>
-                  <span className="text-[10px] text-zinc-400">Vitórias</span>
+                  <span className="text-[10px] text-zinc-400">Vitórias (3 pts)</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-center flex flex-col items-center">
+                  <span className="font-black text-yellow-400 text-sm">E</span>
+                  <span className="text-[10px] text-yellow-300 font-bold">Empates (1 pt)</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center flex flex-col items-center">
                   <span className="font-black text-red-400 text-sm">D</span>
-                  <span className="text-[10px] text-zinc-400">Derrotas</span>
+                  <span className="text-[10px] text-zinc-400">Derrotas (0 pt)</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center flex flex-col items-center">
                   <span className="font-black text-teal-400 text-sm">PM</span>
@@ -721,7 +739,11 @@ export const TrucoTabelaPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs text-zinc-400">
                 <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
                   <span className="font-bold text-white block mb-1">🎮 Pontuação Oficial</span>
-                  <p>Vitória: <strong className="text-emerald-400">3 pontos</strong><br />Derrota: <strong className="text-zinc-400">0 pontos</strong></p>
+                  <p>
+                    Vitória: <strong className="text-emerald-400">3 pontos</strong><br />
+                    Empate: <strong className="text-yellow-400">1 ponto</strong><br />
+                    Derrota: <strong className="text-zinc-400">0 pontos</strong>
+                  </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">

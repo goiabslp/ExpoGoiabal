@@ -489,6 +489,7 @@ export interface TrucoClassificacaoRow {
   equipe: TrucoEquipe;
   jogos: number;
   vitorias: number;
+  empates: number;
   derrotas: number;
   pontos: number;
   pontosMarcados: number;
@@ -1385,6 +1386,7 @@ export const calcularClassificacao = (
   const mapStats = new Map<string, {
     jogos: number;
     vitorias: number;
+    empates: number;
     derrotas: number;
     pontos: number;
     pontosMarcados: number;
@@ -1396,6 +1398,7 @@ export const calcularClassificacao = (
     mapStats.set(eq.id, {
       jogos: 0,
       vitorias: 0,
+      empates: 0,
       derrotas: 0,
       pontos: 0,
       pontosMarcados: 0,
@@ -1438,6 +1441,12 @@ export const calcularClassificacao = (
       statsB.vitorias += 1;
       statsB.pontos += 3;
       statsA.derrotas += 1;
+    } else {
+      // Partida terminada empatada com mesmo saldo de pontos (1 ponto para cada time)
+      statsA.empates += 1;
+      statsA.pontos += 1;
+      statsB.empates += 1;
+      statsB.pontos += 1;
     }
   });
 
@@ -1447,6 +1456,7 @@ export const calcularClassificacao = (
     const stats = mapStats.get(equipe.id) || {
       jogos: 0,
       vitorias: 0,
+      empates: 0,
       derrotas: 0,
       pontos: 0,
       pontosMarcados: 0,

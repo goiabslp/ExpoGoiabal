@@ -255,6 +255,59 @@ describe('Classificação da 1ª Fase do Truco', () => {
     expect(resultado[1].vitorias).toBe(0);
     expect(resultado[1].saldoPontos).toBe(-6);
   });
+
+  it('deve calcular empates (1 pt cada) quando as equipes terminarem com o mesmo saldo de pontos', () => {
+    const equipes = [equipeA, equipeB];
+    const partidas: TrucoPartida[] = [
+      {
+        id: 'p_empate',
+        tipo_fase: 'primeira_fase',
+        rodada: 1,
+        numero_jogo: 1,
+        time_a_id: '1',
+        time_b_id: '2',
+        pontos_time_a: 10,
+        pontos_time_b: 10,
+        vencedor_id: null,
+        status: 'finalizada',
+        fase_nome: 'Rodada 01'
+      }
+    ];
+
+    const resultado = calcularClassificacao(equipes, partidas);
+
+    expect(resultado[0].pontos).toBe(1);
+    expect(resultado[0].empates).toBe(1);
+    expect(resultado[0].vitorias).toBe(0);
+    expect(resultado[0].saldoPontos).toBe(0);
+
+    expect(resultado[1].pontos).toBe(1);
+    expect(resultado[1].empates).toBe(1);
+    expect(resultado[1].vitorias).toBe(0);
+    expect(resultado[1].saldoPontos).toBe(0);
+  });
+
+  it('deve utilizar Pontos Marcados (PM) como critério de desempate imediatamente após Saldo de Pontos (SG)', () => {
+    const eq1: TrucoEquipe = { id: 't1', nome: 'Time Alpha', cidade: 'Goiabal', status: 'aprovado' };
+    const eq2: TrucoEquipe = { id: 't2', nome: 'Time Beta', cidade: 'Goiabal', status: 'aprovado' };
+    const eq3: TrucoEquipe = { id: 't3', nome: 'Time Gamma', cidade: 'Goiabal', status: 'aprovado' };
+
+    // Cenário:
+    // eq1 contra eq3: 12 x 10 (Vitória de eq1, +2 SG, 12 PM, 3 PTS)
+    // eq2 contra eq3: 8 x 6 (Vitória de eq2, +2 SG, 8 PM, 3 PTS)
+    // Ambos têm 3 PTS, 1 V, +2 SG. O desempate deve ser por PM: eq1 (12 PM) fica na frente de eq2 (8 PM).
+    const equipes = [eq2, eq1, eq3]; // eq2 colocado primeiro na lista propositalmente
+    const partidas: TrucoPartida[] = [
+      { id: 'p1', tipo_fase: 'primeira_fase', rodada: 1, numero_jogo: 1, time_a_id: 't1', time_b_id: 't3', pontos_time_a: 12, pontos_time_b: 10, vencedor_id: 't1', status: 'finalizada', fase_nome: 'R1' },
+      { id: 'p2', tipo_fase: 'primeira_fase', rodada: 2, numero_jogo: 2, time_a_id: 't2', time_b_id: 't3', pontos_time_a: 8, pontos_time_b: 6, vencedor_id: 't2', status: 'finalizada', fase_nome: 'R2' },
+    ];
+
+    const resultado = calcularClassificacao(equipes, partidas);
+    expect(resultado[0].equipe.id).toBe('t1');
+    expect(resultado[0].pontosMarcados).toBe(12);
+    expect(resultado[1].equipe.id).toBe('t2');
+    expect(resultado[1].pontosMarcados).toBe(8);
+  });
 });
 
 describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
