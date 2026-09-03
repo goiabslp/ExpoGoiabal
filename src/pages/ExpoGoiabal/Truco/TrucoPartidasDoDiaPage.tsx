@@ -90,15 +90,26 @@ export const TrucoPartidasDoDiaPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Número Gigante da Contagem */}
-            <div className="my-6">
-              <span className="text-8xl sm:text-9xl font-black text-amber-400 font-mono tracking-tighter drop-shadow-[0_0_50px_rgba(245,158,11,0.8)] animate-ping">
-                {estado.preInicioRestante > 0 ? estado.preInicioRestante : '🚀'}
+            {/* Número Gigante da Contagem com animação a cada segundo */}
+            <div className="my-6 h-36 flex items-center justify-center">
+              <span 
+                key={estado.preInicioRestante}
+                className="text-8xl sm:text-9xl font-black text-amber-400 font-mono tracking-tighter drop-shadow-[0_0_60px_rgba(245,158,11,1)] animate-in zoom-in-75 duration-300 inline-block"
+              >
+                {estado.preInicioRestante > 0 ? estado.preInicioRestante : '🚀 VAI!'}
               </span>
             </div>
 
+            {/* Barra de Progresso dos 5 segundos */}
+            <div className="w-full max-w-xs h-2 rounded-full bg-zinc-800 overflow-hidden border border-white/10">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-300 rounded-full"
+                style={{ width: `${Math.max(0, Math.min(100, (estado.preInicioRestante / 5) * 100))}%` }}
+              ></div>
+            </div>
+
             <div className="px-6 py-2 rounded-full bg-zinc-900 border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300">
-              Tempo Regulamentar: 02 Horas
+              Tempo Regulamentar: 02:00:00
             </div>
           </div>
         </div>

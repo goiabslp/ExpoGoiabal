@@ -22,6 +22,7 @@ export interface TrucoCronometroEstado {
   tempoRestanteSegundos: number; // Segundos restantes (0 a 7200)
   tempoTotalSegundos: number;    // 7200 (2 horas)
   preInicioRestante: number;     // 5, 4, 3, 2, 1, 0
+  preInicioExpiraEm?: number | null; // Timestamp em ms de quando o pré-início termina
   rodada: number;
   iniciadoEm: number | null;     // timestamp em ms
   expiraEm: number | null;       // timestamp em ms quando atinge 0
@@ -29,9 +30,9 @@ export interface TrucoCronometroEstado {
   atualizadoEm: number;
 }
 
-const STORAGE_KEY = 'expogoiabal_truco_cronometro_v2';
-const BROADCAST_CHANNEL_NAME = 'truco_cronometro_local_v2';
-const SUPABASE_CHANNEL_NAME = 'truco_cronometro_live_v2';
+const STORAGE_KEY = 'expogoiabal_truco_cronometro_v4';
+const BROADCAST_CHANNEL_NAME = 'truco_cronometro_local_v4';
+const SUPABASE_CHANNEL_NAME = 'truco_cronometro_live_v4';
 
 export const TEMPO_OFICIAL_SEGUNDOS = 2 * 60 * 60; // 7200s = 02:00:00
 export const TEMPO_PRE_CONTAGEM_SEGUNDOS = 5;
@@ -41,6 +42,7 @@ const ESTADO_INICIAL: TrucoCronometroEstado = {
   tempoRestanteSegundos: TEMPO_OFICIAL_SEGUNDOS,
   tempoTotalSegundos: TEMPO_OFICIAL_SEGUNDOS,
   preInicioRestante: TEMPO_PRE_CONTAGEM_SEGUNDOS,
+  preInicioExpiraEm: null,
   rodada: 1,
   iniciadoEm: null,
   expiraEm: null,
@@ -88,28 +90,35 @@ export const obterEstadoCronometro = (): TrucoCronometroEstado => {
     const agora = Date.now();
 
     // 1. Se estiver na contagem prévia de 5 segundos
-    if (estado.status === 'pre_inicio_5s' && estado.iniciadoEm) {
-      const decorridoPre = Math.floor((agora - estado.iniciadoEm) / 1000);
-      const restantePre = Math.max(0, TEMPO_PRE_CONTAGEM_SEGUNDOS - decorridoPre);
+    if (estado.status === 'pre_inicio_5s') {
+      const preExpira = estado.preInicioExpiraEm || ((estado.iniciadoEm || agora) + TEMPO_PRE_CONTAGEM_SEGUNDOS * 1000);
+      const restantePre = Math.max(0, Math.ceil((preExpira - agora) / 1000));
 
       if (restantePre <= 0) {
         // Transição automática para contagem oficial de 02:00:00
-        const novoExpiraEm = agora + estado.tempoTotalSegundos * 1000;
+        const expiraOficial = estado.expiraEm || (agora + estado.tempoTotalSegundos * 1000);
+        const restanteOficial = Math.max(0, Math.ceil((expiraOficial - agora) / 1000));
+
         const novoEstado: TrucoCronometroEstado = {
           ...estado,
-          status: 'em_andamento',
+          status: restanteOficial <= 0 ? 'queda_saideira' : 'em_andamento',
           preInicioRestante: 0,
-          iniciadoEm: agora,
-          expiraEm: novoExpiraEm,
-          tempoRestanteSegundos: estado.tempoTotalSegundos,
+          preInicioExpiraEm: null,
+          iniciadoEm: estado.iniciadoEm || agora,
+          expiraEm: expiraOficial,
+          tempoRestanteSegundos: restanteOficial,
           atualizadoEm: agora
         };
-        salvarEstadoCronometro(novoEstado);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(novoEstado));
+        }
         return novoEstado;
       } else {
         return {
           ...estado,
-          preInicioRestante: restantePre
+          preInicioRestante: restantePre,
+          tempoRestanteSegundos: estado.tempoTotalSegundos
         };
       }
     }
@@ -126,7 +135,9 @@ export const obterEstadoCronometro = (): TrucoCronometroEstado => {
           tempoRestanteSegundos: 0,
           atualizadoEm: agora
         };
-        salvarEstadoCronometro(novoEstado);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(novoEstado));
+        }
         return novoEstado;
       }
 
@@ -200,6 +211,7 @@ export const salvarEstadoCronometro = (novoEstado: TrucoCronometroEstado): void 
     notificarListeners(estadoComTimestamp);
 
     // 4. Disparar Supabase Realtime Broadcast (milissegundos para celulares, TVs e outros PCs)
+    inicializarSupabaseRealtime();
     if (supabaseRealtimeChannel) {
       try {
         supabaseRealtimeChannel.send({
@@ -227,8 +239,11 @@ const salvarNoBancoSupabase = async (estado: TrucoCronometroEstado) => {
     const { error } = await supabase
       .from('truco_torneio_status')
       .upsert({
-        id: 'main',
-        sorteio_iniciado_em: JSON.stringify(estado), // Guarda o JSON do cronômetro no status principal
+        id: 'cronometro',
+        fase_atual: estado.status,
+        top8_equipes_ids: [JSON.stringify(estado)],
+        sorteio_primeira_fase_confirmado: Boolean(estado.status === 'em_andamento'),
+        sorteio_animacao_ativa: estado.status === 'queda_saideira',
         updated_at: new Date().toISOString()
       });
 
@@ -247,15 +262,17 @@ export const buscarEstadoCronometroSupabase = async (): Promise<TrucoCronometroE
   try {
     const { data, error } = await supabase
       .from('truco_torneio_status')
-      .select('sorteio_iniciado_em, updated_at')
-      .eq('id', 'main')
+      .select('*')
+      .eq('id', 'cronometro')
       .maybeSingle();
 
-    if (!error && data?.sorteio_iniciado_em) {
+    if (!error && data?.top8_equipes_ids) {
       try {
-        const parsed = typeof data.sorteio_iniciado_em === 'string'
-          ? JSON.parse(data.sorteio_iniciado_em)
-          : data.sorteio_iniciado_em;
+        let raw = data.top8_equipes_ids;
+        if (Array.isArray(raw) && raw.length > 0) {
+          raw = raw[0];
+        }
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
 
         if (parsed && parsed.status) {
           aplicarEstadoRemoto(parsed);
@@ -278,16 +295,19 @@ export const buscarEstadoCronometroSupabase = async (): Promise<TrucoCronometroE
 export const dispararInicioPartidaCom5s = (rodada?: number): TrucoCronometroEstado => {
   const agora = Date.now();
   const estadoAtual = obterEstadoCronometro();
+  const preFim = agora + (TEMPO_PRE_CONTAGEM_SEGUNDOS * 1000) + 400; // 5.4s para animação completa
+  const expiraOficial = preFim + TEMPO_OFICIAL_SEGUNDOS * 1000;
 
   const novoEstado: TrucoCronometroEstado = {
     ...estadoAtual,
     status: 'pre_inicio_5s',
     preInicioRestante: TEMPO_PRE_CONTAGEM_SEGUNDOS,
+    preInicioExpiraEm: preFim,
     tempoTotalSegundos: TEMPO_OFICIAL_SEGUNDOS,
     tempoRestanteSegundos: TEMPO_OFICIAL_SEGUNDOS,
     rodada: rodada ?? estadoAtual.rodada ?? 1,
     iniciadoEm: agora,
-    expiraEm: null,
+    expiraEm: expiraOficial,
     pausadoEm: null,
     atualizadoEm: agora
   };
@@ -308,6 +328,7 @@ export const iniciarContagemOficialDireta = (rodada?: number): TrucoCronometroEs
     ...estadoAtual,
     status: 'em_andamento',
     preInicioRestante: 0,
+    preInicioExpiraEm: null,
     tempoTotalSegundos: TEMPO_OFICIAL_SEGUNDOS,
     tempoRestanteSegundos: TEMPO_OFICIAL_SEGUNDOS,
     rodada: rodada ?? estadoAtual.rodada ?? 1,
@@ -341,19 +362,22 @@ export const pausarCronometro = (): TrucoCronometroEstado => {
 };
 
 /**
- * Retoma o cronômetro pausado
+ * Retoma o cronômetro a partir do tempo restante
  */
 export const retomarCronometro = (): TrucoCronometroEstado => {
   const estado = obterEstadoCronometro();
   if (estado.status !== 'pausado') return estado;
 
   const agora = Date.now();
-  const novoExpiraEm = agora + estado.tempoRestanteSegundos * 1000;
+  const expira = agora + estado.tempoRestanteSegundos * 1000;
 
   const novoEstado: TrucoCronometroEstado = {
     ...estado,
     status: 'em_andamento',
-    expiraEm: novoExpiraEm,
+    preInicioRestante: 0,
+    preInicioExpiraEm: null,
+    iniciadoEm: agora,
+    expiraEm: expira,
     pausadoEm: null,
     atualizadoEm: agora
   };
@@ -363,7 +387,7 @@ export const retomarCronometro = (): TrucoCronometroEstado => {
 };
 
 /**
- * Aciona imediatamente o modo QUEDA SAÍDEIRA
+ * Aciona o modo QUEDA SAÍDEIRA manualmente ou automaticamente
  */
 export const acionarQuedaSaideira = (): TrucoCronometroEstado => {
   const estado = obterEstadoCronometro();
@@ -372,8 +396,9 @@ export const acionarQuedaSaideira = (): TrucoCronometroEstado => {
   const novoEstado: TrucoCronometroEstado = {
     ...estado,
     status: 'queda_saideira',
+    preInicioRestante: 0,
+    preInicioExpiraEm: null,
     tempoRestanteSegundos: 0,
-    expiraEm: agora,
     atualizadoEm: agora
   };
 
@@ -391,6 +416,8 @@ export const encerrarPartidasDoDia = (): TrucoCronometroEstado => {
   const novoEstado: TrucoCronometroEstado = {
     ...estado,
     status: 'encerrado',
+    preInicioRestante: 0,
+    preInicioExpiraEm: null,
     tempoRestanteSegundos: 0,
     atualizadoEm: agora
   };
@@ -411,6 +438,7 @@ export const reiniciarCronometro = (novaRodada?: number): TrucoCronometroEstado 
     tempoTotalSegundos: TEMPO_OFICIAL_SEGUNDOS,
     tempoRestanteSegundos: TEMPO_OFICIAL_SEGUNDOS,
     preInicioRestante: TEMPO_PRE_CONTAGEM_SEGUNDOS,
+    preInicioExpiraEm: null,
     rodada: novaRodada ?? estadoAtual.rodada ?? 1,
     iniciadoEm: null,
     expiraEm: null,
@@ -476,6 +504,7 @@ export const definirTempoEspecifico = (totalSegundos: number, iniciarImediatamen
     tempoTotalSegundos: segundosValidos > 0 ? segundosValidos : estadoAtual.tempoTotalSegundos,
     tempoRestanteSegundos: segundosValidos,
     preInicioRestante: 0,
+    preInicioExpiraEm: null,
     iniciadoEm: novoStatus === 'em_andamento' ? (estadoAtual.iniciadoEm || agora) : estadoAtual.iniciadoEm,
     expiraEm: expira,
     pausadoEm: novoStatus === 'pausado' ? agora : null,
@@ -510,12 +539,12 @@ export const formatarTempoHHMMSS = (totalSegundos: number): { horas: string; min
 /**
  * Inicializa a conexão com Supabase Realtime (chamado automaticamente)
  */
-const inicializarSupabaseRealtime = () => {
+export const inicializarSupabaseRealtime = () => {
   if (supabaseRealtimeChannel) return;
 
   try {
     supabaseRealtimeChannel = supabase.channel(SUPABASE_CHANNEL_NAME, {
-      config: { broadcast: { self: false } }
+      config: { broadcast: { self: true } }
     });
 
     supabaseRealtimeChannel
@@ -525,11 +554,13 @@ const inicializarSupabaseRealtime = () => {
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_torneio_status' }, (payload: any) => {
-        if (payload?.new?.sorteio_iniciado_em) {
+        if (payload?.new && payload.new.id === 'cronometro' && payload.new.top8_equipes_ids) {
           try {
-            const parsed = typeof payload.new.sorteio_iniciado_em === 'string'
-              ? JSON.parse(payload.new.sorteio_iniciado_em)
-              : payload.new.sorteio_iniciado_em;
+            let raw = payload.new.top8_equipes_ids;
+            if (Array.isArray(raw) && raw.length > 0) {
+              raw = raw[0];
+            }
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
             if (parsed && parsed.status) {
               aplicarEstadoRemoto(parsed);
             }
@@ -540,7 +571,6 @@ const inicializarSupabaseRealtime = () => {
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // Busca estado inicial do banco após assinar
           buscarEstadoCronometroSupabase();
         }
       });
@@ -548,6 +578,11 @@ const inicializarSupabaseRealtime = () => {
     console.warn('Não foi possível inicializar Supabase Realtime Channel:', err);
   }
 };
+
+// Inicializa canal imediatamente
+if (typeof window !== 'undefined') {
+  inicializarSupabaseRealtime();
+}
 
 /**
  * Inscreve-se para receber atualizações do cronômetro em tempo real (multi-dispositivo)
@@ -583,10 +618,10 @@ export const subscribeCronometro = (callback: (estado: TrucoCronometroEstado) =>
     }
   }
 
-  // Polling leve de fallback (a cada 2.5 segundos) para garantir sincronia se o websocket oscilar
+  // Polling contínuo de 1 segundo para garantir sincronia perfeita entre múltiplos aparelhos
   const fallbackInterval = setInterval(() => {
     buscarEstadoCronometroSupabase().then(est => callback(est));
-  }, 2500);
+  }, 1000);
 
   return () => {
     listeners.delete(callback);
