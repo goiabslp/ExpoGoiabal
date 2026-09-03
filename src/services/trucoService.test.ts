@@ -125,6 +125,8 @@ vi.mock('./supabase', () => {
 
 import { 
   gerarRoundRobin, 
+  realizarSorteioPrimeiraFase,
+  isTimeDeFora,
   calcularClassificacao, 
   realizarSorteioMataMata,
   atualizarChaveamentoMataMata,
@@ -135,9 +137,12 @@ import {
 describe('Matemática Round-Robin (Circle Method)', () => {
   it('deve gerar corretamente rodadas simultâneas para 4 equipes (3 rodadas, 2 jogos/rodada, 6 jogos no total)', () => {
     const times = ['T1', 'T2', 'T3', 'T4'];
-    const confrontos = gerarRoundRobin(times);
+    const res = gerarRoundRobin(times);
+    const confrontos = res.confrontos;
 
     expect(confrontos.length).toBe(6); // 4 * 3 / 2 = 6
+    expect(res.numRodadas).toBe(3);
+    expect(res.jogosPorRodada).toBe(2);
 
     // Verificar rodadas
     const rodadas = new Set(confrontos.map(c => c.rodada));
@@ -171,9 +176,12 @@ describe('Matemática Round-Robin (Circle Method)', () => {
 
   it('deve gerar corretamente rodadas simultâneas para 8 equipes (7 rodadas, 4 jogos/rodada, 28 jogos no total)', () => {
     const times = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'];
-    const confrontos = gerarRoundRobin(times);
+    const res = gerarRoundRobin(times);
+    const confrontos = res.confrontos;
 
     expect(confrontos.length).toBe(28); // 8 * 7 / 2 = 28
+    expect(res.numRodadas).toBe(7);
+    expect(res.jogosPorRodada).toBe(4);
 
     const rodadas = new Set(confrontos.map(c => c.rodada));
     expect(rodadas.size).toBe(7); // 8 - 1 = 7 rodadas
@@ -201,9 +209,107 @@ describe('Matemática Round-Robin (Circle Method)', () => {
     expect(pares.size).toBe(28);
   });
 
-  it('deve lançar erro caso a quantidade de equipes seja ímpar', () => {
-    const timesImpar = ['T1', 'T2', 'T3', 'T4', 'T5'];
-    expect(() => gerarRoundRobin(timesImpar)).toThrow();
+  it('deve gerar corretamente calendário Todos contra Todos para quantidade ÍMPAR de equipes (5 equipes: 5 rodadas, 2 jogos/rodada, 10 jogos no total)', () => {
+    const times = ['T1', 'T2', 'T3', 'T4', 'T5'];
+    // Definimos T5 como a equipe que folga na Rodada 1
+    const res = gerarRoundRobin(times, 'T5');
+    const confrontos = res.confrontos;
+
+    expect(confrontos.length).toBe(10); // 5 * 4 / 2 = 10 jogos
+    expect(res.numRodadas).toBe(5);
+    expect(res.jogosPorRodada).toBe(2);
+    expect(res.totalJogos).toBe(10);
+
+    // Verificar que na Rodada 1 o time T5 NÃO joga (folga) e os outros 4 jogam
+    const jogosRodada1 = confrontos.filter(c => c.rodada === 1);
+    expect(jogosRodada1.length).toBe(2);
+    const timesRodada1 = new Set(jogosRodada1.flatMap(j => [j.time_a_id, j.time_b_id]));
+    expect(timesRodada1.has('T5')).toBe(false);
+    expect(timesRodada1.size).toBe(4);
+
+    // Verificar que todas as 5 equipes jogam exatamente 4 partidas ao longo do torneio
+    times.forEach(t => {
+      const partidasDoTime = confrontos.filter(c => c.time_a_id === t || c.time_b_id === t);
+      expect(partidasDoTime.length).toBe(4);
+    });
+
+    // Verificar que cada par de equipes se enfrenta exatamente uma vez
+    const pares = new Set<string>();
+    confrontos.forEach(c => {
+      const key = [c.time_a_id, c.time_b_id].sort().join(' x ');
+      expect(pares.has(key)).toBe(false);
+      pares.add(key);
+    });
+    expect(pares.size).toBe(10);
+  });
+
+  it('deve realizar sorteio com número ímpar de equipes garantindo que todos os times de fora joguem na Rodada 1 e que o último cadastrado folgue', () => {
+    const equipesTeste: TrucoEquipe[] = [
+      { id: '1', nome: 'Time Fora 1 (Dionísio)', cidade: 'Dionísio - MG', status: 'aprovado' },
+      { id: '2', nome: 'Time Local 1 (Goiabal)', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: '3', nome: 'Time Fora 2 (Prata)', cidade: 'São Domingos do Prata', status: 'aprovado' },
+      { id: '4', nome: 'Time Local 2 (Goiabal)', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: '5', nome: 'Time Local 3 (Último Cadastrado)', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+    ];
+
+    expect(isTimeDeFora(equipesTeste[0].cidade)).toBe(true);
+    expect(isTimeDeFora(equipesTeste[1].cidade)).toBe(false);
+    expect(isTimeDeFora(equipesTeste[2].cidade)).toBe(true);
+    expect(isTimeDeFora(equipesTeste[3].cidade)).toBe(false);
+    expect(isTimeDeFora(equipesTeste[4].cidade)).toBe(false);
+
+    const sorteio = realizarSorteioPrimeiraFase(equipesTeste);
+
+    expect(sorteio.totalJogos).toBe(10);
+    expect(sorteio.numRodadas).toBe(5);
+    expect(sorteio.partidasGeradas.length).toBe(10);
+
+    // O último time cadastrado local (ID 5) deve ser a equipe de folga na Rodada 1
+    expect(sorteio.equipeFolgaRodada1?.id).toBe('5');
+
+    // Na Rodada 1, todos os times de fora (IDs 1 e 3) devem obrigatoriamente estar jogando
+    const partidasR1 = sorteio.partidasGeradas.filter((p: TrucoPartida) => p.rodada === 1);
+    const timesJogandoR1 = new Set(partidasR1.flatMap((p: TrucoPartida) => [p.time_a_id, p.time_b_id]));
+
+    expect(timesJogandoR1.has('1')).toBe(true); // Time Fora 1 jogando na R1
+    expect(timesJogandoR1.has('3')).toBe(true); // Time Fora 2 jogando na R1
+    expect(timesJogandoR1.has('5')).toBe(false); // Time 5 folgando na R1
+
+    // Todas as partidas do Time 5 foram geradas para as rodadas seguintes
+    const partidasTime5 = sorteio.partidasGeradas.filter((p: TrucoPartida) => p.time_a_id === '5' || p.time_b_id === '5');
+    expect(partidasTime5.length).toBe(4);
+  });
+
+  it('deve priorizar a equipe GENERAL para folgar na 1ª rodada quando houver número ímpar de equipes', () => {
+    const equipesComGeneral: TrucoEquipe[] = [
+      { id: 't1', nome: 'ADEGA', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't2', nome: 'AZULÃO', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't3', nome: 'CRUZ DE MALTA', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't4', nome: 'FELPS', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't5', nome: 'GENERAL', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't6', nome: 'LAGOA', cidade: 'São José do Goiabal - MG', status: 'aprovado' },
+      { id: 't7', nome: 'LENDÁRIOS', cidade: 'São José do Goiabal - MG', status: 'aprovado' }
+    ];
+
+    const sorteio = realizarSorteioPrimeiraFase(equipesComGeneral);
+
+    expect(sorteio.numRodadas).toBe(7);
+    expect(sorteio.totalJogos).toBe(21); // 7 * 6 / 2 = 21
+
+    // A equipe GENERAL (t5) deve ser selecionada para folgar na Rodada 1
+    expect(sorteio.equipeFolgaRodada1?.nome).toBe('GENERAL');
+    expect(sorteio.equipeFolgaRodada1?.id).toBe('t5');
+
+    // Na Rodada 1, a equipe GENERAL NÃO deve estar em nenhuma partida
+    const partidasR1 = sorteio.partidasGeradas.filter(p => p.rodada === 1);
+    expect(partidasR1.length).toBe(3); // (7 - 1) / 2 = 3 jogos
+    const timesR1 = new Set(partidasR1.flatMap(p => [p.time_a_id, p.time_b_id]));
+    expect(timesR1.has('t5')).toBe(false);
+    expect(timesR1.size).toBe(6); // Os outros 6 times jogam na Rodada 1
+
+    // Nas rodadas 2 a 7, a equipe GENERAL joga 6 partidas (contra todos os outros 6 times)
+    const partidasGeneral = sorteio.partidasGeradas.filter(p => p.time_a_id === 't5' || p.time_b_id === 't5');
+    expect(partidasGeneral.length).toBe(6);
   });
 });
 

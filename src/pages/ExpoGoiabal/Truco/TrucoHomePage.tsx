@@ -97,7 +97,11 @@ export const TrucoHomePage: React.FC = () => {
                   {loading ? '...' : totalEquipes}
                 </span>
                 <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest mt-1">
-                  {totalEquipes % 2 === 0 ? 'Quantidade Par ✅' : 'Quantidade Ímpar ⚠️'}
+                  {totalEquipes < 3 
+                    ? 'Mínimo 3 Equipes ⚠️' 
+                    : totalEquipes % 2 === 0 
+                    ? 'Quantidade Par ✅' 
+                    : 'Quantidade Ímpar ✅'}
                 </span>
               </div>
 

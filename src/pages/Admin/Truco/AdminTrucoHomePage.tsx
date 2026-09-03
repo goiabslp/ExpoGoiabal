@@ -56,7 +56,7 @@ export const AdminTrucoHomePage: React.FC = () => {
   const totalCadastrados = equipes.length;
   const pendentes = equipes.filter(e => e.status === 'pendente');
   const aprovados = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
-  const isParEApto = aprovados.length >= 4 && aprovados.length % 2 === 0;
+  const isApto = aprovados.length >= 3;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-sans flex flex-col selection:bg-emerald-500 selection:text-black">
@@ -165,7 +165,11 @@ export const AdminTrucoHomePage: React.FC = () => {
               {loading ? '...' : aprovados.length}
             </span>
             <span className="text-[10px] text-emerald-500/80 font-semibold mt-1">
-              {isParEApto ? 'Par e Apto p/ Sorteio ✅' : 'Necessário Par ≥ 4 ⚠️'}
+              {!isApto 
+                ? 'Mínimo de 3 equipes ⚠️' 
+                : aprovados.length % 2 === 0 
+                ? 'Par e Apto p/ Sorteio ✅' 
+                : 'Ímpar e Apto p/ Sorteio ✅'}
             </span>
           </div>
 

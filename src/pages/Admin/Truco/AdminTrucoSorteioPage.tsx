@@ -17,6 +17,7 @@ import {
   acionarSorteioPublicoAdmin, 
   resetarTorneio, 
   subscribeToTrucoChanges,
+  isTimeDeFora,
   type TrucoEquipe, 
   type TrucoTorneioStatus 
 } from '../../../services/trucoService';
@@ -58,21 +59,37 @@ export const AdminTrucoSorteioPage: React.FC = () => {
 
   const equipesAprovadas = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
   const equipesPendentes = equipes.filter(e => e.status === 'pendente');
-  const isParEApto = equipesAprovadas.length >= 4 && equipesAprovadas.length % 2 === 0;
+  const isApto = equipesAprovadas.length >= 3;
+
+  const [timeFolgaSelecionadoId, setTimeFolgaSelecionadoId] = useState<string>('');
+
+  useEffect(() => {
+    if (equipesAprovadas.length % 2 !== 0) {
+      const timeGeneral = equipesAprovadas.find(e => e.nome.trim().toUpperCase().includes('GENERAL'));
+      if (timeGeneral) {
+        setTimeFolgaSelecionadoId(timeGeneral.id);
+      } else {
+        const timesLocais = equipesAprovadas.filter(e => !isTimeDeFora(e.cidade));
+        if (timesLocais.length > 0) {
+          setTimeFolgaSelecionadoId(timesLocais[timesLocais.length - 1].id);
+        }
+      }
+    }
+  }, [equipes]);
 
   const handleAcionarSorteio = async () => {
-    if (!isParEApto) {
+    if (!isApto) {
       setFeedbackModal({
         isOpen: true,
         type: 'error',
-        message: `Para realizar o sorteio, é necessário ter no mínimo 4 equipes APROVADAS e a quantidade deve ser PAR. (Atualmente aprovadas: ${equipesAprovadas.length})`
+        message: `Para realizar o sorteio, é necessário ter no mínimo 3 equipes APROVADAS. (Atualmente aprovadas: ${equipesAprovadas.length})`
       });
       return;
     }
 
     setAcionandoSorteio(true);
     try {
-      const res = await acionarSorteioPublicoAdmin(equipesAprovadas);
+      const res = await acionarSorteioPublicoAdmin(equipesAprovadas, timeFolgaSelecionadoId);
       if (res.sucesso) {
         await carregarDados();
         setFeedbackModal({
@@ -172,7 +189,13 @@ export const AdminTrucoSorteioPage: React.FC = () => {
               <div className="flex items-center gap-2 bg-zinc-900 px-3.5 py-2 rounded-xl border border-white/10">
                 <Users size={15} className="text-emerald-400" />
                 <span>
-                  <strong className="text-white">Times Aprovados:</strong> {equipesAprovadas.length} ({isParEApto ? 'Par e Apto ✅' : 'Necessário número Par ≥ 4 ⚠️'})
+                  <strong className="text-white">Times Aprovados:</strong> {equipesAprovadas.length} ({
+                    equipesAprovadas.length < 3 
+                      ? 'Mínimo de 3 equipes necessárias ⚠️' 
+                      : equipesAprovadas.length % 2 === 0 
+                      ? 'Par e Apto ✅' 
+                      : 'Ímpar e Apto ✅ (1 time folga por rodada)'
+                  })
                 </span>
               </div>
 
@@ -198,9 +221,44 @@ export const AdminTrucoSorteioPage: React.FC = () => {
 
             <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed">
               {statusTorneio?.sorteio_primeira_fase_confirmado
-                ? 'O sorteio oficial já foi realizado. As partidas simultâneas da primeira fase estão ativas no calendário do torneio.'
-                : 'Aguardando acionamento. Ao clicar no botão abaixo, o sistema calculará os confrontos no Método do Círculo (Round-Robin) e transmitirá ao vivo para as telas públicas.'}
+                ? 'O sorteio oficial já foi realizado. As partidas da primeira fase estão ativas no calendário do torneio no formato Todos contra Todos.'
+                : 'Aguardando acionamento. Ao clicar no botão abaixo, o sistema calculará os confrontos no Método do Círculo (Round-Robin), garantindo que todos os times de fora joguem hoje e transmitirá ao vivo para as telas públicas.'}
             </p>
+
+            {equipesAprovadas.length % 2 !== 0 && equipesAprovadas.length >= 3 && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2.5 text-xs text-amber-300 font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎯</span>
+                  <div>
+                    <strong className="text-amber-400 font-bold uppercase tracking-wider block">
+                      Folga Programada da 1ª Rodada (Hoje):
+                    </strong>
+                    <span className="text-zinc-300">
+                      Todos os times de fora de Goiabal jogam hoje. A equipe selecionada abaixo folga hoje e jogará todas as suas partidas normalmente nas rodadas seguintes:
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-1">
+                  <select
+                    value={timeFolgaSelecionadoId}
+                    onChange={(e) => setTimeFolgaSelecionadoId(e.target.value)}
+                    className="px-3.5 py-2.5 bg-zinc-900 border border-amber-500/40 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-amber-400 cursor-pointer shadow-inner"
+                  >
+                    {equipesAprovadas
+                      .filter(e => !isTimeDeFora(e.cidade))
+                      .map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.nome} ({t.cidade}) {t.nome.toUpperCase().includes('GENERAL') ? '⭐ (Definido para Folga Hoje)' : ''}
+                        </option>
+                      ))}
+                  </select>
+                  <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                    ✓ Todos contra Todos garantido
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Botões de Ação do Sorteio */}
@@ -229,9 +287,9 @@ export const AdminTrucoSorteioPage: React.FC = () => {
             <button
               type="button"
               onClick={handleAcionarSorteio}
-              disabled={acionandoSorteio || !isParEApto}
+              disabled={acionandoSorteio || !isApto}
               className={`px-7 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
-                !isParEApto
+                !isApto
                   ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5'
                   : statusTorneio?.sorteio_primeira_fase_confirmado
                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'

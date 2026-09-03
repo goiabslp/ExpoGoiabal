@@ -1098,100 +1098,253 @@ export interface RoundRobinConfronto {
 }
 
 /**
+ * Verifica se a cidade da equipe é de fora (diferente de "São José do Goiabal - MG" / Goiabal)
+ */
+export const isTimeDeFora = (cidade?: string): boolean => {
+  if (!cidade) return false;
+  const normalizada = cidade.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return !normalizada.includes('goiabal');
+};
+
+export interface RoundRobinConfronto {
+  rodada: number;
+  numero_jogo: number;
+  time_a_id: string;
+  time_b_id: string;
+}
+
+export interface RoundRobinResultado {
+  confrontos: RoundRobinConfronto[];
+  numRodadas: number;
+  jogosPorRodada: number;
+  totalJogos: number;
+  equipeFolgaRodada1Id?: string | null;
+}
+
+/**
  * Algoritmo canônico do Método do Círculo (Polygon / Circle Method)
- * Garante que:
+ * Suporta quantidades PARES e ÍMPARES de equipes.
+ * 
+ * Para quantidade PAR (N):
  * - Rodadas = N - 1
  * - Jogos por Rodada = N / 2
  * - Total de Jogos = N * (N - 1) / 2
- * - Nenhum time joga duas vezes na mesma rodada
- * - Nenhum time fica sem jogar
- * - Todos jogam contra todos exatamente 1 vez
+ * - Todos jogam simultaneamente a cada rodada
+ * 
+ * Para quantidade ÍMPAR (N):
+ * - Rodadas = N
+ * - Jogos por Rodada = (N - 1) / 2
+ * - Total de Jogos = N * (N - 1) / 2
+ * - Exatamente 1 equipe folga por rodada de forma rotativa programada
+ * - Na Rodada 1, o time selecionado (último cadastrado) folga
+ * - Todos jogam contra todos exatamente 1 vez no campeonato completo
  */
-export const gerarRoundRobin = (equipesIds: string[]): RoundRobinConfronto[] => {
+export const gerarRoundRobin = (
+  equipesIds: string[], 
+  timeFolgaRodada1Id?: string
+): RoundRobinResultado => {
   const n = equipesIds.length;
-  if (n < 2 || n % 2 !== 0) {
-    throw new Error('A quantidade de equipes deve ser par para gerar o calendário simultâneo de rodadas.');
+  if (n < 2) {
+    throw new Error('É necessário ter no mínimo 2 equipes para gerar confrontos.');
   }
 
-  const numRodadas = n - 1;
-  const jogosPorRodada = n / 2;
+  const isImpar = n % 2 !== 0;
   const confrontos: RoundRobinConfronto[] = [];
-
-  const rotating = equipesIds.slice(1);
-  const rotatingLen = rotating.length;
-
   let contadorJogo = 1;
 
-  for (let r = 0; r < numRodadas; r++) {
-    const rodadaNumero = r + 1;
+  if (!isImpar) {
+    // ==========================================
+    // CASO PAR: N equipes, N-1 rodadas, N/2 jogos/rodada
+    // ==========================================
+    const numRodadas = n - 1;
+    const jogosPorRodada = n / 2;
+    const totalJogos = (n * (n - 1)) / 2;
 
-    // Jogo 1 da rodada: time fixo contra o time que está na posição superior da rotação
-    const timeFixo = equipesIds[0];
-    const timeMovel1 = rotating[r % rotatingLen];
+    const rotating = equipesIds.slice(1);
+    const rotatingLen = rotating.length;
 
-    if (r % 2 === 0) {
-      confrontos.push({
-        rodada: rodadaNumero,
-        numero_jogo: contadorJogo++,
-        time_a_id: timeFixo,
-        time_b_id: timeMovel1
-      });
-    } else {
-      confrontos.push({
-        rodada: rodadaNumero,
-        numero_jogo: contadorJogo++,
-        time_a_id: timeMovel1,
-        time_b_id: timeFixo
-      });
+    for (let r = 0; r < numRodadas; r++) {
+      const rodadaNumero = r + 1;
+
+      // Jogo 1 da rodada: time fixo contra o time que está na rotação
+      const timeFixo = equipesIds[0];
+      const timeMovel1 = rotating[r % rotatingLen];
+
+      if (r % 2 === 0) {
+        confrontos.push({
+          rodada: rodadaNumero,
+          numero_jogo: contadorJogo++,
+          time_a_id: timeFixo,
+          time_b_id: timeMovel1
+        });
+      } else {
+        confrontos.push({
+          rodada: rodadaNumero,
+          numero_jogo: contadorJogo++,
+          time_a_id: timeMovel1,
+          time_b_id: timeFixo
+        });
+      }
+
+      // Demais jogos da rodada conectando os pares opostos no círculo
+      for (let k = 1; k < jogosPorRodada; k++) {
+        const idxA = (r + k) % rotatingLen;
+        const idxB = (r - k + rotatingLen) % rotatingLen;
+
+        const timeA = rotating[idxA];
+        const timeB = rotating[idxB];
+
+        confrontos.push({
+          rodada: rodadaNumero,
+          numero_jogo: contadorJogo++,
+          time_a_id: timeA,
+          time_b_id: timeB
+        });
+      }
     }
 
-    // Demais jogos da rodada conectando os pares opostos no círculo
-    for (let k = 1; k < jogosPorRodada; k++) {
-      const idxA = (r + k) % rotatingLen;
-      const idxB = (r - k + rotatingLen) % rotatingLen;
+    return {
+      confrontos,
+      numRodadas,
+      jogosPorRodada,
+      totalJogos,
+      equipeFolgaRodada1Id: null
+    };
+  } else {
+    // ==========================================
+    // CASO ÍMPAR: N equipes, N rodadas, (N-1)/2 jogos/rodada
+    // Utiliza um elemento virtual '__BYE__' emparelhado no círculo.
+    // ==========================================
+    const numRodadas = n;
+    const jogosPorRodada = Math.floor(n / 2);
+    const totalJogos = (n * (n - 1)) / 2;
 
-      const timeA = rotating[idxA];
-      const timeB = rotating[idxB];
-
-      confrontos.push({
-        rodada: rodadaNumero,
-        numero_jogo: contadorJogo++,
-        time_a_id: timeA,
-        time_b_id: timeB
-      });
+    // Se foi informada uma equipe específica para folgar na Rodada 1,
+    // garantimos que ela esteja na primeira posição do rotating (índice 0),
+    // pois na Rodada 1 (r=0), rotating[0] é o time emparelhado com o BYE.
+    let rotatingList = [...equipesIds];
+    if (timeFolgaRodada1Id && rotatingList.includes(timeFolgaRodada1Id)) {
+      rotatingList = [
+        timeFolgaRodada1Id,
+        ...rotatingList.filter(id => id !== timeFolgaRodada1Id)
+      ];
     }
+
+    for (let r = 0; r < numRodadas; r++) {
+      const rodadaNumero = r + 1;
+
+      // Na rodada r, o time que folga é rotatingList[r % n]
+      // Os outros N-1 times são emparelhados em pares simétricos
+      for (let k = 1; k <= jogosPorRodada; k++) {
+        const idxA = (r + k) % n;
+        const idxB = (r - k + n) % n;
+
+        const timeA = rotatingList[idxA];
+        const timeB = rotatingList[idxB];
+
+        if (r % 2 === 0) {
+          confrontos.push({
+            rodada: rodadaNumero,
+            numero_jogo: contadorJogo++,
+            time_a_id: timeA,
+            time_b_id: timeB
+          });
+        } else {
+          confrontos.push({
+            rodada: rodadaNumero,
+            numero_jogo: contadorJogo++,
+            time_a_id: timeB,
+            time_b_id: timeA
+          });
+        }
+      }
+    }
+
+    return {
+      confrontos,
+      numRodadas,
+      jogosPorRodada,
+      totalJogos,
+      equipeFolgaRodada1Id: timeFolgaRodada1Id || rotatingList[0]
+    };
   }
-
-  return confrontos;
 };
 
 /**
  * Embaralha as equipes e gera os confrontos da 1ª Fase
+ * Suporta quantidade PAR e ÍMPAR de equipes.
+ * 
+ * Regra Obrigatória para a Rodada 1:
+ * - Todos os times de fora da cidade (cidade != "São José do Goiabal - MG") jogam hoje.
+ * - Caso a quantidade de equipes seja ímpar, o último time cadastrado folga hoje na Rodada 1.
+ * - Todas as demais partidas do time que folgou são agendadas para as rodadas seguintes,
+ *   preservando o formato Todos contra Todos completo.
  */
-export const realizarSorteioPrimeiraFase = (equipes: TrucoEquipe[]): {
+export const realizarSorteioPrimeiraFase = (
+  equipes: TrucoEquipe[],
+  equipeFolgaIdDesejada?: string
+): {
   equipesSorteadaOrdem: TrucoEquipe[];
   numRodadas: number;
   jogosPorRodada: number;
   totalJogos: number;
   partidasGeradas: TrucoPartida[];
+  equipeFolgaRodada1?: TrucoEquipe | null;
 } => {
   const equipesAprovadas = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
 
-  if (equipesAprovadas.length < 4 || equipesAprovadas.length % 2 !== 0) {
-    throw new Error('O torneio precisa ter uma quantidade PAR de equipes APROVADAS (mínimo de 4).');
+  if (equipesAprovadas.length < 3) {
+    throw new Error('O torneio precisa ter no mínimo 3 equipes APROVADAS para realizar o sorteio.');
   }
 
-  // Embaralha as equipes (Fisher-Yates)
-  const shuffled = [...equipesAprovadas];
+  const isImpar = equipesAprovadas.length % 2 !== 0;
+
+  // Determinar a equipe que folga na Rodada 1 caso seja ímpar:
+  // Regra:
+  // 1. Se informada equipeFolgaIdDesejada, usa ela.
+  // 2. Se houver o time "GENERAL", ele é o time definido para folgar na 1ª rodada.
+  // 3. Todos os times de fora da cidade DEVEM jogar hoje.
+  // 4. Caso contrário, o último time cadastrado local (Goiabal) fica sem jogar hoje.
+  let equipeFolgaRodada1: TrucoEquipe | null = null;
+  if (isImpar) {
+    if (equipeFolgaIdDesejada) {
+      equipeFolgaRodada1 = equipesAprovadas.find(e => e.id === equipeFolgaIdDesejada) || null;
+    }
+
+    if (!equipeFolgaRodada1) {
+      const timeGeneral = equipesAprovadas.find(e => e.nome.trim().toUpperCase().includes('GENERAL'));
+      if (timeGeneral) {
+        equipeFolgaRodada1 = timeGeneral;
+      } else {
+        const timesLocais = equipesAprovadas.filter(e => !isTimeDeFora(e.cidade));
+        if (timesLocais.length > 0) {
+          equipeFolgaRodada1 = timesLocais[timesLocais.length - 1];
+        } else {
+          equipeFolgaRodada1 = equipesAprovadas[equipesAprovadas.length - 1];
+        }
+      }
+    }
+  }
+
+  // Embaralha as equipes (Fisher-Yates) mantendo a equipe de folga isolada para a posição correta
+  const poolParaSorteio = equipesAprovadas.filter(e => e.id !== equipeFolgaRodada1?.id);
+  const shuffled = [...poolParaSorteio];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const ids = shuffled.map(e => e.id);
-  const roundRobin = gerarRoundRobin(ids);
+  const equipesSorteadaOrdem: TrucoEquipe[] = equipeFolgaRodada1 
+    ? [equipeFolgaRodada1, ...shuffled] 
+    : [...shuffled];
 
-  const partidasGeradas: TrucoPartida[] = roundRobin.map((conf) => ({
+  const roundRobinRes = gerarRoundRobin(
+    equipesSorteadaOrdem.map(e => e.id), 
+    equipeFolgaRodada1?.id
+  );
+
+  const partidasGeradas: TrucoPartida[] = roundRobinRes.confrontos.map((conf) => ({
     id: crypto.randomUUID(),
     tipo_fase: 'primeira_fase',
     rodada: conf.rodada,
@@ -1207,16 +1360,13 @@ export const realizarSorteioPrimeiraFase = (equipes: TrucoEquipe[]): {
     updated_at: new Date().toISOString()
   }));
 
-  const numRodadas = equipesAprovadas.length - 1;
-  const jogosPorRodada = equipesAprovadas.length / 2;
-  const totalJogos = (equipesAprovadas.length * (equipesAprovadas.length - 1)) / 2;
-
   return {
-    equipesSorteadaOrdem: shuffled,
-    numRodadas,
-    jogosPorRodada,
-    totalJogos,
-    partidasGeradas
+    equipesSorteadaOrdem,
+    numRodadas: roundRobinRes.numRodadas,
+    jogosPorRodada: roundRobinRes.jogosPorRodada,
+    totalJogos: roundRobinRes.totalJogos,
+    partidasGeradas,
+    equipeFolgaRodada1
   };
 };
 
@@ -1256,24 +1406,31 @@ export const confirmarSorteioPrimeiraFase = async (partidas: TrucoPartida[]): Pr
 /**
  * Aciona o sorteio oficial pelo Administrador e dispara a transmissão pública
  */
-export const acionarSorteioPublicoAdmin = async (equipes: TrucoEquipe[]): Promise<{ sucesso: boolean; mensagem: string }> => {
+export const acionarSorteioPublicoAdmin = async (
+  equipes: TrucoEquipe[],
+  equipeFolgaIdDesejada?: string
+): Promise<{ sucesso: boolean; mensagem: string }> => {
   const equipesAprovadas = equipes.filter(e => (e.status || 'aprovado') === 'aprovado');
 
-  if (equipesAprovadas.length < 4) {
-    return { sucesso: false, mensagem: 'É necessário ter pelo menos 4 equipes APROVADAS para realizar o sorteio.' };
-  }
-  if (equipesAprovadas.length % 2 !== 0) {
-    return { sucesso: false, mensagem: 'A quantidade de equipes APROVADAS deve ser PAR para que todas as partidas ocorram simultaneamente.' };
+  if (equipesAprovadas.length < 3) {
+    return { sucesso: false, mensagem: 'É necessário ter pelo menos 3 equipes APROVADAS para realizar o sorteio.' };
   }
 
-  const resultado = realizarSorteioPrimeiraFase(equipesAprovadas);
+  const resultado = realizarSorteioPrimeiraFase(equipesAprovadas, equipeFolgaIdDesejada);
   if (!resultado || resultado.partidasGeradas.length === 0) {
     return { sucesso: false, mensagem: 'Falha ao gerar os confrontos da primeira fase.' };
   }
 
   await confirmarSorteioPrimeiraFase(resultado.partidasGeradas);
 
-  return { sucesso: true, mensagem: `Sorteio ativado com sucesso! ${resultado.partidasGeradas.length} partidas geradas com as ${equipesAprovadas.length} equipes aprovadas.` };
+  const msgFolga = resultado.equipeFolgaRodada1 
+    ? ` (Quantidade ímpar: ${equipesAprovadas.length} equipes. A equipe "${resultado.equipeFolgaRodada1.nome}" folga na Rodada 1 e jogará nas rodadas seguintes)` 
+    : '';
+
+  return { 
+    sucesso: true, 
+    mensagem: `Sorteio ativado com sucesso! ${resultado.partidasGeradas.length} partidas geradas em ${resultado.numRodadas} rodadas com as ${equipesAprovadas.length} equipes aprovadas.${msgFolga}` 
+  };
 };
 
 /**

@@ -294,7 +294,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                             <Calendar size={18} />
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-black uppercase tracking-wider text-amber-400">
                                 🏟️ RODADA {String(numRod).padStart(2, '0')}
                               </span>
@@ -312,6 +312,31 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                           {jogos.filter(j => j.status === 'finalizada').length}/{jogos.length} Concluídos
                         </span>
                       </div>
+
+                      {/* Aviso de Folga Programada (quando número de equipes for ímpar) */}
+                      {(() => {
+                        if (equipes.length % 2 === 0) return null;
+                        const timeFolga = equipes.find(eq => {
+                          const jogandoDesta = partidasPrimeiraFase
+                            .filter(p => p.rodada === numRod)
+                            .some(j => j.time_a_id === eq.id || j.time_b_id === eq.id);
+                          return !jogandoDesta;
+                        });
+                        if (!timeFolga) return null;
+                        return (
+                          <div className="px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-xs text-amber-300">
+                            <div className="flex items-center gap-2">
+                              <span>💡</span>
+                              <span>
+                                Folga programada nesta rodada: <strong className="text-white">{timeFolga.nome}</strong> ({timeFolga.cidade}).
+                              </span>
+                            </div>
+                            <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded shrink-0">
+                              Todos contra Todos
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       {/* Cards dos Jogos da Rodada */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
