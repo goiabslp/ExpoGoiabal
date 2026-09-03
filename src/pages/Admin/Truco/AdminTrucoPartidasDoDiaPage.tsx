@@ -10,7 +10,9 @@ import {
   CheckCircle2, 
   ExternalLink, 
   Tv, 
-  Calendar 
+  Calendar,
+  Sliders,
+  X
 } from 'lucide-react';
 import { 
   obterEstadoCronometro, 
@@ -23,6 +25,7 @@ import {
   encerrarPartidasDoDia, 
   reiniciarCronometro, 
   ajustarTempoCronometro, 
+  definirTempoEspecifico,
   formatarTempoHHMMSS, 
   type TrucoCronometroEstado 
 } from '../../../services/trucoCronometroService';
@@ -35,6 +38,12 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
   const [estado, setEstado] = useState<TrucoCronometroEstado>(obterEstadoCronometro());
   const [rodadaSelecionada, setRodadaSelecionada] = useState<number>(estado.rodada || 1);
   const [feedbackMsg, setFeedbackMsg] = useState<{ texto: string; tipo: 'sucesso' | 'info' | 'alerta' } | null>(null);
+
+  // Estados do Modal de Tempo Específico
+  const [modalTempoAberto, setModalTempoAberto] = useState(false);
+  const [inputHoras, setInputHoras] = useState(2);
+  const [inputMinutos, setInputMinutos] = useState(0);
+  const [inputSegundos, setInputSegundos] = useState(0);
 
   useEffect(() => {
     // 1. Busca estado global mais recente do Supabase
@@ -77,7 +86,7 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
 
   const handleIniciarCom5s = () => {
     dispararInicioPartidaCom5s(rodadaSelecionada);
-    exibirFeedback('🚀 Contagem de 5 segundos disparada! Em seguida iniciará as 02:00 horas oficiais.', 'sucesso');
+    exibirFeedback('🚀 Contagem de 5 segundos disparada! Em seguida iniciará o tempo oficial.', 'sucesso');
   };
 
   const handlePausar = () => {
@@ -112,6 +121,25 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
     const minutos = Math.abs(segundosDelta / 60);
     const sinal = segundosDelta > 0 ? `+${minutos}` : `-${minutos}`;
     exibirFeedback(`⏱️ Tempo ajustado em ${sinal} minuto(s).`, 'info');
+  };
+
+  const handleAplicarTempoEspecifico = (iniciarDireto: boolean = false) => {
+    const h = Math.max(0, Number(inputHoras) || 0);
+    const m = Math.max(0, Math.min(59, Number(inputMinutos) || 0));
+    const s = Math.max(0, Math.min(59, Number(inputSegundos) || 0));
+    const totalSegundos = h * 3600 + m * 60 + s;
+
+    definirTempoEspecifico(totalSegundos, iniciarDireto);
+    setModalTempoAberto(false);
+
+    const txtTempo = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    exibirFeedback(`⏱️ Tempo definido para ${txtTempo} com sucesso! ${iniciarDireto ? '🚀 Iniciado ao vivo.' : ''}`, 'sucesso');
+  };
+
+  const aplicarAtalhoTempo = (h: number, m: number, s: number) => {
+    setInputHoras(h);
+    setInputMinutos(m);
+    setInputSegundos(s);
   };
 
   return (
@@ -337,51 +365,248 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
 
           </div>
 
-          {/* AJUSTES RÁPIDOS DE TEMPO */}
-          <div className="w-full pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <span className="text-zinc-400 font-bold uppercase tracking-wider">
-              ⏱️ Ajuste Manual de Tempo:
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => handleAjustarTempo(-300)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
-                title="Diminuir 5 minutos"
-              >
-                -5 min
-              </button>
-              <button
-                onClick={() => handleAjustarTempo(-60)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
-                title="Diminuir 1 minuto"
-              >
-                -1 min
-              </button>
-              <button
-                onClick={() => handleAjustarTempo(60)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
-                title="Adicionar 1 minuto"
-              >
-                +1 min
-              </button>
-              <button
-                onClick={() => handleAjustarTempo(300)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
-                title="Adicionar 5 minutos"
-              >
-                +5 min
-              </button>
-              <button
-                onClick={() => handleAjustarTempo(600)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
-                title="Adicionar 10 minutos"
-              >
-                +10 min
-              </button>
+          {/* AJUSTES RÁPIDOS DE TEMPO & INSERÇÃO ESPECÍFICA */}
+          <div className="w-full pt-4 border-t border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 font-bold uppercase tracking-wider">
+                ⏱️ Ajuste Manual:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => handleAjustarTempo(-300)}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
+                  title="Diminuir 5 minutos"
+                >
+                  -5 min
+                </button>
+                <button
+                  onClick={() => handleAjustarTempo(-60)}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
+                  title="Diminuir 1 minuto"
+                >
+                  -1 min
+                </button>
+                <button
+                  onClick={() => handleAjustarTempo(60)}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
+                  title="Adicionar 1 minuto"
+                >
+                  +1 min
+                </button>
+                <button
+                  onClick={() => handleAjustarTempo(300)}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
+                  title="Adicionar 5 minutos"
+                >
+                  +5 min
+                </button>
+                <button
+                  onClick={() => handleAjustarTempo(600)}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase border border-white/5 cursor-pointer"
+                  title="Adicionar 10 minutos"
+                >
+                  +10 min
+                </button>
+              </div>
             </div>
+
+            {/* Botão de Inserir Tempo Específico */}
+            <button
+              onClick={() => {
+                const s = estado.tempoRestanteSegundos;
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                const seg = s % 60;
+                setInputHoras(h);
+                setInputMinutos(m);
+                setInputSegundos(seg);
+                setModalTempoAberto(true);
+              }}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 font-black text-xs uppercase tracking-wider border border-amber-500/40 shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Sliders size={14} className="text-amber-400" />
+              <span>Inserir Tempo Específico</span>
+            </button>
           </div>
 
         </div>
+
+        {/* MODAL DE INSERIR TEMPO ESPECÍFICO */}
+        {modalTempoAberto && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-zinc-900 border border-amber-500/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl flex flex-col gap-6 relative">
+              
+              {/* Header do Modal */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                    <Clock size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wide">
+                      Inserir Tempo Específico
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-medium">
+                      Configure qualquer tempo para o cronômetro oficial
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setModalTempoAberto(false)}
+                  className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Display de Pré-visualização do Tempo */}
+              <div className="bg-black/60 border border-white/10 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
+                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
+                  Tempo a ser aplicado
+                </span>
+                <div className="font-mono text-4xl sm:text-5xl font-black text-amber-400 tracking-wider">
+                  {String(inputHoras).padStart(2, '0')} : {String(inputMinutos).padStart(2, '0')} : {String(inputSegundos).padStart(2, '0')}
+                </div>
+              </div>
+
+              {/* Inputs de Horas, Minutos e Segundos */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Horas */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider text-center">
+                    Horas
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="12"
+                    value={inputHoras}
+                    onChange={(e) => setInputHoras(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl py-2.5 text-center text-xl font-mono font-bold text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                {/* Minutos */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider text-center">
+                    Minutos (0-59)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={inputMinutos}
+                    onChange={(e) => setInputMinutos(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl py-2.5 text-center text-xl font-mono font-bold text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                {/* Segundos */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider text-center">
+                    Segundos (0-59)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={inputSegundos}
+                    onChange={(e) => setInputSegundos(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl py-2.5 text-center text-xl font-mono font-bold text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {/* Atalhos Rápidos */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                  ⚡ Atalhos Rápidos com 1 Clique:
+                </span>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(2, 0, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    02:00:00 (2h)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(1, 30, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    01:30:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(1, 0, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    01:00:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(0, 45, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    00:45:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(0, 30, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    00:30:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(0, 15, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    00:15:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(0, 5, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    00:05:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => aplicarAtalhoTempo(0, 1, 0)}
+                    className="py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] border border-white/5 cursor-pointer"
+                  >
+                    00:01:00
+                  </button>
+                </div>
+              </div>
+
+              {/* Botões de Ação do Modal */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => handleAplicarTempoEspecifico(false)}
+                  className="py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider border border-white/10 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <CheckCircle2 size={16} className="text-amber-400" />
+                  <span>Aplicar Tempo</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAplicarTempoEspecifico(true)}
+                  className="py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Play size={16} />
+                  <span>Aplicar & Iniciar Agora</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* GUIA DAS REGRAS DO CRONÔMETRO */}
         <div className="bg-zinc-900/60 border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col gap-4">

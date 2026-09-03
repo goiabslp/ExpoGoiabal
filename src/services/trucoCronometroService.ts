@@ -452,6 +452,41 @@ export const ajustarTempoCronometro = (segundosDelta: number): TrucoCronometroEs
 };
 
 /**
+ * Define um tempo específico personalizado no cronômetro (em segundos)
+ */
+export const definirTempoEspecifico = (totalSegundos: number, iniciarImediatamente: boolean = false): TrucoCronometroEstado => {
+  const segundosValidos = Math.max(0, Math.floor(totalSegundos));
+  const agora = Date.now();
+  const estadoAtual = obterEstadoCronometro();
+
+  let novoStatus = estadoAtual.status;
+  if (iniciarImediatamente) {
+    novoStatus = segundosValidos === 0 ? 'queda_saideira' : 'em_andamento';
+  } else if (estadoAtual.status === 'em_andamento' && segundosValidos === 0) {
+    novoStatus = 'queda_saideira';
+  } else if (estadoAtual.status === 'queda_saideira' && segundosValidos > 0) {
+    novoStatus = 'em_andamento';
+  }
+
+  const expira = novoStatus === 'em_andamento' ? agora + segundosValidos * 1000 : null;
+
+  const novoEstado: TrucoCronometroEstado = {
+    ...estadoAtual,
+    status: novoStatus,
+    tempoTotalSegundos: segundosValidos > 0 ? segundosValidos : estadoAtual.tempoTotalSegundos,
+    tempoRestanteSegundos: segundosValidos,
+    preInicioRestante: 0,
+    iniciadoEm: novoStatus === 'em_andamento' ? (estadoAtual.iniciadoEm || agora) : estadoAtual.iniciadoEm,
+    expiraEm: expira,
+    pausadoEm: novoStatus === 'pausado' ? agora : null,
+    atualizadoEm: agora
+  };
+
+  salvarEstadoCronometro(novoEstado);
+  return novoEstado;
+};
+
+/**
  * Formata segundos em formato HH:MM:SS
  */
 export const formatarTempoHHMMSS = (totalSegundos: number): { horas: string; minutos: string; segundos: string; texto: string } => {

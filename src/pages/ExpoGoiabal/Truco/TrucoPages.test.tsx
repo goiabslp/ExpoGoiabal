@@ -21,6 +21,7 @@ import {
   acionarQuedaSaideira, 
   encerrarPartidasDoDia, 
   reiniciarCronometro,
+  definirTempoEspecifico,
   formatarTempoHHMMSS
 } from '../../../services/trucoCronometroService';
 
@@ -203,5 +204,14 @@ describe('Serviço de Cronômetro de Truco (trucoCronometroService)', () => {
     expect(est.status).toBe('parado');
     expect(est.tempoRestanteSegundos).toBe(7200);
     expect(est.rodada).toBe(2);
+  });
+
+  it('deve definir tempo específico personalizado e refletir no estado', () => {
+    const est = definirTempoEspecifico(5400, false); // 1h 30m = 5400s
+    expect(est.tempoRestanteSegundos).toBe(5400);
+
+    const estIniciado = definirTempoEspecifico(1800, true); // 30 min iniciado
+    expect(estIniciado.tempoRestanteSegundos).toBe(1800);
+    expect(estIniciado.status).toBe('em_andamento');
   });
 });
