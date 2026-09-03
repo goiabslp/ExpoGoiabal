@@ -281,7 +281,7 @@ export const TrucoCadastroPage: React.FC = () => {
                   <Upload size={14} className="text-emerald-400" />
                   Foto ou Escudo do Time (Opcional)
                 </label>
-                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-zinc-950/50 border border-dashed border-zinc-700 hover:border-emerald-500/50 transition-colors">
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 sm:p-5 rounded-2xl bg-zinc-950/50 border border-dashed border-zinc-700 hover:border-emerald-500/50 transition-colors">
                   {fotoPreview ? (
                     <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md shrink-0">
                       <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
@@ -294,24 +294,27 @@ export const TrucoCadastroPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/80 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
-                      <Users size={32} />
+                    <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col items-center justify-center text-amber-400 shrink-0 shadow-inner">
+                      <span className="text-2xl">🃏</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/80 mt-0.5">Automático</span>
                     </div>
                   )}
 
                   <div className="flex-1 text-center sm:text-left">
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-all border border-white/10 hover:border-emerald-500/40">
-                      <Upload size={14} className="text-emerald-400" />
-                      <span>{fotoFile ? 'Trocar Imagem' : 'Selecionar Imagem'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFotoChange}
-                        className="hidden"
-                      />
-                    </label>
-                    <p className="text-[11px] text-zinc-500 mt-1.5">
-                      PNG, JPG ou WEBP (Recomendado proporção quadrada)
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1.5">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-all border border-white/10 hover:border-emerald-500/40">
+                        <Upload size={14} className="text-emerald-400" />
+                        <span>{fotoFile ? 'Trocar Imagem' : 'Enviar Foto do Time'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFotoChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+                      🃏 <strong className="text-amber-300">Sem imagem?</strong> Não se preocupe! Uma foto oficial temática de <strong>Baralho e Jogadores de Truco</strong> será atribuída automaticamente ao time.
                     </p>
                   </div>
                 </div>

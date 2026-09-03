@@ -28,6 +28,7 @@ import {
   excluirTodasEquipes, 
   popularTimesFicticios, 
   atualizarEquipeCompleta,
+  obterImagemAleatoriaBaralho,
   subscribeToTrucoChanges,
   type TrucoEquipe, 
   type TrucoStatusEquipe
@@ -188,6 +189,13 @@ export const AdminTrucoEquipesPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSortearFotoBaralho = () => {
+    const novaFoto = obterImagemAleatoriaBaralho(editNome || 'EQUIPE DE TRUCO', String(Date.now()));
+    setEditFotoFile(null);
+    setEditFotoUrl(novaFoto);
+    setEditFotoPreview(novaFoto);
   };
 
   const handleSalvarEdicao = async (e: React.FormEvent) => {
@@ -951,22 +959,31 @@ export const AdminTrucoEquipesPage: React.FC = () => {
                   <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-300">
                     Foto ou Escudo da Equipe
                   </label>
-                  <div className="flex items-center gap-4 p-3 rounded-2xl bg-zinc-950/60 border border-zinc-700">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-3 rounded-2xl bg-zinc-950/60 border border-zinc-700">
                     {editFotoPreview ? (
-                      <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-emerald-500 shrink-0">
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-emerald-500 shrink-0 shadow-md">
                         <img src={editFotoPreview} alt="Preview" className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className="w-14 h-14 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
-                        <Users size={22} />
+                      <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 text-xl">
+                        🃏
                       </div>
                     )}
-                    <div className="flex-1">
-                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-all border border-white/10">
+                    <div className="flex-1 flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-all border border-white/10 hover:border-emerald-500/30">
                         <Upload size={14} className="text-emerald-400" />
-                        <span>Trocar Foto</span>
+                        <span>Enviar Arquivo</span>
                         <input type="file" accept="image/*" onChange={handleFotoChange} className="hidden" />
                       </label>
+
+                      <button
+                        type="button"
+                        onClick={handleSortearFotoBaralho}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                        title="Sortear imagem temática de baralho/jogadores"
+                      >
+                        <span>🃏 Sortear Baralho</span>
+                      </button>
                     </div>
                   </div>
                 </div>

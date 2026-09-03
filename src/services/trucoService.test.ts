@@ -578,5 +578,33 @@ describe('Regra de CPF Opcional e Bônus de Premiação no Cadastro', () => {
     expect(r5.dataFormatada).toBe('17/09/2026');
     expect(r5.diaSemana).toBe('Quinta-feira');
   });
+
+  it('deve gerar imagem de baralho com cartas e o nome do time estampado', async () => {
+    const { cadastrarEquipe, gerarEscudoBaralhoComNome } = await import('./trucoService');
+
+    const nomeTime = 'Reis do Zap de Goiabal';
+    const nova = await cadastrarEquipe(
+      { nome: nomeTime, cidade: 'São José do Goiabal - MG' },
+      [
+        { nome_completo: 'J1', cpf: '111.111.111-11', data_nascimento: '1990-01-01' },
+        { nome_completo: 'J2', cpf: '222.222.222-22', data_nascimento: '1990-01-01' },
+        { nome_completo: 'J3', cpf: '333.333.333-33', data_nascimento: '1990-01-01' },
+        { nome_completo: 'J4', cpf: '444.444.444-44', data_nascimento: '1990-01-01' }
+      ]
+    );
+
+    expect(nova.foto_url).toBeTruthy();
+    expect(nova.foto_url).toContain('data:image/svg+xml');
+    
+    // A imagem gerada contém o nome do time decodificado
+    const svgDecodificado = decodeURIComponent((nova.foto_url || '').replace('data:image/svg+xml;utf8,', ''));
+    expect(svgDecodificado.toUpperCase()).toContain('REIS DO ZAP');
+    expect(svgDecodificado).toContain('svg');
+
+    // Teste direto de gerarEscudoBaralhoComNome
+    const escudo = gerarEscudoBaralhoComNome('Ás de Espadas');
+    expect(escudo).toContain('data:image/svg+xml');
+    expect(decodeURIComponent(escudo)).toContain('ÁS DE ESPADAS');
+  });
 });
 

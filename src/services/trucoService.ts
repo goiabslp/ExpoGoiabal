@@ -140,6 +140,350 @@ export const TABELA_PREMIACOES_TRUCO: TrucoPremiacaoInfo[] = [
 export const TOTAL_PREMIACAO_TRUCO_FORMATADO = 'R$ 2.500,00';
 export const TOTAL_PREMIACAO_TRUCO_VALOR = 2500;
 
+/**
+ * Gerador de Escudo e Imagem Oficial Exclusiva de Baralho de Truco com o NOME DO TIME estampado.
+ * Cria um SVG vetorial de alta resolução com cartas de truco reais (Zap, 7 Copas, Espadilha, 7 Ouros),
+ * naipes iluminados (♠ ♥ ♦ ♣), brasão e o nome da equipe em destaque central absoluto.
+ * Garante um design único por time, sem repetições!
+ */
+export const gerarEscudoBaralhoComNome = (nomeTime: string, semente?: string): string => {
+  const nomeLimpo = (nomeTime || 'EQUIPE DE TRUCO').trim().toUpperCase();
+  
+  // Hash único para determinar o estilo visual exclusivo do time
+  const seedStr = `${nomeLimpo}_${semente || ''}`;
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i++) {
+    hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+
+  // 12 Paletas e Combinações Exclusivas de Cartas de Truco
+  const temasBaralho = [
+    {
+      nome: 'Zap Imperial',
+      bg1: '#05130b',
+      bg2: '#0b2e1c',
+      borda: '#10b981',
+      accent: '#34d399',
+      gold: '#fbbf24',
+      badgeBg: '#062015',
+      naipe: '♣',
+      cartas: ['4♣', '7♥'],
+      c1Cor: '#10b981',
+      c2Cor: '#ef4444'
+    },
+    {
+      nome: 'Sete Copas Supremo',
+      bg1: '#180407',
+      bg2: '#3f0c14',
+      borda: '#ef4444',
+      accent: '#f87171',
+      gold: '#fde047',
+      badgeBg: '#2a080d',
+      naipe: '♥',
+      cartas: ['7♥', 'A♠'],
+      c1Cor: '#ef4444',
+      c2Cor: '#0f172a'
+    },
+    {
+      nome: 'Espadilha de Elite',
+      bg1: '#030d1e',
+      bg2: '#0a2540',
+      borda: '#38bdf8',
+      accent: '#7dd3fc',
+      gold: '#fbbf24',
+      badgeBg: '#08172c',
+      naipe: '♠',
+      cartas: ['A♠', '7♦'],
+      c1Cor: '#0f172a',
+      c2Cor: '#f59e0b'
+    },
+    {
+      nome: 'Manilha de Ouro 7♦',
+      bg1: '#1c1203',
+      bg2: '#422807',
+      borda: '#f59e0b',
+      accent: '#fcd34d',
+      gold: '#fef08a',
+      badgeBg: '#2e1904',
+      naipe: '♦',
+      cartas: ['7♦', '4♣'],
+      c1Cor: '#f59e0b',
+      c2Cor: '#10b981'
+    },
+    {
+      nome: 'Reis do Truco',
+      bg1: '#130424',
+      bg2: '#2e0a54',
+      borda: '#a855f7',
+      accent: '#c084fc',
+      gold: '#facc15',
+      badgeBg: '#20073b',
+      naipe: '👑',
+      cartas: ['K♠', 'K♥'],
+      c1Cor: '#0f172a',
+      c2Cor: '#ef4444'
+    },
+    {
+      nome: 'Valetes da Mesa',
+      bg1: '#02181f',
+      bg2: '#063c4e',
+      borda: '#06b6d4',
+      accent: '#22d3ee',
+      gold: '#eab308',
+      badgeBg: '#052936',
+      naipe: '🃏',
+      cartas: ['J♣', 'J♦'],
+      c1Cor: '#10b981',
+      c2Cor: '#f59e0b'
+    },
+    {
+      nome: 'Ases da Noite',
+      bg1: '#0f0f12',
+      bg2: '#1f1f28',
+      borda: '#e2e8f0',
+      accent: '#f8fafc',
+      gold: '#fbbf24',
+      badgeBg: '#14141c',
+      naipe: '♠',
+      cartas: ['A♠', 'A♥'],
+      c1Cor: '#0f172a',
+      c2Cor: '#ef4444'
+    },
+    {
+      nome: 'Damas de Espadas',
+      bg1: '#1a041f',
+      bg2: '#3d084a',
+      borda: '#ec4899',
+      accent: '#f472b6',
+      gold: '#fde047',
+      badgeBg: '#26052f',
+      naipe: '♦',
+      cartas: ['Q♦', 'Q♠'],
+      c1Cor: '#f59e0b',
+      c2Cor: '#0f172a'
+    },
+    {
+      nome: 'Chamas do Truco',
+      bg1: '#200903',
+      bg2: '#4a1506',
+      borda: '#f97316',
+      accent: '#fb923c',
+      gold: '#fef08a',
+      badgeBg: '#310f04',
+      naipe: '🔥',
+      cartas: ['3♣', '2♥'],
+      c1Cor: '#10b981',
+      c2Cor: '#ef4444'
+    },
+    {
+      nome: 'Goiabal Ouro Preto',
+      bg1: '#0a0a0c',
+      bg2: '#1a1815',
+      borda: '#eab308',
+      accent: '#fef08a',
+      gold: '#ca8a04',
+      badgeBg: '#12110e',
+      naipe: '♣',
+      cartas: ['4♣', 'A♠'],
+      c1Cor: '#10b981',
+      c2Cor: '#0f172a'
+    },
+    {
+      nome: 'Mesa Real de Truco',
+      bg1: '#04161b',
+      bg2: '#0b3542',
+      borda: '#14b8a6',
+      accent: '#2dd4bf',
+      gold: '#fbbf24',
+      badgeBg: '#07242c',
+      naipe: '♥',
+      cartas: ['7♥', '7♦'],
+      c1Cor: '#ef4444',
+      c2Cor: '#f59e0b'
+    },
+    {
+      nome: 'Blefe Fatal',
+      bg1: '#180718',
+      bg2: '#380f38',
+      borda: '#d946ef',
+      accent: '#e879f9',
+      gold: '#facc15',
+      badgeBg: '#270a27',
+      naipe: '♣',
+      cartas: ['3♦', '4♣'],
+      c1Cor: '#f59e0b',
+      c2Cor: '#10b981'
+    }
+  ];
+
+  const t = temasBaralho[absHash % temasBaralho.length];
+
+  // Tratamento de quebra de linha inteligente para o nome do time
+  let linha1 = nomeLimpo;
+  let linha2 = '';
+  if (nomeLimpo.length > 15) {
+    const palavras = nomeLimpo.split(' ');
+    if (palavras.length > 1) {
+      const meio = Math.ceil(palavras.length / 2);
+      linha1 = palavras.slice(0, meio).join(' ');
+      linha2 = palavras.slice(meio).join(' ');
+    }
+  }
+
+  const fontSizeL1 = linha2 ? (linha1.length > 13 ? 24 : 28) : (linha1.length > 14 ? 26 : (linha1.length > 10 ? 32 : 38));
+  const fontSizeL2 = linha2.length > 13 ? 22 : 26;
+
+  // Escapar caracteres especiais para XML/SVG
+  const escapeXml = (unsafe: string) => unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <!-- Gradiente de Fundo -->
+    <linearGradient id="bgGrad_${absHash}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${t.bg1}" />
+      <stop offset="50%" stop-color="${t.bg2}" />
+      <stop offset="100%" stop-color="${t.bg1}" />
+    </linearGradient>
+
+    <!-- Gradiente Dourado de Borda -->
+    <linearGradient id="goldGrad_${absHash}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${t.gold}" />
+      <stop offset="50%" stop-color="${t.accent}" />
+      <stop offset="100%" stop-color="${t.borda}" />
+    </linearGradient>
+
+    <!-- Gradiente de Carta Branca -->
+    <linearGradient id="cardGrad_${absHash}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="85%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <!-- Filtro de Sombra -->
+    <filter id="shadow_${absHash}" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.85" />
+    </filter>
+
+    <!-- Filtro de Brilho Neon -->
+    <filter id="glow_${absHash}" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Fundo do Card -->
+  <rect width="600" height="600" fill="url(#bgGrad_${absHash})" />
+
+  <!-- Padrão Decorativo de Naipes no Fundo -->
+  <g opacity="0.08" fill="#ffffff" font-size="72" font-family="sans-serif" text-anchor="middle">
+    <text x="75" y="95">♠</text>
+    <text x="525" y="95">♥</text>
+    <text x="75" y="555">♦</text>
+    <text x="525" y="555">♣</text>
+    <text x="140" y="300">♣</text>
+    <text x="460" y="300">♠</text>
+    <text x="300" y="100">♦</text>
+    <text x="300" y="550">♥</text>
+  </g>
+
+  <!-- Brasão Central em Formato de Escudo de Luxo -->
+  <g filter="url(#shadow_${absHash})">
+    <!-- Borda Externa -->
+    <path d="M 300 55 C 470 55 520 110 520 275 C 520 440 300 535 300 535 C 300 535 80 440 80 275 C 80 110 130 55 300 55 Z"
+          fill="${t.badgeBg}" stroke="url(#goldGrad_${absHash})" stroke-width="8" />
+    
+    <!-- Linha Pontilhada Interna -->
+    <path d="M 300 72 C 450 72 500 120 500 270 C 500 420 300 512 300 512 C 300 512 100 420 100 270 C 100 120 150 72 300 72 Z"
+          fill="none" stroke="${t.accent}" stroke-width="2.5" stroke-dasharray="8 6" opacity="0.65" />
+  </g>
+
+  <!-- DUAS CARTAS DE TRUCO OFICIAIS CRUZADAS NO TOPO -->
+  <g filter="url(#shadow_${absHash})">
+    <!-- Carta 1 (Esquerda) -->
+    <g transform="translate(255, 175) rotate(-18)">
+      <rect x="-44" y="-62" width="88" height="124" rx="10" fill="url(#cardGrad_${absHash})" stroke="#cbd5e1" stroke-width="3" />
+      <text x="-30" y="-36" font-size="22" font-weight="900" fill="${t.c1Cor}" font-family="sans-serif">${t.cartas[0]}</text>
+      <text x="0" y="20" font-size="40" fill="${t.c1Cor}" text-anchor="middle" font-family="sans-serif">${t.cartas[0].slice(-1)}</text>
+      <text x="30" y="50" font-size="22" font-weight="900" fill="${t.c1Cor}" font-family="sans-serif" text-anchor="end">${t.cartas[0]}</text>
+    </g>
+
+    <!-- Carta 2 (Direita) -->
+    <g transform="translate(345, 175) rotate(18)">
+      <rect x="-44" y="-62" width="88" height="124" rx="10" fill="url(#cardGrad_${absHash})" stroke="#cbd5e1" stroke-width="3" />
+      <text x="-30" y="-36" font-size="22" font-weight="900" fill="${t.c2Cor}" font-family="sans-serif">${t.cartas[1]}</text>
+      <text x="0" y="20" font-size="40" fill="${t.c2Cor}" text-anchor="middle" font-family="sans-serif">${t.cartas[1].slice(-1)}</text>
+      <text x="30" y="50" font-size="22" font-weight="900" fill="${t.c2Cor}" font-family="sans-serif" text-anchor="end">${t.cartas[1]}</text>
+    </g>
+  </g>
+
+  <!-- Ícone/Naipe de Destaque Central -->
+  <g filter="url(#glow_${absHash})">
+    <text x="300" y="275" font-size="60" fill="${t.gold}" text-anchor="middle" font-family="sans-serif" font-weight="900">
+      ${t.naipe}
+    </text>
+  </g>
+
+  <!-- FAIXA CENTRAL METÁLICA PARA O NOME DO TIME -->
+  <g filter="url(#shadow_${absHash})">
+    <path d="M 50 338 L 550 338 L 530 442 L 70 442 Z" fill="#090d16" stroke="url(#goldGrad_${absHash})" stroke-width="4.5" />
+    <path d="M 60 346 L 540 346 L 522 434 L 78 434 Z" fill="#111827" stroke="${t.borda}" stroke-width="1.5" opacity="0.85" />
+  </g>
+
+  <!-- Naipes de Ouro nas Extremidades da Faixa -->
+  <text x="95" y="396" font-size="26" fill="${t.gold}" text-anchor="middle" font-family="sans-serif">♠</text>
+  <text x="505" y="396" font-size="26" fill="${t.gold}" text-anchor="middle" font-family="sans-serif">♥</text>
+
+  <!-- NOME DO TIME ESTAMPADO COM DESTAQUE NA IMAGEM -->
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" text-anchor="middle" letter-spacing="1.2">
+    ${linha2 ? `
+      <text x="300" y="380" font-size="${fontSizeL1}" fill="#ffffff" filter="url(#shadow_${absHash})">
+        ${escapeXml(linha1)}
+      </text>
+      <text x="300" y="416" font-size="${fontSizeL2}" fill="${t.gold}" filter="url(#shadow_${absHash})">
+        ${escapeXml(linha2)}
+      </text>
+    ` : `
+      <text x="300" y="398" font-size="${fontSizeL1}" fill="#ffffff" filter="url(#shadow_${absHash})">
+        ${escapeXml(linha1)}
+      </text>
+    `}
+  </g>
+
+  <!-- Subtítulo Oficial do Torneio -->
+  <g font-family="sans-serif" font-weight="900" text-anchor="middle" font-size="12" letter-spacing="3" fill="#cbd5e1">
+    <text x="300" y="475" opacity="0.95">TORNEIO DE TRUCO • 2026</text>
+  </g>
+
+  <!-- 4 Naipes nos Quatro Cantos do Card -->
+  <g font-size="22" fill="${t.gold}" opacity="0.8" font-family="sans-serif">
+    <text x="30" y="45">♠</text>
+    <text x="570" y="45">♥</text>
+    <text x="30" y="585">♦</text>
+    <text x="570" y="585">♣</text>
+  </g>
+</svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
+/**
+ * Retorna a imagem oficial temática de baralho e cartas personalizada com o NOME DO TIME
+ */
+export const obterImagemAleatoriaBaralho = (nomeTime?: string, semente?: string): string => {
+  return gerarEscudoBaralhoComNome(nomeTime || 'EQUIPE DE TRUCO', semente || nomeTime);
+};
+
 export interface TrucoClassificacaoRow {
   posicao: number;
   equipe: TrucoEquipe;
@@ -353,16 +697,22 @@ export const buscarEquipes = async (apenasAprovados: boolean = true): Promise<Tr
       console.warn('Erro ao buscar jogadores no Supabase:', jogadoresError);
     }
 
-    const equipesComJogadores: TrucoEquipe[] = equipesData.map((eq: any) => ({
-      id: eq.id,
-      nome: eq.nome,
-      cidade: eq.cidade,
-      foto_url: eq.foto_url,
-      status: (eq.status || 'aprovado') as TrucoStatusEquipe,
-      cadastro_regularizado: eq.cadastro_regularizado !== false,
-      created_at: eq.created_at,
-      jogadores: (jogadoresData || []).filter((j: any) => j.equipe_id === eq.id)
-    }));
+    const equipesComJogadores: TrucoEquipe[] = equipesData.map((eq: any) => {
+      const fotoFinal = (eq.foto_url && eq.foto_url.trim() !== '')
+        ? eq.foto_url
+        : obterImagemAleatoriaBaralho(eq.nome, eq.id || eq.nome);
+
+      return {
+        id: eq.id,
+        nome: eq.nome,
+        cidade: eq.cidade,
+        foto_url: fotoFinal,
+        status: (eq.status || 'aprovado') as TrucoStatusEquipe,
+        cadastro_regularizado: eq.cadastro_regularizado !== false,
+        created_at: eq.created_at,
+        jogadores: (jogadoresData || []).filter((j: any) => j.equipe_id === eq.id)
+      };
+    });
 
     return equipesComJogadores;
   } catch (err) {
@@ -393,6 +743,7 @@ export const excluirTodasEquipes = async (): Promise<void> => {
 /**
  * Realiza o cadastro de uma nova equipe no banco de dados.
  * OBRIGATÓRIO: Toda nova equipe entra com status 'pendente' aguardando moderação admin.
+ * Caso nenhuma foto seja informada, uma imagem oficial de baralho personalizada com o NOME DO TIME é gerada automaticamente.
  */
 export const cadastrarEquipe = async (
   dados: { nome: string; cidade: string; foto_url?: string; cadastro_regularizado?: boolean },
@@ -432,6 +783,11 @@ export const cadastrarEquipe = async (
 
   const novaEquipeId = crypto.randomUUID();
   const statusInicial: TrucoStatusEquipe = 'pendente';
+
+  // Se nenhuma foto foi enviada, gera o escudo oficial temático de baralho com o NOME DO TIME
+  if (!fotoUrlFinal || fotoUrlFinal.trim() === '') {
+    fotoUrlFinal = obterImagemAleatoriaBaralho(dados.nome, novaEquipeId);
+  }
 
   // Se cadastro_regularizado não for passado explicitamente, verifica se todos os jogadores possuem CPF completo informado
   const todosJogadoresComCpf = jogadores.length > 0 && jogadores.every(j => Boolean(j.cpf && j.cpf.replace(/\D/g, '').length === 11));
@@ -547,6 +903,11 @@ export const atualizarEquipeCompleta = async (
 
   const todosJogadoresComCpf = jogadores.length > 0 && jogadores.every(j => Boolean(j.cpf && j.cpf.replace(/\D/g, '').length === 11));
   const isRegularizado = dados.cadastro_regularizado !== undefined ? dados.cadastro_regularizado : todosJogadoresComCpf;
+
+  // Se a foto estiver vazia, atribui uma imagem temática de baralho com o NOME DO TIME
+  if (!fotoUrlFinal || fotoUrlFinal.trim() === '') {
+    fotoUrlFinal = obterImagemAleatoriaBaralho(dados.nome, equipeId);
+  }
 
   // 1. Atualiza dados da equipe
   const { error: eqError } = await supabase
