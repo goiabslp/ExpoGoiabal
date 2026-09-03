@@ -15,6 +15,7 @@ import {
 import { 
   obterEstadoCronometro, 
   subscribeCronometro, 
+  buscarEstadoCronometroSupabase,
   dispararInicioPartidaCom5s, 
   pausarCronometro, 
   retomarCronometro, 
@@ -36,6 +37,14 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
   const [feedbackMsg, setFeedbackMsg] = useState<{ texto: string; tipo: 'sucesso' | 'info' | 'alerta' } | null>(null);
 
   useEffect(() => {
+    // 1. Busca estado global mais recente do Supabase
+    buscarEstadoCronometroSupabase().then(est => {
+      if (est) {
+        setEstado(est);
+        if (est.rodada) setRodadaSelecionada(est.rodada);
+      }
+    });
+
     const atualizar = () => {
       const est = obterEstadoCronometro();
       setEstado(est);
@@ -43,8 +52,11 @@ export const AdminTrucoPartidasDoDiaPage: React.FC = () => {
     };
 
     atualizar();
-    const interval = setInterval(atualizar, 500);
-    const unsubscribe = subscribeCronometro(() => atualizar());
+    const interval = setInterval(atualizar, 250);
+    const unsubscribe = subscribeCronometro((novoEst) => {
+      setEstado(novoEst);
+      if (novoEst.rodada) setRodadaSelecionada(novoEst.rodada);
+    });
 
     return () => {
       clearInterval(interval);

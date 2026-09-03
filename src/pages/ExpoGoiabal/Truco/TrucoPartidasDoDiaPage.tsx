@@ -14,6 +14,7 @@ import {
 import { 
   obterEstadoCronometro, 
   subscribeCronometro, 
+  buscarEstadoCronometroSupabase,
   formatarTempoHHMMSS, 
   TEMPO_OFICIAL_SEGUNDOS,
   type TrucoCronometroEstado 
@@ -26,15 +27,22 @@ export const TrucoPartidasDoDiaPage: React.FC = () => {
   const navigate = useNavigate();
   const [estado, setEstado] = useState<TrucoCronometroEstado>(obterEstadoCronometro());
 
-  // Timer loop para atualização suave a cada segundo
+  // Timer loop para atualização suave a cada segundo e sincronização em tempo real
   useEffect(() => {
+    // 1. Busca estado global mais recente do Supabase
+    buscarEstadoCronometroSupabase().then(est => {
+      if (est) setEstado(est);
+    });
+
     const atualizar = () => {
       setEstado(obterEstadoCronometro());
     };
 
     atualizar();
-    const interval = setInterval(atualizar, 500);
-    const unsubscribe = subscribeCronometro(() => atualizar());
+    const interval = setInterval(atualizar, 250);
+    const unsubscribe = subscribeCronometro((novoEst) => {
+      setEstado(novoEst);
+    });
 
     return () => {
       clearInterval(interval);

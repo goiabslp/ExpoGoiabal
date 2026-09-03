@@ -1,6 +1,12 @@
+import { supabase } from './supabase';
+
 /**
- * Serviço de Cronômetro Oficial do Torneio de Truco (2 Horas / Queda Saideira / Partidas Encerradas)
- * Sincronizado via timestamps reais, BroadcastChannel e localStorage.
+ * Serviço de Cronômetro Oficial do Torneio de Truco (2 Horas / Queda Saídeira / Partidas Encerradas)
+ * Sincronizado em tempo real globalmente via:
+ * 1. Supabase Realtime Broadcast (WebSockets em milissegundos entre todos os dispositivos/telas)
+ * 2. Supabase Database Persistence (gravação no banco de dados na tabela truco_torneio_status)
+ * 3. Supabase Postgres Changes (escuta de alterações no banco)
+ * 4. LocalStorage & BroadcastChannel (latência zero no mesmo dispositivo)
  */
 
 export type TrucoCronometroStatus = 
@@ -23,8 +29,10 @@ export interface TrucoCronometroEstado {
   atualizadoEm: number;
 }
 
-const STORAGE_KEY = 'expogoiabal_truco_cronometro_v1';
-const BROADCAST_CHANNEL_NAME = 'truco_cronometro_channel_v1';
+const STORAGE_KEY = 'expogoiabal_truco_cronometro_v2';
+const BROADCAST_CHANNEL_NAME = 'truco_cronometro_local_v2';
+const SUPABASE_CHANNEL_NAME = 'truco_cronometro_live_v2';
+
 export const TEMPO_OFICIAL_SEGUNDOS = 2 * 60 * 60; // 7200s = 02:00:00
 export const TEMPO_PRE_CONTAGEM_SEGUNDOS = 5;
 
@@ -40,21 +48,38 @@ const ESTADO_INICIAL: TrucoCronometroEstado = {
   atualizadoEm: Date.now()
 };
 
-let channel: BroadcastChannel | null = null;
+// Canal Local BroadcastChannel
+let localChannel: BroadcastChannel | null = null;
 try {
   if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-    channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+    localChannel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
   }
 } catch (e) {
-  console.warn('BroadcastChannel não suportado neste ambiente:', e);
+  console.warn('BroadcastChannel local não suportado:', e);
 }
+
+// Canal Global Supabase Realtime
+let supabaseRealtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+// Callbacks registrados para atualização de componentes React
+const listeners = new Set<(estado: TrucoCronometroEstado) => void>();
+
+const notificarListeners = (estado: TrucoCronometroEstado) => {
+  listeners.forEach(fn => {
+    try {
+      fn(estado);
+    } catch (err) {
+      console.error('Erro em listener do cronômetro:', err);
+    }
+  });
+};
 
 /**
  * Lê e recalcula o estado atômico atual com base no relógio do sistema
  */
 export const obterEstadoCronometro = (): TrucoCronometroEstado => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     if (!raw) {
       return { ...ESTADO_INICIAL, atualizadoEm: Date.now() };
     }
@@ -119,28 +144,132 @@ export const obterEstadoCronometro = (): TrucoCronometroEstado => {
 };
 
 /**
- * Salva o estado e notifica todos os canais e janelas ativas
+ * Aplica um estado vindo de outro dispositivo via Supabase Realtime ou Banco
+ */
+const aplicarEstadoRemoto = (novoEstado: Partial<TrucoCronometroEstado>) => {
+  if (!novoEstado || typeof novoEstado !== 'object') return;
+
+  try {
+    const estadoAtual = obterEstadoCronometro();
+
+    // Se o estado remoto for mais recente ou for uma ação explícita
+    const estadoMesclado: TrucoCronometroEstado = {
+      ...estadoAtual,
+      ...novoEstado,
+      atualizadoEm: novoEstado.atualizadoEm || Date.now()
+    };
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoMesclado));
+      window.dispatchEvent(new CustomEvent('truco_cronometro_update', { detail: estadoMesclado }));
+    }
+
+    notificarListeners(obterEstadoCronometro());
+  } catch (e) {
+    console.error('Erro ao aplicar estado remoto do cronômetro:', e);
+  }
+};
+
+/**
+ * Salva o estado localmente e propaga via Supabase Realtime + Supabase Database
  */
 export const salvarEstadoCronometro = (novoEstado: TrucoCronometroEstado): void => {
   try {
-    const estadoComTimestamp = {
+    const agora = Date.now();
+    const estadoComTimestamp: TrucoCronometroEstado = {
       ...novoEstado,
-      atualizadoEm: Date.now()
+      atualizadoEm: agora
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoComTimestamp));
-    
-    // Notifica BroadcastChannel
-    if (channel) {
-      channel.postMessage(estadoComTimestamp);
-    }
 
-    // Dispara evento interno na própria janela
+    // 1. Salvar no localStorage local
     if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoComTimestamp));
       window.dispatchEvent(new CustomEvent('truco_cronometro_update', { detail: estadoComTimestamp }));
     }
+
+    // 2. Notificar BroadcastChannel local (outras abas na mesma máquina)
+    if (localChannel) {
+      try {
+        localChannel.postMessage(estadoComTimestamp);
+      } catch (err) {
+        console.warn('Erro ao postar mensagem no localChannel:', err);
+      }
+    }
+
+    // 3. Notificar listeners locais
+    notificarListeners(estadoComTimestamp);
+
+    // 4. Disparar Supabase Realtime Broadcast (milissegundos para celulares, TVs e outros PCs)
+    if (supabaseRealtimeChannel) {
+      try {
+        supabaseRealtimeChannel.send({
+          type: 'broadcast',
+          event: 'cronometro_sync',
+          payload: estadoComTimestamp
+        });
+      } catch (err) {
+        console.warn('Erro ao enviar broadcast no Supabase Realtime:', err);
+      }
+    }
+
+    // 5. Persistir no Supabase Database (tabela truco_torneio_status) para persistência permanente
+    salvarNoBancoSupabase(estadoComTimestamp);
   } catch (err) {
     console.error('Erro ao salvar estado do cronômetro:', err);
   }
+};
+
+/**
+ * Persiste o estado do cronômetro no banco de dados Supabase
+ */
+const salvarNoBancoSupabase = async (estado: TrucoCronometroEstado) => {
+  try {
+    const { error } = await supabase
+      .from('truco_torneio_status')
+      .upsert({
+        id: 'main',
+        sorteio_iniciado_em: JSON.stringify(estado), // Guarda o JSON do cronômetro no status principal
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.warn('Aviso ao salvar cronômetro no banco Supabase:', error.message);
+    }
+  } catch (e) {
+    console.warn('Falha na persistência no banco:', e);
+  }
+};
+
+/**
+ * Busca o estado do cronômetro salvo no banco de dados Supabase (usado na inicialização)
+ */
+export const buscarEstadoCronometroSupabase = async (): Promise<TrucoCronometroEstado> => {
+  try {
+    const { data, error } = await supabase
+      .from('truco_torneio_status')
+      .select('sorteio_iniciado_em, updated_at')
+      .eq('id', 'main')
+      .maybeSingle();
+
+    if (!error && data?.sorteio_iniciado_em) {
+      try {
+        const parsed = typeof data.sorteio_iniciado_em === 'string'
+          ? JSON.parse(data.sorteio_iniciado_em)
+          : data.sorteio_iniciado_em;
+
+        if (parsed && parsed.status) {
+          aplicarEstadoRemoto(parsed);
+          return obterEstadoCronometro();
+        }
+      } catch (e) {
+        console.warn('Dados de cronômetro no banco não estavam em formato JSON padrão:', e);
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar estado do cronômetro do Supabase:', err);
+  }
+
+  return obterEstadoCronometro();
 };
 
 /**
@@ -344,9 +473,57 @@ export const formatarTempoHHMMSS = (totalSegundos: number): { horas: string; min
 };
 
 /**
- * Inscreve-se para receber atualizações do cronômetro em tempo real
+ * Inicializa a conexão com Supabase Realtime (chamado automaticamente)
+ */
+const inicializarSupabaseRealtime = () => {
+  if (supabaseRealtimeChannel) return;
+
+  try {
+    supabaseRealtimeChannel = supabase.channel(SUPABASE_CHANNEL_NAME, {
+      config: { broadcast: { self: false } }
+    });
+
+    supabaseRealtimeChannel
+      .on('broadcast', { event: 'cronometro_sync' }, (payload) => {
+        if (payload?.payload) {
+          aplicarEstadoRemoto(payload.payload);
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_torneio_status' }, (payload: any) => {
+        if (payload?.new?.sorteio_iniciado_em) {
+          try {
+            const parsed = typeof payload.new.sorteio_iniciado_em === 'string'
+              ? JSON.parse(payload.new.sorteio_iniciado_em)
+              : payload.new.sorteio_iniciado_em;
+            if (parsed && parsed.status) {
+              aplicarEstadoRemoto(parsed);
+            }
+          } catch (e) {
+            console.warn('Erro ao processar alteração postgres do cronômetro:', e);
+          }
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Busca estado inicial do banco após assinar
+          buscarEstadoCronometroSupabase();
+        }
+      });
+  } catch (err) {
+    console.warn('Não foi possível inicializar Supabase Realtime Channel:', err);
+  }
+};
+
+/**
+ * Inscreve-se para receber atualizações do cronômetro em tempo real (multi-dispositivo)
  */
 export const subscribeCronometro = (callback: (estado: TrucoCronometroEstado) => void): (() => void) => {
+  listeners.add(callback);
+  inicializarSupabaseRealtime();
+
+  // Busca do Supabase logo na inscrição
+  buscarEstadoCronometroSupabase().then(est => callback(est));
+
   const handleStorage = (event: StorageEvent) => {
     if (event.key === STORAGE_KEY) {
       callback(obterEstadoCronometro());
@@ -357,7 +534,7 @@ export const subscribeCronometro = (callback: (estado: TrucoCronometroEstado) =>
     callback(obterEstadoCronometro());
   };
 
-  const handleBroadcast = (event: MessageEvent) => {
+  const handleLocalBroadcast = (event: MessageEvent) => {
     if (event.data) {
       callback(obterEstadoCronometro());
     }
@@ -366,17 +543,24 @@ export const subscribeCronometro = (callback: (estado: TrucoCronometroEstado) =>
   if (typeof window !== 'undefined') {
     window.addEventListener('storage', handleStorage);
     window.addEventListener('truco_cronometro_update', handleCustom);
-    if (channel) {
-      channel.addEventListener('message', handleBroadcast);
+    if (localChannel) {
+      localChannel.addEventListener('message', handleLocalBroadcast);
     }
   }
 
+  // Polling leve de fallback (a cada 2.5 segundos) para garantir sincronia se o websocket oscilar
+  const fallbackInterval = setInterval(() => {
+    buscarEstadoCronometroSupabase().then(est => callback(est));
+  }, 2500);
+
   return () => {
+    listeners.delete(callback);
+    clearInterval(fallbackInterval);
     if (typeof window !== 'undefined') {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('truco_cronometro_update', handleCustom);
-      if (channel) {
-        channel.removeEventListener('message', handleBroadcast);
+      if (localChannel) {
+        localChannel.removeEventListener('message', handleLocalBroadcast);
       }
     }
   };
