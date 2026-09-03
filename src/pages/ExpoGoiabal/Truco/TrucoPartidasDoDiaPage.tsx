@@ -8,8 +8,7 @@ import {
   CheckCircle2, 
   Pause, 
   Trophy, 
-  Calendar, 
-  Tv 
+  Calendar 
 } from 'lucide-react';
 import { 
   obterEstadoCronometro, 
@@ -132,18 +131,10 @@ export const TrucoPartidasDoDiaPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Tabela'); }}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors border border-white/10 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors border border-white/10 cursor-pointer"
           >
             <Trophy size={14} className="text-amber-400" />
             <span>Ver Tabela</span>
-          </button>
-
-          <button
-            onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/ControlePartidas'); }}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <Tv size={14} />
-            <span>Painel Admin</span>
           </button>
         </div>
       </header>
