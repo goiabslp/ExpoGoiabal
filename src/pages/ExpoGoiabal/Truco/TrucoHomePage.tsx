@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../../../components/Header';
 import { TrucoBackButton } from '../../../components/Truco/TrucoBackButton';
 import { 
-  UserPlus, 
-  Dices, 
   BarChart3, 
   Users, 
   Swords, 
@@ -120,68 +118,10 @@ export const TrucoHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Cards Grid - Layout Elegante e Compacto (3x2) */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-            
-            {/* Card 1: Cadastrar */}
-            <div
-              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Cadastrar'); }}
-              className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-emerald-500/30 hover:border-emerald-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform shrink-0">
-                    <UserPlus size={20} />
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-                    Etapa 1
-                  </span>
-                </div>
+          {/* Action Cards Grid - 4 Módulos Ativos */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
 
-                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-emerald-300 transition-colors">
-                  Inscrição & Equipes
-                </h3>
-                <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
-                  Inscreva os times (4 titulares + reservas) e selecione a cidade.
-                </p>
-              </div>
-
-              <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between text-emerald-400 font-black text-xs uppercase tracking-wider group-hover:text-emerald-300">
-                <span>Inscrever Equipe</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            {/* Card 2: Sorteio da 1ª Fase */}
-            <div
-              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Sorteio'); }}
-              className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-amber-500/30 hover:border-amber-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-black shadow-md group-hover:scale-105 transition-transform shrink-0 font-black">
-                    <Dices size={20} />
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">
-                    Etapa 2
-                  </span>
-                </div>
-
-                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-amber-300 transition-colors">
-                  Sorteio Oficial
-                </h3>
-                <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
-                  Sorteio matemático oficial das rodadas simultâneas.
-                </p>
-              </div>
-
-              <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between text-amber-400 font-black text-xs uppercase tracking-wider group-hover:text-amber-300">
-                <span>Acessar Sorteio</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            {/* Card 3: Partida do Dia & Cronômetro */}
+            {/* Card 1: Cronômetro */}
             <div
               onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/PartidasDoDia'); }}
               className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-yellow-500/40 hover:border-yellow-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(234,179,8,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between ring-1 ring-yellow-500/20"
@@ -198,7 +138,7 @@ export const TrucoHomePage: React.FC = () => {
                 </div>
 
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-yellow-300 transition-colors">
-                  Partidas do Dia
+                  Cronômetro
                 </h3>
                 <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
                   Cronômetro oficial de 02:00h e alerta de Queda Saídeira no telão.
@@ -211,7 +151,7 @@ export const TrucoHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 4: Partidas & Placares */}
+            {/* Card 2: Calendário */}
             <div
               onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Partidas'); }}
               className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-emerald-500/30 hover:border-emerald-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
@@ -222,12 +162,12 @@ export const TrucoHomePage: React.FC = () => {
                     <Swords size={20} />
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-                    Etapa 3
+                    Etapa 1
                   </span>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-emerald-300 transition-colors">
-                  Calendário & Placares
+                  Calendário
                 </h3>
                 <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
                   Terças e Quintas: confira os confrontos e resultados das rodadas.
@@ -235,12 +175,12 @@ export const TrucoHomePage: React.FC = () => {
               </div>
 
               <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between text-emerald-400 font-black text-xs uppercase tracking-wider group-hover:text-emerald-300">
-                <span>Ver Partidas</span>
+                <span>Ver Calendário</span>
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
-            {/* Card 5: Tabela & Top 8 */}
+            {/* Card 3: Tabela */}
             <div
               onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Tabela'); }}
               className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-teal-500/30 hover:border-teal-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(20,184,166,0.2)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
@@ -251,12 +191,12 @@ export const TrucoHomePage: React.FC = () => {
                     <BarChart3 size={20} />
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] font-black uppercase tracking-widest">
-                    Etapa 4
+                    Etapa 2
                   </span>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-teal-300 transition-colors">
-                  Tabela & Top 8
+                  Tabela
                 </h3>
                 <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
                   Classificação em tempo real e elegibilidade para a premiação.
@@ -264,12 +204,12 @@ export const TrucoHomePage: React.FC = () => {
               </div>
 
               <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between text-teal-400 font-black text-xs uppercase tracking-wider group-hover:text-teal-300">
-                <span>Ver Classificação</span>
+                <span>Ver Tabela</span>
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
-            {/* Card 6: Mata-Mata & Campeão */}
+            {/* Card 4: Mata-Mata */}
             <div
               onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/MataMata'); }}
               className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-zinc-900/95 via-zinc-900/70 to-zinc-950/95 border border-amber-400/40 hover:border-amber-400 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
@@ -280,12 +220,12 @@ export const TrucoHomePage: React.FC = () => {
                     <Crown size={20} />
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest">
-                    Etapa 5
+                    Etapa 3
                   </span>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wide group-hover:text-amber-300 transition-colors">
-                  Fase Mata-Mata
+                  Mata-Mata
                 </h3>
                 <p className="text-zinc-400 text-xs leading-relaxed mt-1 font-medium">
                   Grupos A e B, Grande Final e apuração do Campeão Supremo.
@@ -293,7 +233,7 @@ export const TrucoHomePage: React.FC = () => {
               </div>
 
               <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between text-amber-400 font-black text-xs uppercase tracking-wider group-hover:text-amber-300">
-                <span>Ver Chaveamento</span>
+                <span>Ver Mata-Mata</span>
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>

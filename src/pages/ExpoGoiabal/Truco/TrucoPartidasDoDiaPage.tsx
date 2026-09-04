@@ -134,7 +134,7 @@ export const TrucoPartidasDoDiaPage: React.FC = () => {
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             </div>
             <h1 className="text-base sm:text-lg font-black uppercase tracking-wide text-white leading-none">
-              Cronômetro Oficial das Partidas
+              Cronômetro
             </h1>
           </div>
         </div>

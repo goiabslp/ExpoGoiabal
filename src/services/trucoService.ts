@@ -121,6 +121,64 @@ export const calcularDataRodada = (rodadaNumero: number): { dataFormatada: strin
   };
 };
 
+/**
+ * Retorna o objeto Date representando o final do dia da rodada (23:59:59.999)
+ */
+export const obterDataObjetoRodada = (rodadaNumero: number): Date => {
+  const r = Math.max(1, rodadaNumero);
+  const baseDate = new Date(2026, 8, 3); // 03/09/2026
+
+  let diasAdicionais = 0;
+  if (r === 1) {
+    diasAdicionais = 0;
+  } else if (r % 2 === 1) {
+    const k = Math.floor((r - 1) / 2);
+    diasAdicionais = k * 7;
+  } else {
+    const k = Math.floor(r / 2);
+    diasAdicionais = (k * 7) - 2;
+  }
+
+  const targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + diasAdicionais, 23, 59, 59, 999);
+  return targetDate;
+};
+
+/**
+ * Calcula dinamicamente a Rodada Atual com base na data do sistema ou andamento dos jogos.
+ * Regra:
+ * - Se a data atual for até o dia da rodada N (23:59:59), a rodada atual é N.
+ * - Após o término do dia da rodada N (00:00:00 do dia seguinte), a rodada atual avança automaticamente para a próxima rodada (N+1).
+ * - Se houver partidas com status 'em_andamento', essa rodada é priorizada.
+ */
+export const calcularRodadaAtual = (
+  maxRodadas: number = 5,
+  dataReferencia: Date = new Date(),
+  partidas?: TrucoPartida[]
+): number => {
+  const limiteMaximo = Math.max(1, maxRodadas);
+
+  // 1. Se houver partidas ativas em andamento, prioriza a rodada em andamento
+  if (partidas && partidas.length > 0) {
+    const jogoEmAndamento = partidas.find(p => p.tipo_fase === 'primeira_fase' && p.status === 'em_andamento');
+    if (jogoEmAndamento && jogoEmAndamento.rodada >= 1 && jogoEmAndamento.rodada <= limiteMaximo) {
+      return jogoEmAndamento.rodada;
+    }
+  }
+
+  const agora = dataReferencia.getTime();
+
+  // 2. Itera pelas rodadas: se a data atual for menor ou igual ao fim do dia da rodada r, esta é a rodada atual
+  for (let r = 1; r <= limiteMaximo; r++) {
+    const fimDoDiaDaRodada = obterDataObjetoRodada(r).getTime();
+    if (agora <= fimDoDiaDaRodada) {
+      return r;
+    }
+  }
+
+  // 3. Se já passou de todas as rodadas da fase, retorna a última rodada
+  return limiteMaximo;
+};
+
 export interface TrucoPremiacaoInfo {
   posicaoPremiado: number;
   titulo: string;
@@ -1529,11 +1587,16 @@ export const registrarResultadoPartida = async (
       .single();
 
     if (!error && data) {
-      // Se for partida do mata-mata, atualiza chaveamento subsequente
-      if (data.tipo_fase !== 'primeira_fase') {
-        const todasPartidasAtualizadas = partidas.map(p => p.id === partidaId ? { ...p, ...data } : p);
+      const todasPartidasAtualizadas = partidas.map(p => p.id === partidaId ? { ...p, ...data } : p);
+
+      // Se for partida da primeira fase, sincroniza o mata-mata automaticamente se tiver concluído
+      if (data.tipo_fase === 'primeira_fase') {
+        await sincronizarMataMataAutomatico(undefined, todasPartidasAtualizadas);
+      } else {
+        // Se for partida do mata-mata, atualiza chaveamento subsequente
         await atualizarChaveamentoMataMata(todasPartidasAtualizadas);
       }
+
       // Notifica em tempo real imediatamente todas as telas, abas e componentes
       notificarAtualizacaoTruco();
       return data;
@@ -1742,47 +1805,58 @@ export const realizarSorteioMataMata = async (top8Equipes: TrucoEquipe[]): Promi
   partidasMataMata: TrucoPartida[];
 }> => {
   if (top8Equipes.length < 8) {
-    throw new Error('É necessário ter 8 equipes classificadas para sortear o Mata-Mata.');
+    throw new Error('É necessário ter 8 equipes classificadas para montar o Mata-Mata.');
   }
 
-  const shuffled = [...top8Equipes];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  // Chaveamento Oficial por Posição na Tabela:
+  // 1º Lugar x 8º Lugar
+  // 2º Lugar x 7º Lugar
+  // 3º Lugar x 6º Lugar
+  // 4º Lugar x 5º Lugar
+  const time1 = top8Equipes[0]; // 1º
+  const time2 = top8Equipes[1]; // 2º
+  const time3 = top8Equipes[2]; // 3º
+  const time4 = top8Equipes[3]; // 4º
+  const time5 = top8Equipes[4]; // 5º
+  const time6 = top8Equipes[5]; // 6º
+  const time7 = top8Equipes[6]; // 7º
+  const time8 = top8Equipes[7]; // 8º
 
-  const grupoA = shuffled.slice(0, 4);
-  const grupoB = shuffled.slice(4, 8);
+  // Chave A: Duelo 1º x 8º e Duelo 4º x 5º
+  const grupoA = [time1, time8, time4, time5];
+  // Chave B: Duelo 2º x 7º e Duelo 3º x 6º
+  const grupoB = [time2, time7, time3, time6];
 
   const partidasMataMata: TrucoPartida[] = [
-    // GRUPO A - SEMIFINAIS
+    // QUARTAS DE FINAL - CHAVE A (1º x 8º)
     {
       id: crypto.randomUUID(),
       tipo_fase: 'semi_a1',
       rodada: 1,
       numero_jogo: 101,
-      time_a_id: grupoA[0].id,
-      time_b_id: grupoA[1].id,
+      time_a_id: time1.id,
+      time_b_id: time8.id,
       pontos_time_a: 0,
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Semifinal A1'
+      fase_nome: 'Quartas 1 (1º × 8º)'
     },
+    // QUARTAS DE FINAL - CHAVE A (4º x 5º)
     {
       id: crypto.randomUUID(),
       tipo_fase: 'semi_a2',
       rodada: 1,
       numero_jogo: 102,
-      time_a_id: grupoA[2].id,
-      time_b_id: grupoA[3].id,
+      time_a_id: time4.id,
+      time_b_id: time5.id,
       pontos_time_a: 0,
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Semifinal A2'
+      fase_nome: 'Quartas 2 (4º × 5º)'
     },
-    // GRUPO A - FINAL
+    // SEMIFINAL - CHAVE A
     {
       id: crypto.randomUUID(),
       tipo_fase: 'final_a',
@@ -1794,36 +1868,37 @@ export const realizarSorteioMataMata = async (top8Equipes: TrucoEquipe[]): Promi
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Final do Grupo A'
+      fase_nome: 'Semifinal 1 (Venc. 1º×8º × Venc. 4º×5º)'
     },
-    // GRUPO B - SEMIFINAIS
+    // QUARTAS DE FINAL - CHAVE B (2º x 7º)
     {
       id: crypto.randomUUID(),
       tipo_fase: 'semi_b1',
       rodada: 1,
       numero_jogo: 104,
-      time_a_id: grupoB[0].id,
-      time_b_id: grupoB[1].id,
+      time_a_id: time2.id,
+      time_b_id: time7.id,
       pontos_time_a: 0,
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Semifinal B1'
+      fase_nome: 'Quartas 3 (2º × 7º)'
     },
+    // QUARTAS DE FINAL - CHAVE B (3º x 6º)
     {
       id: crypto.randomUUID(),
       tipo_fase: 'semi_b2',
       rodada: 1,
       numero_jogo: 105,
-      time_a_id: grupoB[2].id,
-      time_b_id: grupoB[3].id,
+      time_a_id: time3.id,
+      time_b_id: time6.id,
       pontos_time_a: 0,
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Semifinal B2'
+      fase_nome: 'Quartas 4 (3º × 6º)'
     },
-    // GRUPO B - FINAL
+    // SEMIFINAL - CHAVE B
     {
       id: crypto.randomUUID(),
       tipo_fase: 'final_b',
@@ -1835,7 +1910,7 @@ export const realizarSorteioMataMata = async (top8Equipes: TrucoEquipe[]): Promi
       pontos_time_b: 0,
       vencedor_id: null,
       status: 'agendada',
-      fase_nome: 'Final do Grupo B'
+      fase_nome: 'Semifinal 2 (Venc. 2º×7º × Venc. 3º×6º)'
     },
     // GRANDE FINAL
     {
@@ -1963,6 +2038,101 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
         campeao_equipe_id: grandeFinal.vencedor_id
       });
     }
+  }
+};
+
+/**
+ * Verifica se a 1ª Fase foi concluída ou se todas as partidas da 1ª fase possuem placares definidos.
+ * Em caso afirmativo, calcula o Top 8 com base na classificação geral oficial e monta/atualiza
+ * automaticamente os confrontos do Mata-Mata (1ºx8º, 4ºx5º, 2ºx7º, 3ºx6º) em tempo real.
+ */
+export const sincronizarMataMataAutomatico = async (
+  equipesParam?: TrucoEquipe[],
+  partidasParam?: TrucoPartida[]
+): Promise<void> => {
+  try {
+    const [eqs, parts, status] = await Promise.all([
+      equipesParam ? Promise.resolve(equipesParam) : buscarEquipes(),
+      partidasParam ? Promise.resolve(partidasParam) : buscarPartidas(),
+      buscarStatusTorneio()
+    ]);
+
+    const equipesAprovadas = eqs.filter(e => (e.status || 'aprovado') === 'aprovado');
+    if (equipesAprovadas.length < 8) return;
+
+    const partidas1aFase = parts.filter(p => p.tipo_fase === 'primeira_fase');
+    if (partidas1aFase.length === 0) return;
+
+    // Verifica se todas as partidas da 1ª fase possuem pontuação lançada ou status de finalizada
+    const concluidas1aFase = partidas1aFase.filter(
+      p => p.status === 'finalizada' || (Number(p.pontos_time_a) > 0 || Number(p.pontos_time_b) > 0) || p.vencedor_id !== null
+    );
+
+    const todasConcluidas = concluidas1aFase.length === partidas1aFase.length;
+
+    if (todasConcluidas) {
+      const ranking = calcularClassificacao(equipesAprovadas, parts);
+      const top8Rank = ranking.slice(0, 8);
+      const top8Equipes = top8Rank.map(r => r.equipe);
+      const top8Ids = top8Equipes.map(e => e.id);
+
+      const time1 = top8Equipes[0]; // 1º
+      const time2 = top8Equipes[1]; // 2º
+      const time3 = top8Equipes[2]; // 3º
+      const time4 = top8Equipes[3]; // 4º
+      const time5 = top8Equipes[4]; // 5º
+      const time6 = top8Equipes[5]; // 6º
+      const time7 = top8Equipes[6]; // 7º
+      const time8 = top8Equipes[7]; // 8º
+
+      const grupoA = [time1, time8, time4, time5];
+      const grupoB = [time2, time7, time3, time6];
+
+      const partidasMataMataExistentes = parts.filter(p => p.tipo_fase !== 'primeira_fase');
+
+      if (partidasMataMataExistentes.length === 0) {
+        // Cria as 7 partidas oficiais do Mata-Mata
+        const { partidasMataMata } = await realizarSorteioMataMata(top8Equipes);
+        await confirmarSorteioMataMata(grupoA, grupoB, partidasMataMata);
+      } else {
+        // Atualiza os times nas quartas de final se ainda estiverem agendadas
+        const findPartidaMataMata = (tipo: TrucoTipoFase) => partidasMataMataExistentes.find(p => p.tipo_fase === tipo);
+        
+        const semiA1 = findPartidaMataMata('semi_a1');
+        const semiA2 = findPartidaMataMata('semi_a2');
+        const semiB1 = findPartidaMataMata('semi_b1');
+        const semiB2 = findPartidaMataMata('semi_b2');
+
+        const updates: Promise<any>[] = [];
+
+        if (semiA1 && semiA1.status === 'agendada' && (semiA1.time_a_id !== time1.id || semiA1.time_b_id !== time8.id)) {
+          updates.push(Promise.resolve(supabase.from('truco_partidas').update({ time_a_id: time1.id, time_b_id: time8.id }).eq('id', semiA1.id)));
+        }
+        if (semiA2 && semiA2.status === 'agendada' && (semiA2.time_a_id !== time4.id || semiA2.time_b_id !== time5.id)) {
+          updates.push(Promise.resolve(supabase.from('truco_partidas').update({ time_a_id: time4.id, time_b_id: time5.id }).eq('id', semiA2.id)));
+        }
+        if (semiB1 && semiB1.status === 'agendada' && (semiB1.time_a_id !== time2.id || semiB1.time_b_id !== time7.id)) {
+          updates.push(Promise.resolve(supabase.from('truco_partidas').update({ time_a_id: time2.id, time_b_id: time7.id }).eq('id', semiB1.id)));
+        }
+        if (semiB2 && semiB2.status === 'agendada' && (semiB2.time_a_id !== time3.id || semiB2.time_b_id !== time6.id)) {
+          updates.push(Promise.resolve(supabase.from('truco_partidas').update({ time_a_id: time3.id, time_b_id: time6.id }).eq('id', semiB2.id)));
+        }
+
+        if (updates.length > 0) {
+          await Promise.all(updates);
+        }
+
+        await salvarStatusTorneio({
+          fase_atual: status.fase_atual === 'finalizado' ? 'finalizado' : 'mata_mata',
+          sorteio_mata_mata_confirmado: true,
+          top8_equipes_ids: top8Ids,
+          grupo_a_equipes_ids: grupoA.map(e => e.id),
+          grupo_b_equipes_ids: grupoB.map(e => e.id)
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao sincronizar mata-mata automaticamente:', err);
   }
 };
 

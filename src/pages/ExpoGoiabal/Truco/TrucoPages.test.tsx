@@ -34,9 +34,12 @@ import { TrucoHomePage } from './TrucoHomePage';
 import { TrucoCadastroPage } from './TrucoCadastroPage';
 import { TrucoSorteioRodadasPage } from './TrucoSorteioRodadasPage';
 import { TrucoPartidasPage } from './TrucoPartidasPage';
+import { TrucoPartidasRelatorioImpressaoPage } from './TrucoPartidasRelatorioImpressaoPage';
+import { TrucoTabelaRelatorioImpressaoPage } from './TrucoTabelaRelatorioImpressaoPage';
 import { TrucoTabelaPage } from './TrucoTabelaPage';
 import { TrucoMataMataPage } from './TrucoMataMataPage';
 import { TrucoRegulamentoPage } from './TrucoRegulamentoPage';
+import { TrucoRegulamentoRelatorioImpressaoPage } from './TrucoRegulamentoRelatorioImpressaoPage';
 import { TrucoPartidasDoDiaPage } from './TrucoPartidasDoDiaPage';
 import { AdminTrucoHomePage } from '../../Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../../Admin/Truco/AdminTrucoEquipesPage';
@@ -118,10 +121,37 @@ describe('Renderização das páginas completas de Truco', () => {
     expect(container).toBeTruthy();
   });
 
+  it('deve renderizar TrucoPartidasPage na rota dinâmica de rodada específica', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Partidas/Rodada/2']}>
+        <TrucoPartidasPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoPartidasRelatorioImpressaoPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Partidas/Imprimir/Rodada/1']}>
+        <TrucoPartidasRelatorioImpressaoPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
   it('deve renderizar TrucoTabelaPage sem erros', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Tabela']}>
         <TrucoTabelaPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoTabelaRelatorioImpressaoPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Tabela/Imprimir']}>
+        <TrucoTabelaRelatorioImpressaoPage />
       </MemoryRouter>
     );
     expect(container).toBeTruthy();
@@ -167,6 +197,15 @@ describe('Renderização das páginas completas de Truco', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Regulamento']}>
         <TrucoRegulamentoPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('deve renderizar TrucoRegulamentoRelatorioImpressaoPage sem erros', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/Regulamento/Imprimir']}>
+        <TrucoRegulamentoRelatorioImpressaoPage />
       </MemoryRouter>
     );
     expect(container).toBeTruthy();

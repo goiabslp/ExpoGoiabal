@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, UserPlus, Dices, BarChart3, Trophy } from 'lucide-react';
+import { Home, Flame, Swords, BarChart3, Trophy } from 'lucide-react';
 
 export const TrucoHeaderNav: React.FC = () => {
   const tabs = [
     { to: '/ExpoGoiabal/Truco', label: 'Início', icon: Home, exact: true },
-    { to: '/ExpoGoiabal/Truco/Cadastrar', label: 'Cadastrar', icon: UserPlus },
-    { to: '/ExpoGoiabal/Truco/Sorteio', label: 'Sorteio & Rodadas', icon: Dices },
-    { to: '/ExpoGoiabal/Truco/Tabela', label: 'Tabela & Top 8', icon: BarChart3 },
-    { to: '/ExpoGoiabal/Truco/MataMata', label: 'Mata-Mata & Campeão', icon: Trophy },
+    { to: '/ExpoGoiabal/Truco/PartidasDoDia', label: 'Cronômetro', icon: Flame },
+    { to: '/ExpoGoiabal/Truco/Partidas', label: 'Calendário', icon: Swords },
+    { to: '/ExpoGoiabal/Truco/Tabela', label: 'Tabela', icon: BarChart3 },
+    { to: '/ExpoGoiabal/Truco/MataMata', label: 'Mata-Mata', icon: Trophy },
   ];
 
   return (

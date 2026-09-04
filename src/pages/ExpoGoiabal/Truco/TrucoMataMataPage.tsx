@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../../components/Header';
 import { TrucoBackButton } from '../../../components/Truco/TrucoBackButton';
@@ -10,23 +10,24 @@ import {
   buscarEquipes, 
   buscarPartidas, 
   buscarStatusTorneio,
+  calcularClassificacao,
   realizarSorteioMataMata,
   confirmarSorteioMataMata,
   registrarResultadoPartida,
+  sincronizarMataMataAutomatico,
   subscribeToTrucoChanges 
 } from '../../../services/trucoService';
 import { 
   Trophy, 
   Crown, 
-  Dices, 
   CheckCircle2, 
   Edit3, 
   Users, 
   Play, 
-  RotateCcw, 
   Save, 
-  X,
-  ShieldAlert
+  X, 
+  ShieldAlert,
+  Swords
 } from 'lucide-react';
 
 export const TrucoMataMataPage: React.FC = () => {
@@ -36,7 +37,7 @@ export const TrucoMataMataPage: React.FC = () => {
   const [partidas, setPartidas] = useState<TrucoPartida[]>([]);
   const [statusTorneio, setStatusTorneio] = useState<TrucoTorneioStatus | null>(null);
 
-  // Modal de Sorteio do Mata-Mata
+  // Modal de Montagem do Mata-Mata
   const [isSorteioModalOpen, setIsSorteioModalOpen] = useState(false);
   const [sorteioPreview, setSorteioPreview] = useState<{
     grupoA: TrucoEquipe[];
@@ -62,6 +63,9 @@ export const TrucoMataMataPage: React.FC = () => {
       setEquipes(eqs);
       setPartidas(parts);
       setStatusTorneio(st);
+
+      // Sincroniza e monta automaticamente o mata-mata se a 1ª fase estiver toda preenchida
+      await sincronizarMataMataAutomatico(eqs, parts);
     } catch (err) {
       console.error('Erro ao carregar mata-mata:', err);
     }
@@ -82,22 +86,27 @@ export const TrucoMataMataPage: React.FC = () => {
     return partidas.find(p => p.tipo_fase === tipo);
   };
 
-  const top8Ids = statusTorneio?.top8_equipes_ids || [];
-  const top8Equipes = top8Ids.map(id => getEquipeById(id)).filter(Boolean) as TrucoEquipe[];
+  // Ranking ordenado da 1ª Fase para apuração automática do Top 8
+  const ranking1aFase = useMemo(() => {
+    return calcularClassificacao(equipes, partidas);
+  }, [equipes, partidas]);
+
+  const top8Equipes = useMemo(() => {
+    if (ranking1aFase.length >= 8) {
+      return ranking1aFase.slice(0, 8).map(r => r.equipe);
+    }
+    const top8Ids = statusTorneio?.top8_equipes_ids || [];
+    return top8Ids.map(id => getEquipeById(id)).filter(Boolean) as TrucoEquipe[];
+  }, [ranking1aFase, statusTorneio, equipes]);
+
   const podeSortearMataMata = top8Equipes.length >= 8 && !statusTorneio?.sorteio_mata_mata_confirmado;
 
-  // Realizar Sorteio do Mata-Mata
+  // Gerar Chaveamento Oficial do Mata-Mata por Posição na Tabela (1ºx8º, 2ºx7º, 3ºx6º, 4ºx5º)
   const handleAbrirSorteioMataMata = async () => {
     if (top8Equipes.length < 8) return;
     const res = await realizarSorteioMataMata(top8Equipes);
     setSorteioPreview(res);
     setIsSorteioModalOpen(true);
-  };
-
-  const handleRefazerSorteioMataMata = async () => {
-    if (top8Equipes.length < 8) return;
-    const res = await realizarSorteioMataMata(top8Equipes);
-    setSorteioPreview(res);
   };
 
   const handleConfirmarSorteioMataMata = async () => {
@@ -113,7 +122,7 @@ export const TrucoMataMataPage: React.FC = () => {
       setIsSorteioModalOpen(false);
       setSorteioPreview(null);
     } catch (err) {
-      console.error('Erro ao confirmar sorteio do mata-mata:', err);
+      console.error('Erro ao confirmar chaveamento do mata-mata:', err);
     } finally {
       setConfirmingSorteio(false);
     }
@@ -190,6 +199,8 @@ export const TrucoMataMataPage: React.FC = () => {
     titulo,
     subtitulo,
     partida,
+    timeAFallback,
+    timeBFallback,
     placeholderA = 'Aguardando Time',
     placeholderB = 'Aguardando Time',
     isFinal = false
@@ -197,12 +208,14 @@ export const TrucoMataMataPage: React.FC = () => {
     titulo: string;
     subtitulo?: string;
     partida?: TrucoPartida;
+    timeAFallback?: TrucoEquipe;
+    timeBFallback?: TrucoEquipe;
     placeholderA?: string;
     placeholderB?: string;
     isFinal?: boolean;
   }) => {
-    const timeA = getEquipeById(partida?.time_a_id || null);
-    const timeB = getEquipeById(partida?.time_b_id || null);
+    const timeA = getEquipeById(partida?.time_a_id || null) || timeAFallback;
+    const timeB = getEquipeById(partida?.time_b_id || null) || timeBFallback;
 
     const isProntaParaJogar = !!timeA && !!timeB;
     const isFinalizada = partida?.status === 'finalizada';
@@ -346,13 +359,13 @@ export const TrucoMataMataPage: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-black uppercase tracking-widest mb-2">
                 <Trophy size={13} />
-                <span>Fase Final • Eliminatórias</span>
+                <span>Fase Final • Cruzamento Olímpico</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                🏆 Chaveamento do Mata-Mata
+                🏆 Mata-Mata
               </h1>
               <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
-                Grupos A e B, Semifinais, Finais de Grupo e a Grande Final pelo título de Campeão!
+                Confrontos definidos pela classificação geral: <strong>1º × 8º</strong>, <strong>2º × 7º</strong>, <strong>3º × 6º</strong> e <strong>4º × 5º</strong>.
               </p>
             </div>
 
@@ -364,8 +377,8 @@ export const TrucoMataMataPage: React.FC = () => {
                   disabled={!podeSortearMataMata}
                   className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  <Dices size={18} />
-                  <span>Realizar Sorteio do Mata-Mata</span>
+                  <Swords size={18} />
+                  <span>Gerar Mata-Mata da Tabela</span>
                 </button>
               ) : null}
             </div>
@@ -403,82 +416,109 @@ export const TrucoMataMataPage: React.FC = () => {
             </div>
           )}
 
-          {/* ALERTA SE O MATA-MATA AINDA NÃO FOI SORTEADO */}
-          {!statusTorneio?.sorteio_mata_mata_confirmado && (
-            <div className="w-full mb-8">
-              {top8Equipes.length < 8 ? (
-                <div className="p-5 rounded-3xl bg-zinc-900/80 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <ShieldAlert size={24} className="text-amber-400 shrink-0" />
-                    <div>
-                      <h4 className="text-sm font-black uppercase text-white">Aguardando Conclusão da 1ª Fase</h4>
-                      <p className="text-xs text-zinc-400 font-medium">
-                        O chaveamento do Mata-Mata será liberado assim que a Primeira Fase for 100% concluída e os 08 melhores forem apurados.
-                      </p>
-                    </div>
+          {/* BANNER DE STATUS E AUTOMATIZAÇÃO EM TEMPO REAL */}
+          <div className="w-full mb-8">
+            {statusTorneio?.sorteio_mata_mata_confirmado ? (
+              <div className="p-4 sm:p-5 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    <Trophy size={20} />
                   </div>
-                  <button
-                    onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Tabela'); }}
-                    className="px-4 py-2.5 rounded-xl bg-teal-500 text-black font-black text-xs uppercase tracking-wider hover:bg-teal-400 transition-colors shrink-0"
-                  >
-                    Ver Tabela da 1ª Fase
-                  </button>
-                </div>
-              ) : (
-                <div className="p-5 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                      <Dices size={22} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                      <h4 className="text-sm font-black uppercase text-emerald-400">Mata-Mata Oficial Montado Automaticamente</h4>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-black uppercase text-emerald-400">1ª Fase Encerrada! 08 Classificados Prontos.</h4>
-                      <p className="text-xs text-zinc-300 font-medium">
-                        Realize o sorteio independente do Mata-Mata para distribuir os 8 classificados no Grupo A e Grupo B.
-                      </p>
-                    </div>
+                    <p className="text-xs text-zinc-300 font-medium">
+                      Confrontos consolidados pela classificação geral da 1ª Fase (1º×8º, 2º×7º, 3º×6º e 4º×5º).
+                    </p>
                   </div>
-                  <button
-                    onClick={handleAbrirSorteioMataMata}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all shrink-0 cursor-pointer"
-                  >
-                    <span>Sortear Mata-Mata</span>
-                  </button>
                 </div>
-              )}
-            </div>
-          )}
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-500/30 shrink-0">
+                  ⚡ Tempo Real Ativo
+                </span>
+              </div>
+            ) : top8Equipes.length >= 8 ? (
+              <div className="p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Swords size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                      <h4 className="text-sm font-black uppercase text-amber-400">Projeção Dinâmica do Mata-Mata em Tempo Real</h4>
+                    </div>
+                    <p className="text-xs text-zinc-300 font-medium">
+                      Os confrontos abaixo refletem a classificação atual da tabela. Ao preencher a última rodada da 1ª Fase, o chaveamento será oficializado automaticamente!
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Tabela'); }}
+                  className="px-4 py-2 rounded-xl bg-amber-500 text-black font-black text-xs uppercase tracking-wider hover:bg-amber-400 transition-colors shrink-0 cursor-pointer shadow-md"
+                >
+                  Ver Tabela Geral
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <ShieldAlert size={22} className="text-amber-400 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-black uppercase text-white">Aguardando Equipes da 1ª Fase</h4>
+                    <p className="text-xs text-zinc-400 font-medium">
+                      O chaveamento do Mata-Mata será montado automaticamente assim que os placares forem lançados.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Partidas'); }}
+                  className="px-4 py-2 rounded-xl bg-teal-500 text-black font-black text-xs uppercase tracking-wider hover:bg-teal-400 transition-colors shrink-0 cursor-pointer"
+                >
+                  Ver Partidas
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* ESQUELETO VISUAL COMPLETO DO MATA-MATA (BRACKET) */}
           <div className="w-full flex flex-col gap-12">
             
-            {/* GRUPO A & GRUPO B - LADO A LADO OU EM BLOCOS */}
+            {/* CHAVE A & CHAVE B - LADO A LADO OU EM BLOCOS */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
-              {/* BLOCO GRUPO A */}
+              {/* BLOCO CHAVE A (1º x 8º e 4º x 5º) */}
               <div className="bg-zinc-900/60 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 shadow-xl">
                 <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20">
                   <div className="flex items-center gap-2.5">
                     <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
-                    <h3 className="text-lg font-black uppercase tracking-wider text-white">🅰️ Chaveamento — Grupo A</h3>
+                    <h3 className="text-lg font-black uppercase tracking-wider text-white">🅰️ Chave A — Quartas & Semifinal</h3>
                   </div>
-                  <span className="text-xs text-emerald-400 font-bold uppercase">4 Times</span>
+                  <span className="text-xs text-emerald-400 font-bold uppercase">1º×8º & 4º×5º</span>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Semifinais do Grupo A</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave A)</span>
                   
                   <MatchCard
-                    titulo="Semifinal A1"
+                    titulo="Quartas 1: 1º × 8º"
+                    subtitulo="Confronto Direto por Classificação"
                     partida={semiA1}
-                    placeholderA="Classificado A1"
-                    placeholderB="Classificado A2"
+                    timeAFallback={top8Equipes[0]}
+                    timeBFallback={top8Equipes[7]}
+                    placeholderA="1º Colocado da Tabela"
+                    placeholderB="8º Colocado da Tabela"
                   />
 
                   <MatchCard
-                    titulo="Semifinal A2"
+                    titulo="Quartas 2: 4º × 5º"
+                    subtitulo="Confronto Direto por Classificação"
                     partida={semiA2}
-                    placeholderA="Classificado A3"
-                    placeholderB="Classificado A4"
+                    timeAFallback={top8Equipes[3]}
+                    timeBFallback={top8Equipes[4]}
+                    placeholderA="4º Colocado da Tabela"
+                    placeholderB="5º Colocado da Tabela"
                   />
                 </div>
 
@@ -487,45 +527,52 @@ export const TrucoMataMataPage: React.FC = () => {
                   <div className="w-0.5 h-6 bg-emerald-500/40"></div>
                 </div>
 
-                {/* Final do Grupo A */}
+                {/* Semifinal 1 */}
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    🏆 Final do Grupo A (Decisão do Finalista A)
+                    🏆 Semifinal 1 (Decisão do Finalista Chave A)
                   </span>
                   <MatchCard
-                    titulo="Final do Grupo A"
+                    titulo="Semifinal 1"
+                    subtitulo="Venc. Quartas 1 × Venc. Quartas 2"
                     partida={finalA}
-                    placeholderA="Vencedor Semifinal A1"
-                    placeholderB="Vencedor Semifinal A2"
+                    placeholderA="Vencedor (1º × 8º)"
+                    placeholderB="Vencedor (4º × 5º)"
                   />
                 </div>
               </div>
 
-              {/* BLOCO GRUPO B */}
+              {/* BLOCO CHAVE B (2º x 7º e 3º x 6º) */}
               <div className="bg-zinc-900/60 border border-teal-500/30 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 shadow-xl">
                 <div className="flex items-center justify-between pb-3 border-b border-teal-500/20">
                   <div className="flex items-center gap-2.5">
                     <span className="w-3 h-3 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.8)]"></span>
-                    <h3 className="text-lg font-black uppercase tracking-wider text-white">🅱️ Chaveamento — Grupo B</h3>
+                    <h3 className="text-lg font-black uppercase tracking-wider text-white">🅱️ Chave B — Quartas & Semifinal</h3>
                   </div>
-                  <span className="text-xs text-teal-400 font-bold uppercase">4 Times</span>
+                  <span className="text-xs text-teal-400 font-bold uppercase">2º×7º & 3º×6º</span>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Semifinais do Grupo B</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave B)</span>
                   
                   <MatchCard
-                    titulo="Semifinal B1"
+                    titulo="Quartas 3: 2º × 7º"
+                    subtitulo="Confronto Direto por Classificação"
                     partida={semiB1}
-                    placeholderA="Classificado B1"
-                    placeholderB="Classificado B2"
+                    timeAFallback={top8Equipes[1]}
+                    timeBFallback={top8Equipes[6]}
+                    placeholderA="2º Colocado da Tabela"
+                    placeholderB="7º Colocado da Tabela"
                   />
 
                   <MatchCard
-                    titulo="Semifinal B2"
+                    titulo="Quartas 4: 3º × 6º"
+                    subtitulo="Confronto Direto por Classificação"
                     partida={semiB2}
-                    placeholderA="Classificado B3"
-                    placeholderB="Classificado B4"
+                    timeAFallback={top8Equipes[2]}
+                    timeBFallback={top8Equipes[5]}
+                    placeholderA="3º Colocado da Tabela"
+                    placeholderB="6º Colocado da Tabela"
                   />
                 </div>
 
@@ -534,16 +581,17 @@ export const TrucoMataMataPage: React.FC = () => {
                   <div className="w-0.5 h-6 bg-teal-500/40"></div>
                 </div>
 
-                {/* Final do Grupo B */}
+                {/* Semifinal 2 */}
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-teal-400">
-                    🏆 Final do Grupo B (Decisão do Finalista B)
+                    🏆 Semifinal 2 (Decisão do Finalista Chave B)
                   </span>
                   <MatchCard
-                    titulo="Final do Grupo B"
+                    titulo="Semifinal 2"
+                    subtitulo="Venc. Quartas 3 × Venc. Quartas 4"
                     partida={finalB}
-                    placeholderA="Vencedor Semifinal B1"
-                    placeholderB="Vencedor Semifinal B2"
+                    placeholderA="Vencedor (2º × 7º)"
+                    placeholderB="Vencedor (3º × 6º)"
                   />
                 </div>
               </div>
@@ -565,10 +613,10 @@ export const TrucoMataMataPage: React.FC = () => {
               <div className="w-full">
                 <MatchCard
                   titulo="Grande Finalíssima"
-                  subtitulo="Finalista A × Finalista B"
+                  subtitulo="Finalista Chave A × Finalista Chave B"
                   partida={grandeFinal}
-                  placeholderA="👑 Campeão do Grupo A"
-                  placeholderB="👑 Campeão do Grupo B"
+                  placeholderA="👑 Campeão Chave A"
+                  placeholderB="👑 Campeão Chave B"
                   isFinal={true}
                 />
               </div>
@@ -579,7 +627,7 @@ export const TrucoMataMataPage: React.FC = () => {
         </div>
       </main>
 
-      {/* MODAL DE SORTEIO DO MATA-MATA (CONFIRMAR OU REFAZER) */}
+      {/* MODAL DE CONFIRMAÇÃO DO MATA-MATA (CONFORME POSIÇÃO NA TABELA) */}
       {isSorteioModalOpen && sorteioPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto py-8">
           <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl w-full max-w-2xl p-6 sm:p-8 shadow-[0_0_60px_rgba(245,158,11,0.35)] relative animate-in zoom-in-95 duration-300 my-auto">
@@ -592,44 +640,54 @@ export const TrucoMataMataPage: React.FC = () => {
 
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 text-black flex items-center justify-center shadow-lg font-black">
-                <Dices size={24} />
+                <Trophy size={24} />
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Sorteio Independente</span>
-                <h3 className="text-xl sm:text-2xl font-black uppercase text-white">Sorteio do Mata-Mata (Top 8)</h3>
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Classificação da 1ª Fase</span>
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white">Chaveamento Oficial do Mata-Mata</h3>
               </div>
             </div>
 
-            {/* Divisão dos Grupos Sorteados */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {/* Grupo A */}
-              <div className="bg-black/40 border border-emerald-500/30 rounded-2xl p-4">
-                <h4 className="text-xs font-black uppercase text-emerald-400 mb-3 flex items-center gap-2">
-                  <span>🅰️ Grupo A (4 Equipes)</span>
-                </h4>
-                <div className="flex flex-col gap-2">
-                  {sorteioPreview.grupoA.map((eq) => (
-                    <div key={eq.id} className="bg-zinc-800/80 px-3 py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-between">
-                      <span className="truncate">{eq.nome}</span>
-                      <span className="text-[10px] text-zinc-400">{eq.cidade}</span>
-                    </div>
-                  ))}
+            {/* Confrontos Definidos por Posição */}
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="p-3.5 rounded-2xl bg-black/50 border border-emerald-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-black text-white">
+                  <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px]">Duelo 1</span>
+                  <span>🥇 {top8Equipes[0]?.nome || '1º Colocado'}</span>
+                  <span className="text-zinc-500 font-normal">×</span>
+                  <span>{top8Equipes[7]?.nome || '8º Colocado'}</span>
                 </div>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">1º × 8º</span>
               </div>
 
-              {/* Grupo B */}
-              <div className="bg-black/40 border border-teal-500/30 rounded-2xl p-4">
-                <h4 className="text-xs font-black uppercase text-teal-400 mb-3 flex items-center gap-2">
-                  <span>🅱️ Grupo B (4 Equipes)</span>
-                </h4>
-                <div className="flex flex-col gap-2">
-                  {sorteioPreview.grupoB.map((eq) => (
-                    <div key={eq.id} className="bg-zinc-800/80 px-3 py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-between">
-                      <span className="truncate">{eq.nome}</span>
-                      <span className="text-[10px] text-zinc-400">{eq.cidade}</span>
-                    </div>
-                  ))}
+              <div className="p-3.5 rounded-2xl bg-black/50 border border-emerald-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-black text-white">
+                  <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px]">Duelo 2</span>
+                  <span>{top8Equipes[3]?.nome || '4º Colocado'}</span>
+                  <span className="text-zinc-500 font-normal">×</span>
+                  <span>{top8Equipes[4]?.nome || '5º Colocado'}</span>
                 </div>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">4º × 5º</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-black/50 border border-teal-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-black text-white">
+                  <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-400 text-[10px]">Duelo 3</span>
+                  <span>🥈 {top8Equipes[1]?.nome || '2º Colocado'}</span>
+                  <span className="text-zinc-500 font-normal">×</span>
+                  <span>{top8Equipes[6]?.nome || '7º Colocado'}</span>
+                </div>
+                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">2º × 7º</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-black/50 border border-teal-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-black text-white">
+                  <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-400 text-[10px]">Duelo 4</span>
+                  <span>🥉 {top8Equipes[2]?.nome || '3º Colocado'}</span>
+                  <span className="text-zinc-500 font-normal">×</span>
+                  <span>{top8Equipes[5]?.nome || '6º Colocado'}</span>
+                </div>
+                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">3º × 6º</span>
               </div>
             </div>
 
@@ -637,12 +695,10 @@ export const TrucoMataMataPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-white/10">
               <button
                 type="button"
-                onClick={handleRefazerSorteioMataMata}
-                disabled={confirmingSorteio}
+                onClick={() => setIsSorteioModalOpen(false)}
                 className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <RotateCcw size={15} />
-                <span>🔄 Refazer Sorteio</span>
+                <span>Cancelar</span>
               </button>
 
               <button
@@ -651,7 +707,7 @@ export const TrucoMataMataPage: React.FC = () => {
                 disabled={confirmingSorteio}
                 className="w-full sm:flex-1 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/25 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                {confirmingSorteio ? 'Salvando Chaveamento...' : '✅ Confirmar Chaveamento Oficial'}
+                {confirmingSorteio ? 'Salvando Chaveamento...' : '✅ Confirmar Confrontos Oficiais'}
               </button>
             </div>
 

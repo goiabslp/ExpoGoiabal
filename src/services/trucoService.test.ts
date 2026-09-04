@@ -448,11 +448,11 @@ describe('Classificação da 1ª Fase do Truco', () => {
   });
 });
 
-describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
-  it('deve sortear e estruturar corretamente as 7 partidas do Mata-Mata para os 8 classificados', async () => {
+describe('Mata-Mata (Confrontos definidos por Posição na Tabela: 1ºx8º, 2ºx7º, 3ºx6º, 4ºx5º)', () => {
+  it('deve organizar os confrontos do Mata-Mata rigorosamente conforme as posições na tabela', async () => {
     const top8: TrucoEquipe[] = Array.from({ length: 8 }, (_, i) => ({
       id: `team_${i + 1}`,
-      nome: `Equipe ${i + 1}`,
+      nome: `Equipe ${i + 1}º Lugar`,
       cidade: 'Goiabal',
       status: 'aprovado'
     }));
@@ -463,21 +463,25 @@ describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
     expect(grupoB.length).toBe(4);
     expect(partidasMataMata.length).toBe(7);
 
-    // Verificar se as semifinais contêm os times sorteados
-    const semiA1 = partidasMataMata.find(p => p.tipo_fase === 'semi_a1');
-    const semiA2 = partidasMataMata.find(p => p.tipo_fase === 'semi_a2');
-    const semiB1 = partidasMataMata.find(p => p.tipo_fase === 'semi_b1');
-    const semiB2 = partidasMataMata.find(p => p.tipo_fase === 'semi_b2');
+    // Duelo 1: 1º x 8º
+    const quartas1 = partidasMataMata.find(p => p.tipo_fase === 'semi_a1');
+    expect(quartas1?.time_a_id).toBe('team_1'); // 1º
+    expect(quartas1?.time_b_id).toBe('team_8'); // 8º
 
-    expect(semiA1?.time_a_id).toBeTruthy();
-    expect(semiA1?.time_b_id).toBeTruthy();
-    expect(semiA2?.time_a_id).toBeTruthy();
-    expect(semiA2?.time_b_id).toBeTruthy();
+    // Duelo 2: 4º x 5º
+    const quartas2 = partidasMataMata.find(p => p.tipo_fase === 'semi_a2');
+    expect(quartas2?.time_a_id).toBe('team_4'); // 4º
+    expect(quartas2?.time_b_id).toBe('team_5'); // 5º
 
-    expect(semiB1?.time_a_id).toBeTruthy();
-    expect(semiB1?.time_b_id).toBeTruthy();
-    expect(semiB2?.time_a_id).toBeTruthy();
-    expect(semiB2?.time_b_id).toBeTruthy();
+    // Duelo 3: 2º x 7º
+    const quartas3 = partidasMataMata.find(p => p.tipo_fase === 'semi_b1');
+    expect(quartas3?.time_a_id).toBe('team_2'); // 2º
+    expect(quartas3?.time_b_id).toBe('team_7'); // 7º
+
+    // Duelo 4: 3º x 6º
+    const quartas4 = partidasMataMata.find(p => p.tipo_fase === 'semi_b2');
+    expect(quartas4?.time_a_id).toBe('team_3'); // 3º
+    expect(quartas4?.time_b_id).toBe('team_6'); // 6º
   });
 
   it('deve avançar vencedores para as Finais de Grupo e Grande Final', async () => {
@@ -768,6 +772,52 @@ describe('Regra de CPF Opcional e Bônus de Premiação no Cadastro', () => {
     const r5 = calcularDataRodada(5);
     expect(r5.dataFormatada).toBe('17/09/2026');
     expect(r5.diaSemana).toBe('Quinta-feira');
+  });
+
+  it('deve calcular dinamicamente a rodada atual e avançar automaticamente após o dia da rodada', async () => {
+    const { calcularRodadaAtual, obterDataObjetoRodada } = await import('./trucoService');
+
+    // 1. Data antes do torneio (ex: 01/09/2026) -> Rodada 1
+    const dataAntes = new Date(2026, 8, 1, 10, 0, 0);
+    expect(calcularRodadaAtual(5, dataAntes)).toBe(1);
+
+    // 2. Data no dia da Rodada 1 (03/09/2026 às 15:00) -> Rodada 1
+    const dataDiaR1 = new Date(2026, 8, 3, 15, 30, 0);
+    expect(calcularRodadaAtual(5, dataDiaR1)).toBe(1);
+
+    // 3. Data no final do dia da Rodada 1 (03/09/2026 às 23:59:00) -> Rodada 1
+    const dataFimR1 = new Date(2026, 8, 3, 23, 59, 0);
+    expect(calcularRodadaAtual(5, dataFimR1)).toBe(1);
+
+    // 4. Data no dia seguinte à Rodada 1 (04/09/2026 às 08:00) -> Passou da Rodada 1, avança para Rodada 2!
+    const dataDiaSeguinteR1 = new Date(2026, 8, 4, 8, 0, 0);
+    expect(calcularRodadaAtual(5, dataDiaSeguinteR1)).toBe(2);
+
+    // 5. Data no fim de semana antes da Rodada 2 (06/09/2026) -> Rodada 2
+    const dataFimDeSemana = new Date(2026, 8, 6, 12, 0, 0);
+    expect(calcularRodadaAtual(5, dataFimDeSemana)).toBe(2);
+
+    // 6. Data no dia da Rodada 2 (08/09/2026) -> Rodada 2
+    const dataDiaR2 = new Date(2026, 8, 8, 20, 0, 0);
+    expect(calcularRodadaAtual(5, dataDiaR2)).toBe(2);
+
+    // 7. Data no dia seguinte à Rodada 2 (09/09/2026) -> Avança para Rodada 3!
+    const dataDiaSeguinteR2 = new Date(2026, 8, 9, 10, 0, 0);
+    expect(calcularRodadaAtual(5, dataDiaSeguinteR2)).toBe(3);
+
+    // 8. Data no dia da Rodada 3 (10/09/2026) -> Rodada 3
+    const dataDiaR3 = new Date(2026, 8, 10, 19, 0, 0);
+    expect(calcularRodadaAtual(5, dataDiaR3)).toBe(3);
+
+    // 9. Data após a última rodada (ex: 20/09/2026) -> Retorna a última rodada (5)
+    const dataAposFim = new Date(2026, 8, 20, 10, 0, 0);
+    expect(calcularRodadaAtual(5, dataAposFim)).toBe(5);
+
+    // 10. Valida objeto date do fim do dia
+    const fimObjR1 = obterDataObjetoRodada(1);
+    expect(fimObjR1.getDate()).toBe(3);
+    expect(fimObjR1.getMonth()).toBe(8); // Setembro
+    expect(fimObjR1.getHours()).toBe(23);
   });
 
   it('deve gerar imagem de baralho com cartas e o nome do time estampado', async () => {

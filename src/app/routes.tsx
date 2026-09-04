@@ -8,13 +8,14 @@ import { FotosPage } from '../pages/ExpoGoiabal/FotosPage';
 import { ShowPage } from '../pages/ExpoGoiabal/ShowPage';
 import { ShowSelectorPage } from '../pages/ExpoGoiabal/ShowSelectorPage';
 import { TrucoHomePage } from '../pages/ExpoGoiabal/Truco/TrucoHomePage';
-import { TrucoCadastroPage } from '../pages/ExpoGoiabal/Truco/TrucoCadastroPage';
-import { TrucoSorteioRodadasPage } from '../pages/ExpoGoiabal/Truco/TrucoSorteioRodadasPage';
 import { TrucoPartidasPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasPage';
 import { TrucoTabelaPage } from '../pages/ExpoGoiabal/Truco/TrucoTabelaPage';
 import { TrucoMataMataPage } from '../pages/ExpoGoiabal/Truco/TrucoMataMataPage';
 import { TrucoRegulamentoPage } from '../pages/ExpoGoiabal/Truco/TrucoRegulamentoPage';
+import { TrucoRegulamentoRelatorioImpressaoPage } from '../pages/ExpoGoiabal/Truco/TrucoRegulamentoRelatorioImpressaoPage';
 import { TrucoPartidasDoDiaPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasDoDiaPage';
+import { TrucoPartidasRelatorioImpressaoPage } from '../pages/ExpoGoiabal/Truco/TrucoPartidasRelatorioImpressaoPage';
+import { TrucoTabelaRelatorioImpressaoPage } from '../pages/ExpoGoiabal/Truco/TrucoTabelaRelatorioImpressaoPage';
 import { AdminTrucoPartidasPage } from '../pages/Admin/AdminTrucoPartidasPage';
 import { AdminTrucoHomePage } from '../pages/Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../pages/Admin/Truco/AdminTrucoEquipesPage';
@@ -79,6 +80,14 @@ export const router = createBrowserRouter([
     element: <AdminTrucoPartidasPage />,
   },
   {
+    path: '/Admin/Truco/Partidas/Rodada/:rodadaId',
+    element: <AdminTrucoPartidasPage />,
+  },
+  {
+    path: '/Admin/truco/partidas/rodada/:rodadaId',
+    element: <AdminTrucoPartidasPage />,
+  },
+  {
     path: '/Admin/Truco/PartidasDoDia',
     element: <AdminTrucoPartidasDoDiaPage />,
   },
@@ -124,43 +133,43 @@ export const router = createBrowserRouter([
   },
   {
     path: '/ExpoGoiabal/Truco/Cadastrar',
-    element: <TrucoCadastroPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/truco/cadastrar',
-    element: <TrucoCadastroPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/Truco/Sorteio',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/truco/sorteio',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/Truco/Sorteio/AoVivo',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/truco/sorteio/aovivo',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/Truco/Sorteio/Resumo',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/truco/sorteio/resumo',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/Truco/Sorteio/TV',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/truco/sorteio/tv',
-    element: <TrucoSorteioRodadasPage />,
+    element: <Navigate to="/ExpoGoiabal/Truco" replace />,
   },
   {
     path: '/ExpoGoiabal/Truco/Partidas',
@@ -169,6 +178,30 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/truco/partidas',
     element: <TrucoPartidasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Partidas/Rodada/:rodadaId',
+    element: <TrucoPartidasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/partidas/rodada/:rodadaId',
+    element: <TrucoPartidasPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Partidas/Imprimir',
+    element: <TrucoPartidasRelatorioImpressaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/partidas/imprimir',
+    element: <TrucoPartidasRelatorioImpressaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Partidas/Imprimir/Rodada/:rodadaId',
+    element: <TrucoPartidasRelatorioImpressaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/partidas/imprimir/rodada/:rodadaId',
+    element: <TrucoPartidasRelatorioImpressaoPage />,
   },
   {
     path: '/ExpoGoiabal/Truco/Rodadas',
@@ -195,6 +228,14 @@ export const router = createBrowserRouter([
     element: <TrucoTabelaPage />,
   },
   {
+    path: '/ExpoGoiabal/Truco/Tabela/Imprimir',
+    element: <TrucoTabelaRelatorioImpressaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/tabela/imprimir',
+    element: <TrucoTabelaRelatorioImpressaoPage />,
+  },
+  {
     path: '/ExpoGoiabal/Truco/MataMata',
     element: <TrucoMataMataPage />,
   },
@@ -217,6 +258,14 @@ export const router = createBrowserRouter([
   {
     path: '/ExpoGoiabal/truco/regulamento',
     element: <TrucoRegulamentoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/Truco/Regulamento/Imprimir',
+    element: <TrucoRegulamentoRelatorioImpressaoPage />,
+  },
+  {
+    path: '/ExpoGoiabal/truco/regulamento/imprimir',
+    element: <TrucoRegulamentoRelatorioImpressaoPage />,
   },
   {
     path: '/ExpoGoiabal/Truco/PartidasDoDia',
@@ -253,6 +302,10 @@ export const router = createBrowserRouter([
   {
     path: '/truco/regulamento',
     element: <Navigate to="/ExpoGoiabal/Truco/Regulamento" replace />,
+  },
+  {
+    path: '/truco/regulamento/imprimir',
+    element: <Navigate to="/ExpoGoiabal/Truco/Regulamento/Imprimir" replace />,
   },
   {
     path: '/truco',

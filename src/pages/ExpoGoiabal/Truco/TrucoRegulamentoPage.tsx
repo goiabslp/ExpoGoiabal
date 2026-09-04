@@ -39,21 +39,63 @@ export const TrucoRegulamentoPage: React.FC = () => {
 
           <TrucoBackButton to="/ExpoGoiabal/Truco" label="Voltar para o Torneio" />
 
+          {/* ESTILOS DE IMPRESSÃO EMBUTIDOS */}
+          <style>{`
+            @media print {
+              @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 12mm 10mm;
+              }
+              header, nav, .print-hidden, [data-truco-back-button] {
+                display: none !important;
+              }
+              body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .chapter-card {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                background: #ffffff !important;
+                border: 1px solid #d1d5db !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+                margin-bottom: 16px !important;
+              }
+              .chapter-card * {
+                color: #000000 !important;
+              }
+            }
+          `}</style>
+
           {/* Header do Regulamento */}
-          <div className="w-full text-center max-w-3xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest mb-3 shadow-lg shadow-amber-500/10">
+          <div className="w-full text-center max-w-3xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-3 duration-500 print:mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest mb-3 shadow-lg shadow-amber-500/10 print:hidden">
               <FileText size={14} />
               <span>Documento Oficial • ExpoGoiabal 2026</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white mb-3 leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white print:text-black mb-3 leading-tight">
               📜 Regulamento Oficial
             </h1>
-            <p className="text-base sm:text-lg font-bold text-amber-400 uppercase tracking-wide">
+            <p className="text-base sm:text-lg font-bold text-amber-400 print:text-black uppercase tracking-wide">
               2º Torneio Regional de Truco da ExpoGoiabal 2026
             </p>
-            <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-2xl mx-auto">
+            <p className="text-zinc-400 print:text-zinc-700 text-xs sm:text-sm mt-2 max-w-2xl mx-auto">
               Normas, etapas de disputa, formação de equipes, regras de elegibilidade e premiações oficiais da competição promovida pela Prefeitura Municipal de São José do Goiabal.
             </p>
+
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 print:hidden">
+              <button
+                onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Regulamento/Imprimir'); }}
+                className="px-5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 hover:text-amber-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/10 hover:scale-105"
+                title="Imprimir Regulamento Oficial ou Salvar em PDF"
+              >
+                <Printer size={15} />
+                <span>Imprimir Regulamento / Salvar PDF</span>
+              </button>
+            </div>
           </div>
 
           {/* Grade de Seções do Regulamento */}
@@ -88,12 +130,24 @@ export const TrucoRegulamentoPage: React.FC = () => {
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-white font-black uppercase text-xs">
                     <UserCheck size={16} className="text-amber-400" />
-                    <span>Organizador Convidado</span>
+                    <span>Organizadores Convidados</span>
                   </div>
-                  <p className="text-zinc-300 font-medium leading-relaxed">
-                    <strong className="text-amber-300">Ricardo Moraes</strong><br />
-                    Coordenação Técnica Geral e Arbitragem Convidada.
-                  </p>
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                      <strong className="text-amber-300 block font-bold text-sm">Ricardo Moraes</strong>
+                      <span className="text-[11px] text-zinc-400 leading-tight block">Coordenação Técnica Geral e Arbitragem Convidada</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                        <strong className="text-amber-300 block font-bold text-sm">Ademir Fraga</strong>
+                        <span className="text-[11px] text-zinc-400 leading-tight block">Organizador Convidado</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                        <strong className="text-amber-300 block font-bold text-sm">Matheus Ermelindo</strong>
+                        <span className="text-[11px] text-zinc-400 leading-tight block">Organizador Convidado</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-2 md:col-span-2">
@@ -403,11 +457,11 @@ export const TrucoRegulamentoPage: React.FC = () => {
           {/* Botões de Ação no Fim da Página */}
           <div className="w-full mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Cadastrar'); }}
+              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco'); }}
               className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
             >
               <Sparkles size={16} />
-              <span>Inscrever Meu Time</span>
+              <span>Acessar Painel do Truco</span>
             </button>
 
             <button
@@ -419,12 +473,12 @@ export const TrucoRegulamentoPage: React.FC = () => {
             </button>
 
             <button
-              onClick={() => window.print()}
-              className="w-full sm:w-auto px-5 py-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-wider border border-white/5 flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              title="Imprimir ou salvar em PDF"
+              onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Regulamento/Imprimir'); }}
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 hover:text-amber-300 font-black text-xs uppercase tracking-wider border border-amber-500/30 hover:border-amber-500/60 shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105"
+              title="Imprimir ou salvar regulamento em PDF"
             >
               <Printer size={15} />
-              <span>Imprimir Regulamento</span>
+              <span>Imprimir Regulamento / Salvar PDF</span>
             </button>
           </div>
 
