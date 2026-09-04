@@ -436,34 +436,11 @@ export const TrucoRegulamentoRelatorioImpressaoPage: React.FC = () => {
               </div>
             </section>
 
-            {/* ASSINATURAS E AUTENTICAÇÃO */}
-            <section className="mt-4 pt-4 border-t-2 border-white/10 print:border-black print-card-break">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-center pt-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-48 sm:w-64 border-b border-zinc-400 print:border-black mb-1.5" />
-                  <strong className="text-xs font-black uppercase text-white print:text-black">
-                    Prefeitura Municipal de São José do Goiabal
-                  </strong>
-                  <span className="text-[10px] text-zinc-400 print:text-zinc-700">
-                    Comissão Organizadora Oficial • Adm. 2025–2028
-                  </span>
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <div className="w-48 sm:w-64 border-b border-zinc-400 print:border-black mb-1.5" />
-                  <strong className="text-xs font-black uppercase text-white print:text-black">
-                    Coordenação Técnica & Arbitragem
-                  </strong>
-                  <span className="text-[10px] text-zinc-400 print:text-zinc-700">
-                    2º Torneio Regional de Truco da ExpoGoiabal 2026
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center text-[9px] text-zinc-500 print:text-zinc-700">
-                Documento emitido automaticamente pelo Sistema Oficial da ExpoGoiabal 2026 em {dataAtualTexto} às {horaAtualTexto}.
-              </div>
-            </section>
+            {/* RODAPÉ DO DOCUMENTO */}
+            <div className="mt-4 pt-3 border-t border-white/10 print:border-zinc-300 flex flex-col sm:flex-row items-center justify-between text-[9px] text-zinc-400 print:text-zinc-600 gap-2 print-card-break">
+              <span>Prefeitura Municipal de São José do Goiabal • ExpoGoiabal 2026</span>
+              <span>Documento oficial gerado automaticamente em {dataAtualTexto} às {horaAtualTexto}</span>
+            </div>
 
           </div>
 
