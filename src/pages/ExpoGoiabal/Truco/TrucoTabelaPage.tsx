@@ -66,8 +66,10 @@ export const TrucoTabelaPage: React.FC = () => {
 
   const partidasPrimeiraFase = partidas.filter(p => p.tipo_fase === 'primeira_fase');
   const totalJogos1aFase = partidasPrimeiraFase.length;
-  const concluidos1aFase = partidasPrimeiraFase.filter(p => p.status === 'finalizada').length;
-  const pendentes1aFase = totalJogos1aFase - concluidos1aFase;
+  const concluidos1aFase = partidasPrimeiraFase.filter(
+    p => p.status === 'finalizada' || (Number(p.pontos_time_a) > 0 || Number(p.pontos_time_b) > 0) || p.vencedor_id !== null
+  ).length;
+  const pendentes1aFase = Math.max(0, totalJogos1aFase - concluidos1aFase);
 
   const todasConcluidas = totalJogos1aFase > 0 && pendentes1aFase === 0;
   const isFaseEncerrada = statusTorneio?.fase_atual === 'primeira_fase_encerrada' || 
@@ -110,9 +112,15 @@ export const TrucoTabelaPage: React.FC = () => {
           {/* Header Section */}
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-widest mb-2">
-                <BarChart3 size={13} />
-                <span>Classificação da 1ª Fase</span>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-widest">
+                  <BarChart3 size={13} />
+                  <span>Classificação da 1ª Fase</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-black uppercase tracking-widest shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>Tempo Real Ativo</span>
+                </div>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
                 Tabela Geral & Top 8

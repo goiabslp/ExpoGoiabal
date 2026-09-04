@@ -84,22 +84,44 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
   const handleAbrirEdicao = (partida: TrucoPartida) => {
     if (!isAdmin) return;
     setEditingPartida(partida);
-    setEditPontosA(partida.pontos_time_a);
-    setEditPontosB(partida.pontos_time_b);
-    setEditStatus(partida.status);
+    setEditPontosA(partida.pontos_time_a || 0);
+    setEditPontosB(partida.pontos_time_b || 0);
+    // Se o status da partida for 'agendada', ao abrir para lançar o placar já sugere 'finalizada'
+    setEditStatus(partida.status === 'agendada' ? 'finalizada' : partida.status);
   };
 
   const handleSalvarPlacar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPartida || !isAdmin) return;
 
+    const pontosA = Number(editPontosA) || 0;
+    const pontosB = Number(editPontosB) || 0;
+    // Se digitou pontos e o status ainda estiver como 'agendada', assume como 'finalizada'
+    const statusFinal = editStatus === 'agendada' && (pontosA > 0 || pontosB > 0) ? 'finalizada' : editStatus;
+
     setSavingMatch(true);
+
+    // Atualização otimista imediata no estado da tela
+    setPartidas(prevPartidas =>
+      prevPartidas.map(p =>
+        p.id === editingPartida.id
+          ? {
+              ...p,
+              pontos_time_a: pontosA,
+              pontos_time_b: pontosB,
+              status: statusFinal,
+              vencedor_id: pontosA > pontosB ? p.time_a_id : pontosB > pontosA ? p.time_b_id : null
+            }
+          : p
+      )
+    );
+
     try {
       await registrarResultadoPartida(
         editingPartida.id,
-        Number(editPontosA),
-        Number(editPontosB),
-        editStatus
+        pontosA,
+        pontosB,
+        statusFinal
       );
       await carregarDados();
       setEditingPartida(null);

@@ -983,6 +983,8 @@ export const atualizarStatusEquipe = async (
     console.error('Erro ao atualizar status da equipe no Supabase:', error);
     throw new Error(`Falha ao atualizar status no banco: ${error.message}`);
   }
+
+  notificarAtualizacaoTruco();
 };
 
 /**
@@ -1010,6 +1012,7 @@ export const excluirEquipe = async (equipeId: string): Promise<void> => {
     if (error) {
       console.error('Erro ao excluir equipe no Supabase:', error);
     }
+    notificarAtualizacaoTruco();
   } catch (e) {
     console.error('Erro ao excluir equipe no Supabase:', e);
   }
@@ -1078,6 +1081,8 @@ export const salvarStatusTorneio = async (status: Partial<TrucoTorneioStatus>): 
 
     if (error) {
       console.error('Erro ao salvar status no Supabase:', error);
+    } else {
+      notificarAtualizacaoTruco();
     }
   } catch (e) {
     console.error('Erro ao salvar status no Supabase:', e);
@@ -1495,8 +1500,14 @@ export const registrarResultadoPartida = async (
   const partida = partidas.find(p => p.id === partidaId);
   if (!partida) return null;
 
+  // Se o usuário informou pontos (> 0) e o status ainda estiver como 'agendada', ajusta para 'finalizada'
+  let statusFinal = status;
+  if (statusFinal === 'agendada' && (pontosA > 0 || pontosB > 0)) {
+    statusFinal = 'finalizada';
+  }
+
   let vencedorId: string | null = null;
-  if (status === 'finalizada') {
+  if (statusFinal === 'finalizada' || statusFinal === 'em_andamento' || pontosA > 0 || pontosB > 0) {
     if (pontosA > pontosB) vencedorId = partida.time_a_id;
     else if (pontosB > pontosA) vencedorId = partida.time_b_id;
   }
@@ -1505,7 +1516,7 @@ export const registrarResultadoPartida = async (
     pontos_time_a: pontosA,
     pontos_time_b: pontosB,
     vencedor_id: vencedorId,
-    status,
+    status: statusFinal,
     updated_at: new Date().toISOString()
   };
 
@@ -1523,6 +1534,8 @@ export const registrarResultadoPartida = async (
         const todasPartidasAtualizadas = partidas.map(p => p.id === partidaId ? { ...p, ...data } : p);
         await atualizarChaveamentoMataMata(todasPartidasAtualizadas);
       }
+      // Notifica em tempo real imediatamente todas as telas, abas e componentes
+      notificarAtualizacaoTruco();
       return data;
     }
   } catch (err) {
@@ -1564,8 +1577,10 @@ export const calcularClassificacao = (
     });
   });
 
+  // Considera partidas da primeira fase que foram finalizadas OU que tenham placar lançado
   const partidasPrimeiraFaseFinalizadas = partidas.filter(
-    p => p.tipo_fase === 'primeira_fase' && p.status === 'finalizada'
+    p => p.tipo_fase === 'primeira_fase' && 
+         (p.status === 'finalizada' || (Number(p.pontos_time_a) > 0 || Number(p.pontos_time_b) > 0) || p.vencedor_id !== null)
   );
 
   partidasPrimeiraFaseFinalizadas.forEach(partida => {
@@ -1599,7 +1614,7 @@ export const calcularClassificacao = (
       statsB.pontos += 3;
       statsA.derrotas += 1;
     } else {
-      // Partida terminada empatada com mesmo saldo de pontos (1 ponto para cada time)
+      // Partida terminada empatada (1 ponto para cada time)
       statsA.empates += 1;
       statsA.pontos += 1;
       statsB.empates += 1;
@@ -1952,19 +1967,121 @@ export const atualizarChaveamentoMataMata = async (todasPartidas: TrucoPartida[]
 };
 
 // ==========================================
-// REALTIME LISTENER (SUPABASE)
+// SINCRONIZAÇÃO EM TEMPO REAL (REALTIME MULTICAMADA)
 // ==========================================
 
+const TRUCO_SYNC_CHANNEL_NAME = 'truco_realtime_sync_channel';
+let localBroadcastChannel: BroadcastChannel | null = null;
+
+try {
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    localBroadcastChannel = new BroadcastChannel(TRUCO_SYNC_CHANNEL_NAME);
+  }
+} catch (e) {
+  // BroadcastChannel pode não estar disponível em ambientes especiais
+}
+
+/**
+ * Notifica imediatamente todas as abas, telas e o Supabase que houve alteração nos dados do Truco.
+ * Garante latência de 0ms entre abas e telas abertas no mesmo navegador.
+ */
+export const notificarAtualizacaoTruco = () => {
+  // 1. Notifica a aba local via CustomEvent
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('truco_data_updated', { detail: { timestamp: Date.now() } }));
+    try {
+      localStorage.setItem('truco_last_update_ts', String(Date.now()));
+    } catch (e) {
+      // Ignora erro de localStorage
+    }
+  }
+
+  // 2. Notifica outras abas locais via BroadcastChannel
+  if (localBroadcastChannel) {
+    try {
+      localBroadcastChannel.postMessage({ type: 'TRUCO_DATA_UPDATED', timestamp: Date.now() });
+    } catch (e) {
+      console.warn('Erro ao emitir broadcast local do truco:', e);
+    }
+  }
+
+  // 3. Notifica via Supabase Realtime Broadcast (para outros navegadores/dispositivos)
+  try {
+    const notifyChannel = supabase.channel('truco_global_broadcast');
+    notifyChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        notifyChannel.send({
+          type: 'broadcast',
+          event: 'truco_updated',
+          payload: { timestamp: Date.now() }
+        }).catch(() => {});
+      }
+    });
+  } catch (e) {
+    // Silently continue
+  }
+};
+
+/**
+ * Escuta alterações em tempo real no Supabase, BroadcastChannel e eventos locais do navegador.
+ * Possui polling resiliente como salvaguarda contínua de conexão.
+ */
 export const subscribeToTrucoChanges = (onUpdate: () => void) => {
+  let isSubscribed = true;
+
+  const triggerUpdate = () => {
+    if (!isSubscribed) return;
+    onUpdate();
+  };
+
+  // 1. Listener de eventos locais (mesma janela)
+  const handleLocalEvent = () => triggerUpdate();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('truco_data_updated', handleLocalEvent);
+    window.addEventListener('storage', handleLocalEvent);
+  }
+
+  // 2. Listener do BroadcastChannel (outras abas)
+  let broadcastListener: ((event: MessageEvent) => void) | null = null;
+  if (localBroadcastChannel) {
+    broadcastListener = (event: MessageEvent) => {
+      if (event?.data?.type === 'TRUCO_DATA_UPDATED') {
+        triggerUpdate();
+      }
+    };
+    localBroadcastChannel.addEventListener('message', broadcastListener);
+  }
+
+  // 3. Supabase Realtime com canal com ID único para isolamento de canais
+  const uniqueChannelId = `truco_rt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   const channel = supabase
-    .channel('truco_realtime_changes_v3')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_equipes' }, () => onUpdate())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_jogadores' }, () => onUpdate())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_torneio_status' }, () => onUpdate())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_partidas' }, () => onUpdate())
+    .channel(uniqueChannelId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_equipes' }, () => triggerUpdate())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_jogadores' }, () => triggerUpdate())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_torneio_status' }, () => triggerUpdate())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'truco_partidas' }, () => triggerUpdate())
+    .on('broadcast', { event: 'truco_updated' }, () => triggerUpdate())
     .subscribe();
 
+  // 4. Polling inteligente de segurança (a cada 3.5 segundos)
+  const pollInterval = setInterval(() => {
+    triggerUpdate();
+  }, 3500);
+
   return () => {
-    supabase.removeChannel(channel);
+    isSubscribed = false;
+    clearInterval(pollInterval);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('truco_data_updated', handleLocalEvent);
+      window.removeEventListener('storage', handleLocalEvent);
+    }
+    if (localBroadcastChannel && broadcastListener) {
+      localBroadcastChannel.removeEventListener('message', broadcastListener);
+    }
+    try {
+      supabase.removeChannel(channel);
+    } catch (e) {
+      // Ignora erro ao remover canal
+    }
   };
 };

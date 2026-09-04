@@ -1,6 +1,35 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('../../../services/supabase', () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle: async () => ({ data: null, error: null }), single: async () => ({ data: null, error: null }) }),
+        order: () => Promise.resolve({ data: [], error: null }),
+        then: (resolve: any) => resolve({ data: [], error: null })
+      }),
+      insert: async () => ({ error: null }),
+      upsert: async () => ({ error: null }),
+      update: () => ({ eq: async () => ({ error: null, select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+      delete: () => ({ eq: async () => ({ error: null }), neq: async () => ({ error: null }), or: async () => ({ error: null }) })
+    }),
+    storage: {
+      from: () => ({
+        upload: async () => ({ error: null }),
+        getPublicUrl: (p: string) => ({ data: { publicUrl: `https://mock.storage/${p}` } })
+      })
+    },
+    channel: () => ({
+      on: function() { return this; },
+      subscribe: function() { return this; },
+      send: async () => ({})
+    }),
+    removeChannel: () => {}
+  }
+}));
+
 import { TrucoHomePage } from './TrucoHomePage';
 import { TrucoCadastroPage } from './TrucoCadastroPage';
 import { TrucoSorteioRodadasPage } from './TrucoSorteioRodadasPage';

@@ -414,6 +414,38 @@ describe('Classificação da 1ª Fase do Truco', () => {
     expect(resultado[1].equipe.id).toBe('t2');
     expect(resultado[1].pontosMarcados).toBe(8);
   });
+
+  it('deve computar os pontos na tabela mesmo se o status da partida não for explicitamente "finalizada", mas tiver placar inserido (> 0)', () => {
+    const eq1: TrucoEquipe = { id: 't1', nome: 'Time Alpha', cidade: 'Goiabal', status: 'aprovado' };
+    const eq2: TrucoEquipe = { id: 't2', nome: 'Time Beta', cidade: 'Goiabal', status: 'aprovado' };
+    const equipes = [eq1, eq2];
+
+    // Partida com placar 12 x 4, porém com status "agendada" (cenário de inserção rápida)
+    const partidas: TrucoPartida[] = [
+      { 
+        id: 'p1', 
+        tipo_fase: 'primeira_fase', 
+        rodada: 1, 
+        numero_jogo: 1, 
+        time_a_id: 't1', 
+        time_b_id: 't2', 
+        pontos_time_a: 12, 
+        pontos_time_b: 4, 
+        vencedor_id: 't1', 
+        status: 'agendada', 
+        fase_nome: 'Rodada 01' 
+      }
+    ];
+
+    const resultado = calcularClassificacao(equipes, partidas);
+    expect(resultado[0].equipe.id).toBe('t1');
+    expect(resultado[0].pontos).toBe(3);
+    expect(resultado[0].vitorias).toBe(1);
+    expect(resultado[0].saldoPontos).toBe(8);
+    expect(resultado[1].equipe.id).toBe('t2');
+    expect(resultado[1].pontos).toBe(0);
+    expect(resultado[1].saldoPontos).toBe(-8);
+  });
 });
 
 describe('Mata-Mata (Top 8, Grupos A e B e Grande Final)', () => {
