@@ -50,12 +50,21 @@ export const TrucoPartidasRelatorioImpressaoPage: React.FC = () => {
   }, []);
 
   const partidasPrimeiraFase = useMemo(() => partidas.filter(p => p.tipo_fase === 'primeira_fase'), [partidas]);
-  const maxRodadas = useMemo(() => Math.max(...partidasPrimeiraFase.map(p => p.rodada), 5), [partidasPrimeiraFase]);
-  const listaRodadas = useMemo(() => Array.from({ length: maxRodadas }, (_, i) => i + 1), [maxRodadas]);
+  
+  const rodadasExistentes = useMemo(() => {
+    const set = new Set(partidasPrimeiraFase.map(p => p.rodada));
+    const arr = Array.from(set).sort((a, b) => a - b);
+    return arr.length > 0 ? arr : [1];
+  }, [partidasPrimeiraFase]);
+
+  const maxRodadas = useMemo(() => Math.max(...rodadasExistentes), [rodadasExistentes]);
+  const listaRodadas = useMemo(() => rodadasExistentes, [rodadasExistentes]);
 
   const rodadaAtualNumero = useMemo(() => {
-    return calcularRodadaAtual(maxRodadas, new Date(), partidasPrimeiraFase);
-  }, [maxRodadas, partidasPrimeiraFase]);
+    const rCalc = calcularRodadaAtual(maxRodadas, new Date(), partidasPrimeiraFase);
+    if (rodadasExistentes.includes(rCalc)) return rCalc;
+    return rodadasExistentes[0] || 1;
+  }, [maxRodadas, partidasPrimeiraFase, rodadasExistentes]);
 
   // Rodada selecionada para o relatório
   const [rodadaSelecionada, setRodadaSelecionada] = useState<number | 'todas'>(() => {
@@ -77,10 +86,10 @@ export const TrucoPartidasRelatorioImpressaoPage: React.FC = () => {
           setRodadaSelecionada(n);
         }
       }
-    } else if (!loading) {
+    } else if (!loading && partidasPrimeiraFase.length > 0) {
       setRodadaSelecionada(rodadaAtualNumero);
     }
-  }, [rodadaId, loading, rodadaAtualNumero]);
+  }, [rodadaId, loading, rodadaAtualNumero, partidasPrimeiraFase.length]);
 
   const handleMudarRodada = (novaRodada: number | 'todas') => {
     setRodadaSelecionada(novaRodada);

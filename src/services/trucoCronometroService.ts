@@ -242,7 +242,6 @@ const salvarNoBancoSupabase = async (estado: TrucoCronometroEstado) => {
         id: 'cronometro',
         fase_atual: estado.status,
         top8_equipes_ids: [JSON.stringify(estado)],
-        sorteio_primeira_fase_confirmado: Boolean(estado.status === 'em_andamento'),
         sorteio_animacao_ativa: estado.status === 'queda_saideira',
         updated_at: new Date().toISOString()
       });

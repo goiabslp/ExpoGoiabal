@@ -31,7 +31,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
-  Sparkles,
   Printer
 } from 'lucide-react';
 
@@ -50,15 +49,26 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
   const [loading, setLoading] = useState(true);
 
   const partidasPrimeiraFase = useMemo(() => partidas.filter(p => p.tipo_fase === 'primeira_fase'), [partidas]);
-  const maxRodadas = useMemo(() => Math.max(...partidasPrimeiraFase.map(p => p.rodada), 5), [partidasPrimeiraFase]);
-  const listaRodadas = useMemo(() => Array.from({ length: maxRodadas }, (_, i) => i + 1), [maxRodadas]);
+  
+  // Extrai as rodadas que realmente existem nas partidas geradas
+  const rodadasExistentes = useMemo(() => {
+    const set = new Set(partidasPrimeiraFase.map(p => p.rodada));
+    const arr = Array.from(set).sort((a, b) => a - b);
+    return arr.length > 0 ? arr : [1];
+  }, [partidasPrimeiraFase]);
+
+  const maxRodadas = useMemo(() => Math.max(...rodadasExistentes), [rodadasExistentes]);
+  const listaRodadas = useMemo(() => rodadasExistentes, [rodadasExistentes]);
 
   // Calcula dinamicamente a rodada atual com base na data do torneio e jogos
   const rodadaAtualNumero = useMemo(() => {
-    return calcularRodadaAtual(maxRodadas, new Date(), partidasPrimeiraFase);
-  }, [maxRodadas, partidasPrimeiraFase]);
+    const rCalculada = calcularRodadaAtual(maxRodadas, new Date(), partidasPrimeiraFase);
+    // Garante que a rodada calculada exista nas rodadas geradas
+    if (rodadasExistentes.includes(rCalculada)) return rCalculada;
+    return rodadasExistentes[0] || 1;
+  }, [maxRodadas, partidasPrimeiraFase, rodadasExistentes]);
 
-  // Filtros - Inicializa selecionando a Rodada Atual (ou parâmetro de rota se informado)
+  // Filtros - Inicializa selecionando a Rodada informada na rota ou Rodada Atual
   const [rodadaFiltro, setRodadaFiltro] = useState<number | 'todas'>(() => {
     if (rodadaId) {
       if (rodadaId.toLowerCase() === 'todas') return 'todas';
@@ -100,12 +110,16 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
     }
   }, [rodadaId, searchParams]);
 
-  // Garante seleção da rodada atual após carregar os dados se não houver rota específica
+  // Garante que a rodada selecionada seja válida após carregar os dados
   useEffect(() => {
-    if (!loading && !rodadaId && !searchParams.get('rodada')) {
-      setRodadaFiltro(rodadaAtualNumero);
+    if (!loading && partidasPrimeiraFase.length > 0) {
+      if (!rodadaId && !searchParams.get('rodada')) {
+        setRodadaFiltro(rodadaAtualNumero);
+      } else if (typeof rodadaFiltro === 'number' && !rodadasExistentes.includes(rodadaFiltro)) {
+        setRodadaFiltro(rodadaAtualNumero);
+      }
     }
-  }, [loading, rodadaAtualNumero, rodadaId, searchParams]);
+  }, [loading, partidasPrimeiraFase.length, rodadaAtualNumero, rodadaId, searchParams, rodadasExistentes]);
 
   const [buscaTime, setBuscaTime] = useState('');
 
@@ -293,7 +307,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
               <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Carregando partidas...</span>
             </div>
-          ) : !statusTorneio?.sorteio_primeira_fase_confirmado || partidasPrimeiraFase.length === 0 ? (
+          ) : !statusTorneio?.sorteio_primeira_fase_confirmado && partidasPrimeiraFase.length === 0 ? (
             <div className="w-full bg-zinc-900/80 border border-dashed border-zinc-800 rounded-3xl p-12 text-center flex flex-col items-center shadow-xl">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4">
                 <Dices size={32} />
@@ -302,20 +316,31 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                 Sorteio da 1ª Fase ainda não foi realizado
               </h3>
               <p className="text-zinc-400 text-sm max-w-md mb-6">
-                Para visualizar e gerenciar as partidas, é necessário primeiro realizar o sorteio oficial das equipes.
+                Para visualizar e gerenciar as partidas, é necessário primeiro realizar o sorteio oficial das equipes no Painel Administrativo.
               </p>
-              <button
-                onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco'); }}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Dices size={16} />
-                <span>Voltar ao Início do Truco</span>
-              </button>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco'); }}
+                  className="px-6 py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer border border-white/10"
+                >
+                  <Dices size={16} />
+                  <span>Voltar ao Início do Truco</span>
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Sorteio'); }}
+                    className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Dices size={16} />
+                    <span>Realizar Sorteio Agora</span>
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="w-full flex flex-col gap-6">
 
-              {/* CARD DE RESUMO, BUSCA E SELECT DINÂMICO DE RODADAS */}
+              {/* CARD DE RESUMO, BUSCA E NAVEGAÇÃO DE RODADAS */}
               <div className="bg-zinc-900/90 border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-5 backdrop-blur-md">
                 
                 {/* Linha Superior: Status e Busca */}
@@ -337,6 +362,11 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                       <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Em Andamento</span>
                       <span className="text-xl font-black text-amber-400">{emAndamento}</span>
                     </div>
+                    <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Aguardando</span>
+                      <span className="text-xl font-black text-zinc-300">{Math.max(0, totalJogos - concluidos - emAndamento)}</span>
+                    </div>
                   </div>
 
                   {/* Input de Busca por Time */}
@@ -349,30 +379,91 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                       onChange={e => setBuscaTime(e.target.value)}
                       className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white placeholder-zinc-500 focus:border-amber-500 outline-none transition-all"
                     />
+                    {buscaTime && (
+                      <button
+                        onClick={() => setBuscaTime('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
                 </div>
 
-                {/* Linha Inferior: Select Dinâmico de Rodadas com Navegação Rápida e Rodada Atual */}
-                <div className="pt-4 border-t border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  
-                  {/* Info da Rodada Atual */}
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold shadow-sm">
-                      <Flame size={14} className="animate-pulse text-amber-400" />
+                {/* Linha Intermediária: Pills / Abas Rápidas de Seleção de Rodadas */}
+                <div className="pt-3 border-t border-white/10 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                      <span>Navegação Rápida por Rodada:</span>
+                    </span>
+
+                    {/* Badge Rodada Atual */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold shadow-sm">
+                      <Flame size={13} className="animate-pulse text-amber-400" />
                       <span>Rodada Atual: <strong>Rodada {String(rodadaAtualNumero).padStart(2, '0')}</strong> ({calcularDataRodada(rodadaAtualNumero).dataFormatada} - {calcularDataRodada(rodadaAtualNumero).diaSemana})</span>
                     </div>
+                  </div>
 
-                    {rodadaFiltro !== rodadaAtualNumero && (
-                      <button
-                        type="button"
-                        onClick={() => handleMudarRodada(rodadaAtualNumero)}
-                        className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-amber-300 hover:text-white border border-amber-500/30 text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow"
-                        title="Ir direto para a rodada atual"
-                      >
-                        <Sparkles size={12} />
-                        <span>Ir para Rodada Atual</span>
-                      </button>
+                  {/* Abas Horizontais com Scroll Suave */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                    {/* Botão Todas as Rodadas */}
+                    <button
+                      type="button"
+                      onClick={() => handleMudarRodada('todas')}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+                        rodadaFiltro === 'todas'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-black shadow-lg shadow-emerald-500/20 scale-105'
+                          : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <Calendar size={14} />
+                      <span>Todas as Rodadas ({totalJogos})</span>
+                    </button>
+
+                    {/* Botões Individuais das Rodadas */}
+                    {listaRodadas.map(rod => {
+                      const isAtual = rod === rodadaAtualNumero;
+                      const isSelected = rodadaFiltro === rod;
+                      const dtInfo = calcularDataRodada(rod);
+                      const jRod = partidasPrimeiraFase.filter(p => p.rodada === rod);
+                      const cRod = jRod.filter(p => p.status === 'finalizada' || (p.pontos_time_a || 0) > 0 || (p.pontos_time_b || 0) > 0).length;
+
+                      return (
+                        <button
+                          key={rod}
+                          type="button"
+                          onClick={() => handleMudarRodada(rod)}
+                          title={`Rodada ${rod} - ${dtInfo.textoCompleto}`}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-black shadow-lg shadow-amber-500/20 scale-105'
+                              : isAtual
+                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25'
+                              : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/10'
+                          }`}
+                        >
+                          {isAtual && <Flame size={13} className={isSelected ? 'text-black' : 'text-amber-400 animate-pulse'} />}
+                          <span>Rodada {String(rod).padStart(2, '0')}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                            isSelected ? 'bg-black/30 text-black' : 'bg-black/40 text-zinc-400'
+                          }`}>
+                            {cRod}/{jRod.length}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Linha Inferior: Select Dinâmico de Rodadas com Navegação Anterior/Próxima */}
+                <div className="pt-3 border-t border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  
+                  <div className="text-xs text-zinc-400 font-medium">
+                    {rodadaFiltro === 'todas' ? (
+                      <span>Exibindo <strong>todas as {listaRodadas.length} rodadas</strong> do torneio ({totalJogos} confrontos totais)</span>
+                    ) : (
+                      <span>Exibindo <strong>Rodada {String(rodadaFiltro).padStart(2, '0')}</strong> • {calcularDataRodada(rodadaFiltro).textoCompleto}</span>
                     )}
                   </div>
 
@@ -383,7 +474,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                     <button
                       type="button"
                       onClick={handleRodadaAnterior}
-                      disabled={typeof rodadaFiltro === 'number' && rodadaFiltro <= 1}
+                      disabled={typeof rodadaFiltro === 'number' && rodadaFiltro <= listaRodadas[0]}
                       className="p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 disabled:opacity-30 disabled:hover:bg-zinc-800/80 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer disabled:cursor-not-allowed"
                       title="Rodada Anterior"
                     >
@@ -400,6 +491,9 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                         }}
                         className="w-full px-4 py-2.5 pr-10 rounded-xl bg-black/70 border border-amber-500/40 hover:border-amber-400 focus:border-amber-400 text-white font-black text-xs uppercase tracking-wider outline-none transition-all cursor-pointer appearance-none shadow-inner"
                       >
+                        <option value="todas" className="bg-zinc-900 text-white py-2 font-bold">
+                          📅 TODAS AS RODADAS ({totalJogos} JOGOS TOTAIS)
+                        </option>
                         {listaRodadas.map(rod => {
                           const isAtual = rod === rodadaAtualNumero;
                           const dataInfo = calcularDataRodada(rod);
@@ -412,9 +506,6 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                             </option>
                           );
                         })}
-                        <option value="todas" className="bg-zinc-900 text-white py-2 font-bold">
-                          📅 TODAS AS RODADAS ({totalJogos} JOGOS)
-                        </option>
                       </select>
                       <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none" />
                     </div>
@@ -423,7 +514,7 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                     <button
                       type="button"
                       onClick={handleRodadaProxima}
-                      disabled={typeof rodadaFiltro === 'number' && rodadaFiltro >= maxRodadas}
+                      disabled={typeof rodadaFiltro === 'number' && rodadaFiltro >= listaRodadas[listaRodadas.length - 1]}
                       className="p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 disabled:opacity-30 disabled:hover:bg-zinc-800/80 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer disabled:cursor-not-allowed"
                       title="Próxima Rodada"
                     >
@@ -449,8 +540,6 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                     });
                   }
 
-                  if (jogos.length === 0) return null;
-
                   return (
                     <div key={numRod} className="flex flex-col gap-4">
                       
@@ -468,6 +557,11 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                               <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-[10px] font-bold text-emerald-400">
                                 Jogos Simultâneos
                               </span>
+                              {numRod === rodadaAtualNumero && (
+                                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-[10px] font-black uppercase text-amber-400">
+                                  🔥 Rodada Atual
+                                </span>
+                              )}
                             </div>
                             <span className="text-xs text-zinc-300 font-semibold">
                               📅 {dataInfo.textoCompleto}
@@ -520,14 +614,36 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                         );
                       })()}
 
-                      {/* Cards dos Jogos da Rodada */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {jogos.map((partida) => {
-                          const timeA = getEquipeById(partida.time_a_id);
-                          const timeB = getEquipeById(partida.time_b_id);
+                      {/* Se não houver jogos para os filtros atuais nesta rodada */}
+                      {jogos.length === 0 ? (
+                        <div className="bg-zinc-900/60 border border-dashed border-zinc-800 rounded-2xl p-8 text-center flex flex-col items-center">
+                          <span className="text-2xl mb-2">🔍</span>
+                          <h4 className="text-sm font-bold text-white uppercase">Nenhum confronto encontrado</h4>
+                          <p className="text-xs text-zinc-400 mt-1 mb-4">
+                            {buscaTime ? `Nenhuma partida para "${buscaTime}" na Rodada ${numRod}.` : `Nenhuma partida agendada para a Rodada ${numRod}.`}
+                          </p>
+                          <div className="flex gap-2">
+                            {buscaTime && (
+                              <button onClick={() => setBuscaTime('')} className="px-3 py-1.5 rounded-lg bg-zinc-800 text-xs font-bold uppercase text-white hover:bg-zinc-700 cursor-pointer">
+                                Limpar Busca
+                              </button>
+                            )}
+                            {rodadaFiltro !== 'todas' && (
+                              <button onClick={() => handleMudarRodada('todas')} className="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-bold uppercase hover:bg-amber-400 cursor-pointer">
+                                Ver Todas as Rodadas
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Cards dos Jogos da Rodada */
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {jogos.map((partida) => {
+                            const timeA = getEquipeById(partida.time_a_id);
+                            const timeB = getEquipeById(partida.time_b_id);
 
-                          const isFinalizada = partida.status === 'finalizada';
-                          const isEmAndamento = partida.status === 'em_andamento';
+                            const isFinalizada = partida.status === 'finalizada';
+                            const isEmAndamento = partida.status === 'em_andamento';
 
                           const pontosA = Number(partida.pontos_time_a) || 0;
                           const pontosB = Number(partida.pontos_time_b) || 0;
@@ -698,13 +814,14 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
                           );
                         })}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
+
+          </div>
+        )}
 
         </div>
       </main>
