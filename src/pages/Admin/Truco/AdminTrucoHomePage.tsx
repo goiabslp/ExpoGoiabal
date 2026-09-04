@@ -322,7 +322,7 @@ export const AdminTrucoHomePage: React.FC = () => {
                   Módulo 4
                 </span>
                 <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-yellow-300 transition-colors">
-                  Partidas do Dia
+                  Cronômetro
                 </h4>
                 <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
                   Inicie a contagem oficial das <strong>02:00 horas</strong> (com contagem de 5s), acione o alerta de <strong>Queda Saídeira</strong> e encerre as partidas.
