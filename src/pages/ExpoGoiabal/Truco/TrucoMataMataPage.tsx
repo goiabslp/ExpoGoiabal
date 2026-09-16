@@ -11,8 +11,6 @@ import {
   buscarPartidas, 
   buscarStatusTorneio,
   calcularClassificacao,
-  realizarSorteioMataMata,
-  confirmarSorteioMataMata,
   registrarResultadoPartida,
   sincronizarMataMataAutomatico,
   subscribeToTrucoChanges 
@@ -37,14 +35,6 @@ export const TrucoMataMataPage: React.FC = () => {
   const [partidas, setPartidas] = useState<TrucoPartida[]>([]);
   const [statusTorneio, setStatusTorneio] = useState<TrucoTorneioStatus | null>(null);
 
-  // Modal de Montagem do Mata-Mata
-  const [isSorteioModalOpen, setIsSorteioModalOpen] = useState(false);
-  const [sorteioPreview, setSorteioPreview] = useState<{
-    grupoA: TrucoEquipe[];
-    grupoB: TrucoEquipe[];
-    partidasMataMata: TrucoPartida[];
-  } | null>(null);
-  const [confirmingSorteio, setConfirmingSorteio] = useState(false);
 
   // Modal de Edição de Placar do Mata-Mata
   const [editingPartida, setEditingPartida] = useState<TrucoPartida | null>(null);
@@ -99,34 +89,6 @@ export const TrucoMataMataPage: React.FC = () => {
     return top8Ids.map(id => getEquipeById(id)).filter(Boolean) as TrucoEquipe[];
   }, [ranking1aFase, statusTorneio, equipes]);
 
-  const podeSortearMataMata = top8Equipes.length >= 8 && !statusTorneio?.sorteio_mata_mata_confirmado;
-
-  // Gerar Chaveamento Oficial do Mata-Mata por Posição na Tabela (1ºx8º, 2ºx7º, 3ºx6º, 4ºx5º)
-  const handleAbrirSorteioMataMata = async () => {
-    if (top8Equipes.length < 8) return;
-    const res = await realizarSorteioMataMata(top8Equipes);
-    setSorteioPreview(res);
-    setIsSorteioModalOpen(true);
-  };
-
-  const handleConfirmarSorteioMataMata = async () => {
-    if (!sorteioPreview) return;
-    setConfirmingSorteio(true);
-    try {
-      await confirmarSorteioMataMata(
-        sorteioPreview.grupoA,
-        sorteioPreview.grupoB,
-        sorteioPreview.partidasMataMata
-      );
-      await carregarDados();
-      setIsSorteioModalOpen(false);
-      setSorteioPreview(null);
-    } catch (err) {
-      console.error('Erro ao confirmar chaveamento do mata-mata:', err);
-    } finally {
-      setConfirmingSorteio(false);
-    }
-  };
 
   const handleAbrirEdicao = (partida: TrucoPartida) => {
     if (!partida.time_a_id || !partida.time_b_id) return;
@@ -367,20 +329,6 @@ export const TrucoMataMataPage: React.FC = () => {
               <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
                 Confrontos definidos pela classificação geral: <strong>1º × 8º</strong>, <strong>2º × 7º</strong>, <strong>3º × 6º</strong> e <strong>4º × 5º</strong>.
               </p>
-            </div>
-
-            {/* Ações */}
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              {!statusTorneio?.sorteio_mata_mata_confirmado ? (
-                <button
-                  onClick={handleAbrirSorteioMataMata}
-                  disabled={!podeSortearMataMata}
-                  className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <Swords size={18} />
-                  <span>Gerar Mata-Mata da Tabela</span>
-                </button>
-              ) : null}
             </div>
           </div>
 
@@ -627,93 +575,6 @@ export const TrucoMataMataPage: React.FC = () => {
         </div>
       </main>
 
-      {/* MODAL DE CONFIRMAÇÃO DO MATA-MATA (CONFORME POSIÇÃO NA TABELA) */}
-      {isSorteioModalOpen && sorteioPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto py-8">
-          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl w-full max-w-2xl p-6 sm:p-8 shadow-[0_0_60px_rgba(245,158,11,0.35)] relative animate-in zoom-in-95 duration-300 my-auto">
-            <button
-              onClick={() => setIsSorteioModalOpen(false)}
-              className="absolute top-5 right-5 text-zinc-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 text-black flex items-center justify-center shadow-lg font-black">
-                <Trophy size={24} />
-              </div>
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">Classificação da 1ª Fase</span>
-                <h3 className="text-xl sm:text-2xl font-black uppercase text-white">Chaveamento Oficial do Mata-Mata</h3>
-              </div>
-            </div>
-
-            {/* Confrontos Definidos por Posição */}
-            <div className="flex flex-col gap-3 mb-6">
-              <div className="p-3.5 rounded-2xl bg-black/50 border border-emerald-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-black text-white">
-                  <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px]">Duelo 1</span>
-                  <span>🥇 {top8Equipes[0]?.nome || '1º Colocado'}</span>
-                  <span className="text-zinc-500 font-normal">×</span>
-                  <span>{top8Equipes[7]?.nome || '8º Colocado'}</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">1º × 8º</span>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-black/50 border border-emerald-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-black text-white">
-                  <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px]">Duelo 2</span>
-                  <span>{top8Equipes[3]?.nome || '4º Colocado'}</span>
-                  <span className="text-zinc-500 font-normal">×</span>
-                  <span>{top8Equipes[4]?.nome || '5º Colocado'}</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">4º × 5º</span>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-black/50 border border-teal-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-black text-white">
-                  <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-400 text-[10px]">Duelo 3</span>
-                  <span>🥈 {top8Equipes[1]?.nome || '2º Colocado'}</span>
-                  <span className="text-zinc-500 font-normal">×</span>
-                  <span>{top8Equipes[6]?.nome || '7º Colocado'}</span>
-                </div>
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">2º × 7º</span>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-black/50 border border-teal-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-black text-white">
-                  <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-400 text-[10px]">Duelo 4</span>
-                  <span>🥉 {top8Equipes[2]?.nome || '3º Colocado'}</span>
-                  <span className="text-zinc-500 font-normal">×</span>
-                  <span>{top8Equipes[5]?.nome || '6º Colocado'}</span>
-                </div>
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">3º × 6º</span>
-              </div>
-            </div>
-
-            {/* Ações */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() => setIsSorteioModalOpen(false)}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Cancelar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmarSorteioMataMata}
-                disabled={confirmingSorteio}
-                className="w-full sm:flex-1 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/25 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {confirmingSorteio ? 'Salvando Chaveamento...' : '✅ Confirmar Confrontos Oficiais'}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* MODAL DE EDIÇÃO DE PLACAR NO MATA-MATA */}
       {editingPartida && (
