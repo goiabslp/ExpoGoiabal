@@ -33,6 +33,28 @@ export type TrucoTipoFase =
   | 'final_b' 
   | 'grande_final';
 
+export interface TrucoJogoMD3 {
+  pontosA: number;
+  pontosB: number;
+  status: 'agendada' | 'em_andamento' | 'finalizada';
+  vencedorId: string | null;
+}
+
+export interface TrucoConfrontoMD3 {
+  tipo_fase: TrucoTipoFase;
+  jogo1: TrucoJogoMD3;
+  jogo2: TrucoJogoMD3;
+  jogo3: TrucoJogoMD3;
+  vitoriasA: number;
+  vitoriasB: number;
+  classificadoId: string | null;
+  status: 'agendada' | 'em_andamento' | 'finalizada';
+}
+
+export type TrucoMataMataMD3State = {
+  [key in TrucoTipoFase]?: TrucoConfrontoMD3;
+};
+
 export interface TrucoPartida {
   id: string;
   tipo_fase: TrucoTipoFase;
@@ -1966,6 +1988,336 @@ export const confirmarSorteioMataMata = async (
     grupo_b_equipes_ids: grupoB.map(e => e.id),
     campeao_equipe_id: null
   });
+};
+
+// ==========================================
+// MATA-MATA: GESTÃO E CÁLCULO DE MELHOR DE 3 (MD3)
+// ==========================================
+
+export const criarJogoMD3Vazio = (): TrucoJogoMD3 => ({
+  pontosA: 0,
+  pontosB: 0,
+  status: 'agendada',
+  vencedorId: null
+});
+
+export const criarConfrontoMD3Vazio = (tipo_fase: TrucoTipoFase): TrucoConfrontoMD3 => ({
+  tipo_fase,
+  jogo1: criarJogoMD3Vazio(),
+  jogo2: criarJogoMD3Vazio(),
+  jogo3: criarJogoMD3Vazio(),
+  vitoriasA: 0,
+  vitoriasB: 0,
+  classificadoId: null,
+  status: 'agendada'
+});
+
+/**
+ * Calcula dinamicamente o resultado de uma série Melhor de 3 (MD3)
+ * Regra:
+ * - O time que atingir 2 vitórias (maioria dos 3 jogos) classifica-se automaticamente.
+ * - Caso a série fique 1x1, o Jogo 3 é necessário.
+ * - Se um time já venceu 2 jogos (2x0), o sistema já classifica automaticamente.
+ */
+export const calcularResultadoMD3 = (
+  confronto: TrucoConfrontoMD3,
+  timeAId: string | null,
+  timeBId: string | null,
+  isFinalUnica: boolean = false
+): TrucoConfrontoMD3 => {
+  const conf: TrucoConfrontoMD3 = {
+    ...confronto,
+    jogo1: { ...confronto.jogo1 },
+    jogo2: { ...confronto.jogo2 },
+    jogo3: { ...confronto.jogo3 }
+  };
+
+  // Avalia individualmente cada um dos 3 jogos
+  const avaliarJogo = (j: TrucoJogoMD3): { vencedorId: string | null; concluido: boolean } => {
+    const ptsA = Number(j.pontosA) || 0;
+    const ptsB = Number(j.pontosB) || 0;
+    const hasPoints = ptsA > 0 || ptsB > 0;
+    const isFinalizado = j.status === 'finalizada' || hasPoints;
+
+    if (!isFinalizado || !timeAId || !timeBId) {
+      return { vencedorId: null, concluido: false };
+    }
+
+    if (ptsA > ptsB) {
+      j.vencedorId = timeAId;
+      j.status = 'finalizada';
+      return { vencedorId: timeAId, concluido: true };
+    } else if (ptsB > ptsA) {
+      j.vencedorId = timeBId;
+      j.status = 'finalizada';
+      return { vencedorId: timeBId, concluido: true };
+    } else if (j.vencedorId) {
+      j.status = 'finalizada';
+      return { vencedorId: j.vencedorId, concluido: true };
+    }
+
+    return { vencedorId: null, concluido: false };
+  };
+
+  const res1 = avaliarJogo(conf.jogo1);
+  const res2 = avaliarJogo(conf.jogo2);
+  const res3 = avaliarJogo(conf.jogo3);
+
+  let vitA = 0;
+  let vitB = 0;
+
+  if (res1.vencedorId === timeAId) vitA++;
+  else if (res1.vencedorId === timeBId) vitB++;
+
+  if (res2.vencedorId === timeAId) vitA++;
+  else if (res2.vencedorId === timeBId) vitB++;
+
+  if (res3.vencedorId === timeAId) vitA++;
+  else if (res3.vencedorId === timeBId) vitB++;
+
+  conf.vitoriasA = vitA;
+  conf.vitoriasB = vitB;
+
+  // Se for final única e o jogo 1 tiver pontuação/vencedor
+  if (isFinalUnica && res1.concluido && !res2.concluido && !res3.concluido) {
+    if (res1.vencedorId) {
+      conf.classificadoId = res1.vencedorId;
+      conf.status = 'finalizada';
+      return conf;
+    }
+  }
+
+  // Regra Oficial de Melhor de 3: Maioria (2 vitórias)
+  if (timeAId && vitA >= 2) {
+    conf.classificadoId = timeAId;
+    conf.status = 'finalizada';
+  } else if (timeBId && vitB >= 2) {
+    conf.classificadoId = timeBId;
+    conf.status = 'finalizada';
+  } else {
+    conf.classificadoId = null;
+    const anyActive = 
+      conf.jogo1.status === 'em_andamento' || 
+      conf.jogo2.status === 'em_andamento' || 
+      conf.jogo3.status === 'em_andamento' ||
+      res1.concluido || res2.concluido || res3.concluido;
+
+    conf.status = anyActive ? 'em_andamento' : 'agendada';
+  }
+
+  return conf;
+};
+
+/**
+ * Carrega o estado atual de todas as séries de Melhor de 3 do Mata-Mata.
+ * Sincroniza retrocompativelmente com as partidas gravadas no Supabase.
+ */
+export const buscarMataMataMD3 = async (): Promise<TrucoMataMataMD3State> => {
+  const fasesMataMata: TrucoTipoFase[] = [
+    'semi_a1', 
+    'semi_a2', 
+    'semi_b1', 
+    'semi_b2', 
+    'final_a', 
+    'final_b', 
+    'grande_final'
+  ];
+
+  const estado: TrucoMataMataMD3State = {};
+  fasesMataMata.forEach(f => {
+    estado[f] = criarConfrontoMD3Vazio(f);
+  });
+
+  try {
+    const [statusRes, partidas] = await Promise.all([
+      supabase.from('truco_torneio_status').select('*').eq('id', 'matamata_md3').maybeSingle(),
+      buscarPartidas()
+    ]);
+
+    if (!statusRes.error && statusRes.data && statusRes.data.top8_equipes_ids && statusRes.data.top8_equipes_ids[0]) {
+      try {
+        const raw = statusRes.data.top8_equipes_ids[0];
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        fasesMataMata.forEach(f => {
+          if (parsed[f]) {
+            estado[f] = {
+              ...criarConfrontoMD3Vazio(f),
+              ...parsed[f]
+            };
+          }
+        });
+      } catch (err) {
+        console.warn('Erro ao processar dados de MD3 do banco:', err);
+      }
+    }
+
+    // Retrocompatibilidade inteligente com placares existentes da tabela truco_partidas
+    partidas.forEach(p => {
+      const f = p.tipo_fase;
+      if (estado[f]) {
+        const conf = estado[f]!;
+        // Se o confronto em MD3 estiver totalmente zerado, mas a partida já tiver pontos no banco, inicializa Jogo 1
+        const hasPointsInMatch = (p.pontos_time_a || 0) > 0 || (p.pontos_time_b || 0) > 0;
+        const md3Zerado = conf.jogo1.pontosA === 0 && conf.jogo1.pontosB === 0 && conf.jogo2.pontosA === 0 && conf.jogo2.pontosB === 0 && conf.jogo3.pontosA === 0 && conf.jogo3.pontosB === 0;
+
+        if (md3Zerado && hasPointsInMatch) {
+          conf.jogo1.pontosA = p.pontos_time_a || 0;
+          conf.jogo1.pontosB = p.pontos_time_b || 0;
+          conf.jogo1.status = 'finalizada';
+          conf.jogo1.vencedorId = p.vencedor_id || (p.pontos_time_a > p.pontos_time_b ? p.time_a_id : p.time_b_id);
+        }
+
+        // Recalcula o status e maiorias
+        estado[f] = calcularResultadoMD3(conf, p.time_a_id, p.time_b_id);
+      }
+    });
+
+  } catch (e) {
+    console.error('Erro ao buscar estado MD3 do mata-mata:', e);
+  }
+
+  return estado;
+};
+
+/**
+ * Salva o estado do Mata-Mata MD3 no Supabase e atualiza automaticamente:
+ * 1. O placar agregado e status de cada partida na tabela `truco_partidas`.
+ * 2. O avanço automático para as Semifinais e Grande Final quando o time atinge a maioria (2 vitórias).
+ * 3. O Campeão Supremo do torneio se a Grande Final for concluída.
+ * 4. Notificação em tempo real imediata para todas as abas e telas públicas.
+ */
+export const salvarMataMataMD3 = async (
+  novoEstado: TrucoMataMataMD3State,
+  todasPartidasParam?: TrucoPartida[]
+): Promise<TrucoMataMataMD3State> => {
+  try {
+    const partidas = todasPartidasParam || (await buscarPartidas());
+    const findPartida = (tipo: TrucoTipoFase) => partidas.find(p => p.tipo_fase === tipo);
+
+    const finalA = findPartida('final_a');
+    const finalB = findPartida('final_b');
+    const grandeFinal = findPartida('grande_final');
+
+    // 1. Recalcula todos os confrontos com base nos times atuais
+    const fases: TrucoTipoFase[] = ['semi_a1', 'semi_a2', 'semi_b1', 'semi_b2', 'final_a', 'final_b', 'grande_final'];
+    const estadoCalculado: TrucoMataMataMD3State = {};
+
+    fases.forEach(f => {
+      const part = findPartida(f);
+      const conf = novoEstado[f] || criarConfrontoMD3Vazio(f);
+      estadoCalculado[f] = calcularResultadoMD3(conf, part?.time_a_id || null, part?.time_b_id || null);
+    });
+
+    // 2. Persiste o JSON completo do MD3 em `truco_torneio_status`
+    await supabase.from('truco_torneio_status').upsert({
+      id: 'matamata_md3',
+      fase_atual: 'mata_mata',
+      sorteio_mata_mata_confirmado: true,
+      top8_equipes_ids: [JSON.stringify(estadoCalculado)],
+      updated_at: new Date().toISOString()
+    });
+
+    // 3. Atualiza os registros das partidas na tabela `truco_partidas`
+    const updatesPartidas: Promise<any>[] = [];
+    fases.forEach(f => {
+      const p = findPartida(f);
+      const conf = estadoCalculado[f];
+      if (p && conf) {
+        updatesPartidas.push(
+          Promise.resolve(
+            supabase.from('truco_partidas').update({
+              pontos_time_a: conf.vitoriasA,
+              pontos_time_b: conf.vitoriasB,
+              vencedor_id: conf.classificadoId,
+              status: conf.status,
+              updated_at: new Date().toISOString()
+            }).eq('id', p.id)
+          )
+        );
+        // Atualiza em memória também
+        p.pontos_time_a = conf.vitoriasA;
+        p.pontos_time_b = conf.vitoriasB;
+        p.vencedor_id = conf.classificadoId;
+        p.status = conf.status;
+      }
+    });
+
+    await Promise.all(updatesPartidas);
+
+    // 4. Progressão Automática do Chaveamento (Classificação Automática por Maioria)
+    const classificadoA1 = estadoCalculado['semi_a1']?.classificadoId || null;
+    const classificadoA2 = estadoCalculado['semi_a2']?.classificadoId || null;
+
+    if (finalA && (finalA.time_a_id !== classificadoA1 || finalA.time_b_id !== classificadoA2)) {
+      finalA.time_a_id = classificadoA1;
+      finalA.time_b_id = classificadoA2;
+      await supabase.from('truco_partidas').update({
+        time_a_id: classificadoA1,
+        time_b_id: classificadoA2
+      }).eq('id', finalA.id);
+    }
+
+    const classificadoB1 = estadoCalculado['semi_b1']?.classificadoId || null;
+    const classificadoB2 = estadoCalculado['semi_b2']?.classificadoId || null;
+
+    if (finalB && (finalB.time_a_id !== classificadoB1 || finalB.time_b_id !== classificadoB2)) {
+      finalB.time_a_id = classificadoB1;
+      finalB.time_b_id = classificadoB2;
+      await supabase.from('truco_partidas').update({
+        time_a_id: classificadoB1,
+        time_b_id: classificadoB2
+      }).eq('id', finalB.id);
+    }
+
+    // Recalcula semifinais após atribuição dos times
+    if (finalA) {
+      estadoCalculado['final_a'] = calcularResultadoMD3(estadoCalculado['final_a']!, finalA.time_a_id, finalA.time_b_id);
+    }
+    if (finalB) {
+      estadoCalculado['final_b'] = calcularResultadoMD3(estadoCalculado['final_b']!, finalB.time_a_id, finalB.time_b_id);
+    }
+
+    const classificadoSemiA = estadoCalculado['final_a']?.classificadoId || null;
+    const classificadoSemiB = estadoCalculado['final_b']?.classificadoId || null;
+
+    if (grandeFinal && (grandeFinal.time_a_id !== classificadoSemiA || grandeFinal.time_b_id !== classificadoSemiB)) {
+      grandeFinal.time_a_id = classificadoSemiA;
+      grandeFinal.time_b_id = classificadoSemiB;
+      await supabase.from('truco_partidas').update({
+        time_a_id: classificadoSemiA,
+        time_b_id: classificadoSemiB
+      }).eq('id', grandeFinal.id);
+    }
+
+    // Grande Final e Campeão Supremo
+    if (grandeFinal) {
+      estadoCalculado['grande_final'] = calcularResultadoMD3(estadoCalculado['grande_final']!, grandeFinal.time_a_id, grandeFinal.time_b_id);
+      const campeaoId = estadoCalculado['grande_final']?.classificadoId || null;
+
+      if (campeaoId) {
+        await salvarStatusTorneio({
+          fase_atual: 'finalizado',
+          campeao_equipe_id: campeaoId
+        });
+      } else {
+        const st = await buscarStatusTorneio();
+        if (st.campeao_equipe_id) {
+          await salvarStatusTorneio({
+            fase_atual: 'mata_mata',
+            campeao_equipe_id: null
+          });
+        }
+      }
+    }
+
+    // 5. Notificação Realtime Global
+    notificarAtualizacaoTruco();
+    return estadoCalculado;
+
+  } catch (err) {
+    console.error('Erro ao salvar Mata-Mata MD3:', err);
+    throw err;
+  }
 };
 
 /**

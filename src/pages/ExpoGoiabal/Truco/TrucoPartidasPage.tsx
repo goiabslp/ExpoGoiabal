@@ -292,6 +292,14 @@ export const TrucoPartidasPage: React.FC<TrucoPartidasPageProps> = ({ isAdmin = 
               </button>
 
               <button
+                onClick={() => { window.scrollTo(0, 0); navigate(isAdmin ? '/Admin/Truco/MataMata' : '/ExpoGoiabal/Truco/MataMata'); }}
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+              >
+                <Trophy size={16} />
+                <span>Mata-Mata (MD3)</span>
+              </button>
+
+              <button
                 onClick={() => { window.scrollTo(0, 0); navigate('/ExpoGoiabal/Truco/Tabela'); }}
                 className="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
               >

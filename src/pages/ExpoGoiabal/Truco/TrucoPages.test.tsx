@@ -45,6 +45,7 @@ import { AdminTrucoHomePage } from '../../Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../../Admin/Truco/AdminTrucoEquipesPage';
 import { AdminTrucoSorteioPage } from '../../Admin/Truco/AdminTrucoSorteioPage';
 import { AdminTrucoPartidasDoDiaPage } from '../../Admin/Truco/AdminTrucoPartidasDoDiaPage';
+import { AdminTrucoMataMataPage } from '../../Admin/Truco/AdminTrucoMataMataPage';
 import { 
   obterEstadoCronometro, 
   dispararInicioPartidaCom5s, 
@@ -157,13 +158,31 @@ describe('Renderização das páginas completas de Truco', () => {
     expect(container).toBeTruthy();
   });
 
-  it('deve renderizar TrucoMataMataPage sem erros', () => {
-    const { container } = render(
+  it('deve renderizar TrucoMataMataPage sem erros e sem botões de edição de placar', () => {
+    const { container, queryByTitle } = render(
       <MemoryRouter initialEntries={['/ExpoGoiabal/Truco/MataMata']}>
         <TrucoMataMataPage />
       </MemoryRouter>
     );
     expect(container).toBeTruthy();
+    // Garante que não é possível inserir/editar placar nesta página pública
+    expect(queryByTitle('Editar Placar')).toBeNull();
+  });
+
+  it('deve renderizar AdminTrucoMataMataPage nas rotas dedicadas de abas', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco/MataMata']}>
+        <AdminTrucoMataMataPage />
+      </MemoryRouter>
+    );
+    expect(container).toBeTruthy();
+
+    const { container: quartasContainer } = render(
+      <MemoryRouter initialEntries={['/Admin/Truco/MataMata/Quartas']}>
+        <AdminTrucoMataMataPage />
+      </MemoryRouter>
+    );
+    expect(quartasContainer).toBeTruthy();
   });
 
   it('deve renderizar AdminTrucoHomePage sem erros', () => {

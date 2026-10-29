@@ -847,5 +847,54 @@ describe('Regra de CPF Opcional e Bônus de Premiação no Cadastro', () => {
     expect(escudo).toContain('data:image/svg+xml');
     expect(decodeURIComponent(escudo)).toContain('ÁS DE ESPADAS');
   });
+
+  it('deve calcular corretamente a série Melhor de 3 e classificar automaticamente por maioria (2 vitórias)', async () => {
+    const { criarConfrontoMD3Vazio, calcularResultadoMD3 } = await import('./trucoService');
+
+    const timeA = 'time-111';
+    const timeB = 'time-222';
+    let confronto = criarConfrontoMD3Vazio('semi_a1');
+
+    // 1. Início: sem jogos iniciados
+    let resultado = calcularResultadoMD3(confronto, timeA, timeB);
+    expect(resultado.status).toBe('agendada');
+    expect(resultado.vitoriasA).toBe(0);
+    expect(resultado.vitoriasB).toBe(0);
+    expect(resultado.classificadoId).toBeNull();
+
+    // 2. Jogo 1 finalizado: Time A vence por 12 x 8 (1 a 0 na série) -> Não tem maioria ainda
+    confronto.jogo1 = { pontosA: 12, pontosB: 8, status: 'finalizada', vencedorId: null };
+    resultado = calcularResultadoMD3(confronto, timeA, timeB);
+    expect(resultado.status).toBe('em_andamento');
+    expect(resultado.vitoriasA).toBe(1);
+    expect(resultado.vitoriasB).toBe(0);
+    expect(resultado.classificadoId).toBeNull(); // Ainda não tem a maioria
+
+    // 3. Jogo 2 finalizado: Time A vence por 12 x 4 (2 a 0 na série) -> Maioria atingida!
+    confronto.jogo2 = { pontosA: 12, pontosB: 4, status: 'finalizada', vencedorId: null };
+    resultado = calcularResultadoMD3(confronto, timeA, timeB);
+    expect(resultado.status).toBe('finalizada');
+    expect(resultado.vitoriasA).toBe(2);
+    expect(resultado.vitoriasB).toBe(0);
+    expect(resultado.classificadoId).toBe(timeA); // Classificado automaticamente!
+
+    // 4. Cenário de desempate (1 a 1 -> Jogo 3 decisivo)
+    let confrontoEmpatado = criarConfrontoMD3Vazio('semi_a2');
+    confrontoEmpatado.jogo1 = { pontosA: 12, pontosB: 6, status: 'finalizada', vencedorId: null };
+    confrontoEmpatado.jogo2 = { pontosA: 6, pontosB: 12, status: 'finalizada', vencedorId: null };
+    let resEmpate = calcularResultadoMD3(confrontoEmpatado, timeA, timeB);
+    expect(resEmpate.status).toBe('em_andamento');
+    expect(resEmpate.vitoriasA).toBe(1);
+    expect(resEmpate.vitoriasB).toBe(1);
+    expect(resEmpate.classificadoId).toBeNull(); // Precisa do jogo 3!
+
+    // Time B vence o Jogo 3 (2 a 1 na série) -> Time B classificado!
+    confrontoEmpatado.jogo3 = { pontosA: 8, pontosB: 12, status: 'finalizada', vencedorId: null };
+    let resFinal = calcularResultadoMD3(confrontoEmpatado, timeA, timeB);
+    expect(resFinal.status).toBe('finalizada');
+    expect(resFinal.vitoriasA).toBe(1);
+    expect(resFinal.vitoriasB).toBe(2);
+    expect(resFinal.classificadoId).toBe(timeB); // Time B classificado automaticamente!
+  });
 });
 

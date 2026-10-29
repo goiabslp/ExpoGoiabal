@@ -21,6 +21,7 @@ import { AdminTrucoHomePage } from '../pages/Admin/Truco/AdminTrucoHomePage';
 import { AdminTrucoEquipesPage } from '../pages/Admin/Truco/AdminTrucoEquipesPage';
 import { AdminTrucoSorteioPage } from '../pages/Admin/Truco/AdminTrucoSorteioPage';
 import { AdminTrucoPartidasDoDiaPage } from '../pages/Admin/Truco/AdminTrucoPartidasDoDiaPage';
+import { AdminTrucoMataMataPage } from '../pages/Admin/Truco/AdminTrucoMataMataPage';
 
 export const router = createBrowserRouter([
   {
@@ -110,6 +111,38 @@ export const router = createBrowserRouter([
   {
     path: '/Admin/truco/cronometro',
     element: <AdminTrucoPartidasDoDiaPage />,
+  },
+  {
+    path: '/Admin/Truco/MataMata',
+    element: <AdminTrucoMataMataPage />,
+  },
+  {
+    path: '/Admin/truco/matamata',
+    element: <AdminTrucoMataMataPage />,
+  },
+  {
+    path: '/Admin/Truco/MataMata/:fase',
+    element: <AdminTrucoMataMataPage />,
+  },
+  {
+    path: '/Admin/truco/matamata/:fase',
+    element: <AdminTrucoMataMataPage />,
+  },
+  {
+    path: '/Admin/Truco/Mata-Mata',
+    element: <Navigate to="/Admin/Truco/MataMata" replace />,
+  },
+  {
+    path: '/Admin/truco/mata-mata',
+    element: <Navigate to="/Admin/Truco/MataMata" replace />,
+  },
+  {
+    path: '/Admin/Truco/FaseFinal',
+    element: <Navigate to="/Admin/Truco/MataMata" replace />,
+  },
+  {
+    path: '/Admin/truco/fasefinal',
+    element: <Navigate to="/Admin/Truco/MataMata" replace />,
   },
   {
     path: '/ExpoGoiabal/Inicio',

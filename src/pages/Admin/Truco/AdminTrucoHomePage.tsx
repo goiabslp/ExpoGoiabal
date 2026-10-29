@@ -10,7 +10,8 @@ import {
   ExternalLink, 
   Clock, 
   BadgeCheck, 
-  ArrowRight
+  ArrowRight,
+  Trophy
 } from 'lucide-react';
 import { 
   buscarTodasEquipesAdmin, 
@@ -204,19 +205,19 @@ export const AdminTrucoHomePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {/* Card 1: Gerenciamento de Equipes */}
             <div 
               onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Equipes'); }}
-              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-emerald-500/30 hover:border-emerald-400 rounded-3xl p-6 sm:p-7 shadow-xl hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-emerald-500/30 hover:border-emerald-400 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40 shadow-inner group-hover:scale-110 transition-transform">
-                    <Users size={28} />
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40 shadow-inner group-hover:scale-110 transition-transform">
+                    <Users size={24} />
                   </div>
                   {pendentes.length > 0 && (
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-wider animate-pulse">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-wider animate-pulse">
                       {pendentes.length} Pendente(s)
                     </span>
                   )}
@@ -225,74 +226,106 @@ export const AdminTrucoHomePage: React.FC = () => {
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 block mb-1">
                   Módulo 1
                 </span>
-                <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-emerald-300 transition-colors">
+                <h4 className="text-lg font-black uppercase tracking-wide text-white mb-2 group-hover:text-emerald-300 transition-colors">
                   Gerenciar Equipes
                 </h4>
-                <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
+                <p className="text-zinc-400 text-xs font-medium leading-relaxed mb-6">
                   Modere cadastros (aprovar/reprovar), <strong>edite todos os dados dos times e jogadores</strong> e controle a elegibilidade ao bônus.
                 </p>
               </div>
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between text-emerald-400 font-black text-xs uppercase tracking-wider group-hover:text-emerald-300">
-                <span>Acessar Gerenciador</span>
+                <span>Acessar Equipes</span>
                 <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
               </div>
             </div>
 
-            {/* Card 2: Lançamento de Placares & Partidas */}
+            {/* Card 2: Lançamento de Placares & Partidas 1ª Fase */}
             <div 
               onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Partidas'); }}
-              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-teal-500/30 hover:border-teal-400 rounded-3xl p-6 sm:p-7 shadow-xl hover:shadow-[0_0_30px_rgba(20,184,166,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-teal-500/30 hover:border-teal-400 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-[0_0_30px_rgba(20,184,166,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/40 shadow-inner group-hover:scale-110 transition-transform">
-                    <Swords size={28} />
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/40 shadow-inner group-hover:scale-110 transition-transform">
+                    <Swords size={24} />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[10px] font-black uppercase tracking-wider">
-                    {partidas.length} Jogos
+                  <span className="px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[10px] font-black uppercase tracking-wider">
+                    {partidas.filter(p => p.tipo_fase === 'primeira_fase').length} Jogos
                   </span>
                 </div>
 
                 <span className="text-[10px] font-black uppercase tracking-widest text-teal-400 block mb-1">
                   Módulo 2
                 </span>
-                <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-teal-300 transition-colors">
-                  Lançar Placares
+                <h4 className="text-lg font-black uppercase tracking-wide text-white mb-2 group-hover:text-teal-300 transition-colors">
+                  1ª Fase (Rodadas)
                 </h4>
-                <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
-                  Acompanhe os confrontos rodada a rodada, insira e edite os pontos das equipes, defina vencedores e atualize a classificação ao vivo.
+                <p className="text-zinc-400 text-xs font-medium leading-relaxed mb-6">
+                  Acompanhe os confrontos rodada a rodada da 1ª Fase, insira os pontos das equipes e atualize a classificação da tabela geral.
                 </p>
               </div>
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between text-teal-400 font-black text-xs uppercase tracking-wider group-hover:text-teal-300">
-                <span>Acessar Placares</span>
+                <span>Placares 1ª Fase</span>
                 <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
               </div>
             </div>
 
-            {/* Card 3: Controle do Sorteio */}
+            {/* Card 3: Mata-Mata Oficial (Quartas, Semifinal e Final) */}
             <div 
-              onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Sorteio'); }}
-              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-amber-500/30 hover:border-amber-400 rounded-3xl p-6 sm:p-7 shadow-xl hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/MataMata'); }}
+              className="group cursor-pointer bg-gradient-to-b from-amber-500/15 via-zinc-900 to-zinc-950 border-2 border-amber-500/50 hover:border-amber-400 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-[0_0_35px_rgba(245,158,11,0.35)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40 shadow-inner group-hover:scale-110 transition-transform">
-                    <Dices size={28} />
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/25 text-amber-400 flex items-center justify-center border border-amber-500/50 shadow-inner group-hover:scale-110 transition-transform">
+                    <Trophy size={24} />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+                    Melhor de 03
+                  </span>
+                </div>
+
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block mb-1">
+                  Módulo 3 • Destaque
+                </span>
+                <h4 className="text-lg font-black uppercase tracking-wide text-white mb-2 group-hover:text-amber-300 transition-colors">
+                  🏆 Mata-Mata (MD3)
+                </h4>
+                <p className="text-zinc-300 text-xs font-medium leading-relaxed mb-6">
+                  Gerencie as <strong>Quartas, Semifinal e Final</strong> em Melhor de 03. Insira os pontos dos jogos e o sistema classifica automaticamente por maioria!
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-amber-500/20 flex items-center justify-between text-amber-400 font-black text-xs uppercase tracking-wider group-hover:text-amber-300">
+                <span>Gerenciar Mata-Mata</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 4: Controle do Sorteio */}
+            <div 
+              onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/Sorteio'); }}
+              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-amber-500/30 hover:border-amber-400 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40 shadow-inner group-hover:scale-110 transition-transform">
+                    <Dices size={24} />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
                     {statusTorneio?.sorteio_primeira_fase_confirmado ? 'Sorteado' : 'Aguardando'}
                   </span>
                 </div>
 
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block mb-1">
-                  Módulo 3
+                  Módulo 4
                 </span>
-                <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-amber-300 transition-colors">
+                <h4 className="text-lg font-black uppercase tracking-wide text-white mb-2 group-hover:text-amber-300 transition-colors">
                   Controle do Sorteio
                 </h4>
-                <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
+                <p className="text-zinc-400 text-xs font-medium leading-relaxed mb-6">
                   Acione o sorteio matemático oficial dos confrontos para transmissão em tempo real nos telões públicos ou resete as rodadas.
                 </p>
               </div>
@@ -303,28 +336,28 @@ export const AdminTrucoHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 4: Partida do Dia & Cronômetro Oficial */}
+            {/* Card 5: Partida do Dia & Cronômetro Oficial */}
             <div 
               onClick={() => { window.scrollTo(0, 0); navigate('/Admin/Truco/ControlePartidas'); }}
-              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-yellow-500/40 hover:border-yellow-400 rounded-3xl p-6 sm:p-7 shadow-xl hover:shadow-[0_0_30px_rgba(234,179,8,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              className="group cursor-pointer bg-gradient-to-b from-zinc-900 to-zinc-950 border border-yellow-500/40 hover:border-yellow-400 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-[0_0_30px_rgba(234,179,8,0.25)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-yellow-400 flex items-center justify-center border border-yellow-500/40 shadow-inner group-hover:scale-110 transition-transform">
-                    <Clock size={28} />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-yellow-400 flex items-center justify-center border border-yellow-500/40 shadow-inner group-hover:scale-110 transition-transform">
+                    <Clock size={24} />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-black uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-black uppercase tracking-wider">
                     02:00 Horas
                   </span>
                 </div>
 
                 <span className="text-[10px] font-black uppercase tracking-widest text-yellow-400 block mb-1">
-                  Módulo 4
+                  Módulo 5
                 </span>
-                <h4 className="text-xl font-black uppercase tracking-wide text-white mb-2 group-hover:text-yellow-300 transition-colors">
+                <h4 className="text-lg font-black uppercase tracking-wide text-white mb-2 group-hover:text-yellow-300 transition-colors">
                   Cronômetro
                 </h4>
-                <p className="text-zinc-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
+                <p className="text-zinc-400 text-xs font-medium leading-relaxed mb-6">
                   Inicie a contagem oficial das <strong>02:00 horas</strong> (com contagem de 5s), acione o alerta de <strong>Queda Saídeira</strong> e encerre as partidas.
                 </p>
               </div>

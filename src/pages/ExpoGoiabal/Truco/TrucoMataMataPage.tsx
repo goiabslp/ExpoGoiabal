@@ -7,11 +7,13 @@ import {
   type TrucoPartida, 
   type TrucoTorneioStatus,
   type TrucoTipoFase,
+  type TrucoMataMataMD3State,
+  type TrucoConfrontoMD3,
   buscarEquipes, 
   buscarPartidas, 
   buscarStatusTorneio,
+  buscarMataMataMD3,
   calcularClassificacao,
-  registrarResultadoPartida,
   sincronizarMataMataAutomatico,
   subscribeToTrucoChanges 
 } from '../../../services/trucoService';
@@ -19,13 +21,13 @@ import {
   Trophy, 
   Crown, 
   CheckCircle2, 
-  Edit3, 
   Users, 
   Play, 
-  Save, 
-  X, 
   ShieldAlert,
-  Swords
+  Swords,
+  Flame,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export const TrucoMataMataPage: React.FC = () => {
@@ -34,25 +36,21 @@ export const TrucoMataMataPage: React.FC = () => {
   const [equipes, setEquipes] = useState<TrucoEquipe[]>([]);
   const [partidas, setPartidas] = useState<TrucoPartida[]>([]);
   const [statusTorneio, setStatusTorneio] = useState<TrucoTorneioStatus | null>(null);
-
-
-  // Modal de Edição de Placar do Mata-Mata
-  const [editingPartida, setEditingPartida] = useState<TrucoPartida | null>(null);
-  const [editPontosA, setEditPontosA] = useState(0);
-  const [editPontosB, setEditPontosB] = useState(0);
-  const [editStatus, setEditStatus] = useState<'agendada' | 'em_andamento' | 'finalizada'>('agendada');
-  const [savingMatch, setSavingMatch] = useState(false);
+  const [md3State, setMd3State] = useState<TrucoMataMataMD3State>({});
+  const [expandedConfrontos, setExpandedConfrontos] = useState<Record<string, boolean>>({});
 
   const carregarDados = async () => {
     try {
-      const [eqs, parts, st] = await Promise.all([
+      const [eqs, parts, st, md3] = await Promise.all([
         buscarEquipes(),
         buscarPartidas(),
-        buscarStatusTorneio()
+        buscarStatusTorneio(),
+        buscarMataMataMD3()
       ]);
       setEquipes(eqs);
       setPartidas(parts);
       setStatusTorneio(st);
+      setMd3State(md3);
 
       // Sincroniza e monta automaticamente o mata-mata se a 1ª fase estiver toda preenchida
       await sincronizarMataMataAutomatico(eqs, parts);
@@ -89,54 +87,11 @@ export const TrucoMataMataPage: React.FC = () => {
     return top8Ids.map(id => getEquipeById(id)).filter(Boolean) as TrucoEquipe[];
   }, [ranking1aFase, statusTorneio, equipes]);
 
-
-  const handleAbrirEdicao = (partida: TrucoPartida) => {
-    if (!partida.time_a_id || !partida.time_b_id) return;
-    setEditingPartida(partida);
-    setEditPontosA(partida.pontos_time_a || 0);
-    setEditPontosB(partida.pontos_time_b || 0);
-    setEditStatus(partida.status === 'agendada' ? 'finalizada' : partida.status);
-  };
-
-  const handleSalvarPlacar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingPartida) return;
-
-    const pontosA = Number(editPontosA) || 0;
-    const pontosB = Number(editPontosB) || 0;
-    const statusFinal = editStatus === 'agendada' && (pontosA > 0 || pontosB > 0) ? 'finalizada' : editStatus;
-
-    setSavingMatch(true);
-
-    // Atualização otimista imediata na interface do mata-mata
-    setPartidas(prevPartidas =>
-      prevPartidas.map(p =>
-        p.id === editingPartida.id
-          ? {
-              ...p,
-              pontos_time_a: pontosA,
-              pontos_time_b: pontosB,
-              status: statusFinal,
-              vencedor_id: pontosA > pontosB ? p.time_a_id : pontosB > pontosA ? p.time_b_id : null
-            }
-          : p
-      )
-    );
-
-    try {
-      await registrarResultadoPartida(
-        editingPartida.id,
-        pontosA,
-        pontosB,
-        statusFinal
-      );
-      await carregarDados();
-      setEditingPartida(null);
-    } catch (err) {
-      console.error('Erro ao salvar resultado no mata-mata:', err);
-    } finally {
-      setSavingMatch(false);
-    }
+  const toggleExpand = (tipo: string) => {
+    setExpandedConfrontos(prev => ({
+      ...prev,
+      [tipo]: !prev[tipo]
+    }));
   };
 
   // Partidas do Mata-Mata
@@ -152,12 +107,15 @@ export const TrucoMataMataPage: React.FC = () => {
 
   const campeaoEquipe = statusTorneio?.campeao_equipe_id 
     ? getEquipeById(statusTorneio.campeao_equipe_id)
+    : md3State['grande_final']?.classificadoId
+    ? getEquipeById(md3State['grande_final'].classificadoId)
     : grandeFinal?.status === 'finalizada' && grandeFinal.vencedor_id
     ? getEquipeById(grandeFinal.vencedor_id)
     : null;
 
-  // Componente de Card de Duelo do Bracket
+  // Componente de Card de Duelo do Bracket (Série Melhor de 03)
   const MatchCard = ({
+    tipo,
     titulo,
     subtitulo,
     partida,
@@ -167,6 +125,7 @@ export const TrucoMataMataPage: React.FC = () => {
     placeholderB = 'Aguardando Time',
     isFinal = false
   }: {
+    tipo: TrucoTipoFase;
     titulo: string;
     subtitulo?: string;
     partida?: TrucoPartida;
@@ -179,43 +138,71 @@ export const TrucoMataMataPage: React.FC = () => {
     const timeA = getEquipeById(partida?.time_a_id || null) || timeAFallback;
     const timeB = getEquipeById(partida?.time_b_id || null) || timeBFallback;
 
-    const isProntaParaJogar = !!timeA && !!timeB;
-    const isFinalizada = partida?.status === 'finalizada';
-    const isEmAndamento = partida?.status === 'em_andamento';
+    const conf: TrucoConfrontoMD3 = md3State[tipo] || {
+      tipo_fase: tipo,
+      jogo1: { pontosA: 0, pontosB: 0, status: 'agendada', vencedorId: null },
+      jogo2: { pontosA: 0, pontosB: 0, status: 'agendada', vencedorId: null },
+      jogo3: { pontosA: 0, pontosB: 0, status: 'agendada', vencedorId: null },
+      vitoriasA: partida?.pontos_time_a || 0,
+      vitoriasB: partida?.pontos_time_b || 0,
+      classificadoId: partida?.vencedor_id || null,
+      status: partida?.status || 'agendada'
+    };
 
-    const vitoriaA = isFinalizada && (partida?.pontos_time_a || 0) > (partida?.pontos_time_b || 0);
-    const vitoriaB = isFinalizada && (partida?.pontos_time_b || 0) > (partida?.pontos_time_a || 0);
+    const isProntaParaJogar = !!timeA && !!timeB;
+    const isFinalizada = conf.status === 'finalizada' || (conf.classificadoId !== null);
+    const isEmAndamento = conf.status === 'em_andamento';
+
+    const isClassificadoA = conf.classificadoId && conf.classificadoId === timeA?.id;
+    const isClassificadoB = conf.classificadoId && conf.classificadoId === timeB?.id;
+    const isEmpate1x1 = conf.vitoriasA === 1 && conf.vitoriasB === 1;
+    const isExpanded = expandedConfrontos[tipo] ?? true;
+
+    // Helper para exibir bolinhas indicativas das vitórias na série de 3
+    const renderBolinhasVitoria = (vitorias: number) => {
+      return (
+        <div className="flex items-center gap-1">
+          <span className={`w-2.5 h-2.5 rounded-full ${vitorias >= 1 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-zinc-800 border border-white/10'}`} />
+          <span className={`w-2.5 h-2.5 rounded-full ${vitorias >= 2 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-zinc-800 border border-white/10'}`} />
+        </div>
+      );
+    };
 
     return (
       <div className={`relative overflow-hidden rounded-3xl p-4 sm:p-5 shadow-xl transition-all duration-300 border ${
         isFinal 
           ? 'bg-gradient-to-b from-amber-500/15 via-zinc-900/90 to-zinc-950 border-amber-500/50 shadow-amber-500/10'
           : isFinalizada 
-          ? 'bg-zinc-900/90 border-zinc-800' 
+          ? 'bg-zinc-900/90 border-emerald-500/30' 
           : isEmAndamento 
-          ? 'bg-zinc-900/95 border-emerald-500/50 ring-1 ring-emerald-500/20' 
+          ? 'bg-zinc-900/95 border-amber-500/40 ring-1 ring-amber-500/20' 
           : 'bg-zinc-900/80 border-white/10'
       }`}>
         {/* Header do Card */}
         <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/5 text-[11px]">
           <div>
-            <span className="font-black uppercase tracking-wider text-amber-400 block">{titulo}</span>
-            {subtitulo && <span className="text-[10px] text-zinc-500">{subtitulo}</span>}
+            <div className="flex items-center gap-1.5">
+              <span className="font-black uppercase tracking-wider text-amber-400 block">{titulo}</span>
+              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black uppercase">
+                Melhor de 03
+              </span>
+            </div>
+            {subtitulo && <span className="text-[10px] text-zinc-500 block mt-0.5">{subtitulo}</span>}
           </div>
 
           <div className="flex items-center gap-1.5">
             {isFinalizada ? (
-              <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                 <CheckCircle2 size={11} />
-                Concluída
+                Concluída ({conf.vitoriasA} × {conf.vitoriasB})
               </span>
             ) : isEmAndamento ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
                 <Play size={10} />
-                Em Jogo
+                Em Andamento ({conf.vitoriasA} × {conf.vitoriasB})
               </span>
             ) : isProntaParaJogar ? (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
                 Pronta
               </span>
             ) : (
@@ -224,21 +211,21 @@ export const TrucoMataMataPage: React.FC = () => {
               </span>
             )}
 
-            {isProntaParaJogar && partida && (
-              <button
-                onClick={() => handleAbrirEdicao(partida)}
-                className="p-1 rounded-lg bg-zinc-800 hover:bg-amber-500 hover:text-black text-zinc-300 transition-colors cursor-pointer"
-                title="Editar Placar"
-              >
-                <Edit3 size={13} />
-              </button>
-            )}
+            <button
+              onClick={() => toggleExpand(tipo)}
+              className="p-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              title="Expandir detalhes dos jogos"
+            >
+              {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
           </div>
         </div>
 
         {/* Time A Row */}
         <div className={`p-2.5 rounded-2xl flex items-center justify-between gap-2 mb-2 transition-all ${
-          vitoriaA ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300' : 'bg-black/30 border border-white/5'
+          isClassificadoA 
+            ? 'bg-emerald-500/15 border border-emerald-500/50 text-emerald-300' 
+            : 'bg-black/30 border border-white/5'
         }`}>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0 flex items-center justify-center">
@@ -249,26 +236,36 @@ export const TrucoMataMataPage: React.FC = () => {
               )}
             </div>
             <div className="min-w-0">
-              <span className={`text-xs font-black uppercase truncate block ${timeA ? 'text-white' : 'text-zinc-500 italic'}`}>
-                {timeA ? timeA.nome : placeholderA}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs font-black uppercase truncate block ${timeA ? 'text-white' : 'text-zinc-500 italic'}`}>
+                  {timeA ? timeA.nome : placeholderA}
+                </span>
+                {isClassificadoA && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[8px] font-black uppercase">
+                    Classificado
+                  </span>
+                )}
+              </div>
               {timeA && <span className="text-[9px] text-zinc-400 truncate block">{timeA.cidade}</span>}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {vitoriaA && <Trophy size={14} className="text-emerald-400" />}
-            <span className={`text-base font-black px-2 py-0.5 rounded-lg bg-black/50 ${
-              vitoriaA ? 'text-emerald-400 font-black' : 'text-zinc-300'
+          <div className="flex items-center gap-2 shrink-0">
+            {renderBolinhasVitoria(conf.vitoriasA)}
+            {isClassificadoA && <Trophy size={14} className="text-emerald-400" />}
+            <span className={`text-sm font-black px-2 py-0.5 rounded-lg bg-black/60 min-w-[28px] text-center ${
+              isClassificadoA ? 'text-emerald-400 font-black ring-1 ring-emerald-500/30' : 'text-zinc-300'
             }`}>
-              {partida?.pontos_time_a || 0}
+              {conf.vitoriasA}
             </span>
           </div>
         </div>
 
         {/* Time B Row */}
         <div className={`p-2.5 rounded-2xl flex items-center justify-between gap-2 transition-all ${
-          vitoriaB ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300' : 'bg-black/30 border border-white/5'
+          isClassificadoB 
+            ? 'bg-emerald-500/15 border border-emerald-500/50 text-emerald-300' 
+            : 'bg-black/30 border border-white/5'
         }`}>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 shrink-0 flex items-center justify-center">
@@ -279,22 +276,95 @@ export const TrucoMataMataPage: React.FC = () => {
               )}
             </div>
             <div className="min-w-0">
-              <span className={`text-xs font-black uppercase truncate block ${timeB ? 'text-white' : 'text-zinc-500 italic'}`}>
-                {timeB ? timeB.nome : placeholderB}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs font-black uppercase truncate block ${timeB ? 'text-white' : 'text-zinc-500 italic'}`}>
+                  {timeB ? timeB.nome : placeholderB}
+                </span>
+                {isClassificadoB && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[8px] font-black uppercase">
+                    Classificado
+                  </span>
+                )}
+              </div>
               {timeB && <span className="text-[9px] text-zinc-400 truncate block">{timeB.cidade}</span>}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {vitoriaB && <Trophy size={14} className="text-emerald-400" />}
-            <span className={`text-base font-black px-2 py-0.5 rounded-lg bg-black/50 ${
-              vitoriaB ? 'text-emerald-400 font-black' : 'text-zinc-300'
+          <div className="flex items-center gap-2 shrink-0">
+            {renderBolinhasVitoria(conf.vitoriasB)}
+            {isClassificadoB && <Trophy size={14} className="text-emerald-400" />}
+            <span className={`text-sm font-black px-2 py-0.5 rounded-lg bg-black/60 min-w-[28px] text-center ${
+              isClassificadoB ? 'text-emerald-400 font-black ring-1 ring-emerald-500/30' : 'text-zinc-300'
             }`}>
-              {partida?.pontos_time_b || 0}
+              {conf.vitoriasB}
             </span>
           </div>
         </div>
+
+        {/* ALERTA DE EMPATE 1x1 */}
+        {isEmpate1x1 && (
+          <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between text-amber-300 text-[10px] font-black uppercase">
+            <span className="flex items-center gap-1">
+              <Flame size={12} className="text-amber-400" /> Empate 1 × 1: Decisão no 3º Jogo (Nega)!
+            </span>
+          </div>
+        )}
+
+        {/* DETALHAMENTO DOS 3 JOGOS DA SÉRIE MELHOR DE 3 */}
+        {isExpanded && isProntaParaJogar && (
+          <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 block">
+              Jogos da Série (Maioria de 3 Classifica)
+            </span>
+
+            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+              {/* Jogo 1 */}
+              <div className="bg-black/40 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center">
+                <span className="text-[8px] font-bold text-zinc-400 uppercase">1º Jogo</span>
+                <span className="font-black text-white text-xs mt-0.5">
+                  {conf.jogo1.pontosA} × {conf.jogo1.pontosB}
+                </span>
+                <span className="text-[8px] font-bold mt-0.5 text-zinc-400 truncate max-w-full">
+                  {conf.jogo1.vencedorId ? `Venc: ${getEquipeById(conf.jogo1.vencedorId)?.nome}` : 'Aberto'}
+                </span>
+              </div>
+
+              {/* Jogo 2 */}
+              <div className="bg-black/40 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center">
+                <span className="text-[8px] font-bold text-zinc-400 uppercase">2º Jogo</span>
+                <span className="font-black text-white text-xs mt-0.5">
+                  {conf.jogo2.pontosA} × {conf.jogo2.pontosB}
+                </span>
+                <span className="text-[8px] font-bold mt-0.5 text-zinc-400 truncate max-w-full">
+                  {conf.jogo2.vencedorId ? `Venc: ${getEquipeById(conf.jogo2.vencedorId)?.nome}` : 'Aberto'}
+                </span>
+              </div>
+
+              {/* Jogo 3 */}
+              <div className={`border rounded-xl p-2 flex flex-col items-center text-center ${
+                (conf.vitoriasA === 2 || conf.vitoriasB === 2) && conf.jogo3.pontosA === 0 && conf.jogo3.pontosB === 0
+                  ? 'bg-zinc-900/30 border-white/5 text-zinc-500'
+                  : isEmpate1x1
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'bg-black/40 border-white/5'
+              }`}>
+                <span className="text-[8px] font-bold uppercase">3º Jogo</span>
+                <span className="font-black text-xs mt-0.5">
+                  {(conf.vitoriasA === 2 || conf.vitoriasB === 2) && conf.jogo3.pontosA === 0 && conf.jogo3.pontosB === 0
+                    ? 'Dispensado'
+                    : `${conf.jogo3.pontosA} × ${conf.jogo3.pontosB}`}
+                </span>
+                <span className="text-[8px] font-bold mt-0.5 truncate max-w-full">
+                  {(conf.vitoriasA === 2 || conf.vitoriasB === 2) && conf.jogo3.pontosA === 0 && conf.jogo3.pontosB === 0
+                    ? 'Maioria 2x0'
+                    : conf.jogo3.vencedorId
+                    ? `Venc: ${getEquipeById(conf.jogo3.vencedorId)?.nome}`
+                    : 'Aberto'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -321,13 +391,13 @@ export const TrucoMataMataPage: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-black uppercase tracking-widest mb-2">
                 <Trophy size={13} />
-                <span>Fase Final • Cruzamento Olímpico</span>
+                <span>Fase Final • Cruzamento Olímpico • Séries Melhor de 03</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
                 🏆 Mata-Mata
               </h1>
               <p className="text-zinc-400 text-xs sm:text-sm font-medium mt-1">
-                Confrontos definidos pela classificação geral: <strong>1º × 8º</strong>, <strong>2º × 7º</strong>, <strong>3º × 6º</strong> e <strong>4º × 5º</strong>.
+                Confrontos em <strong>Melhor de 03</strong> definidos pela classificação geral: <strong>1º × 8º</strong>, <strong>2º × 7º</strong>, <strong>3º × 6º</strong> e <strong>4º × 5º</strong>. A maioria dos 3 jogos classifica automaticamente.
               </p>
             </div>
           </div>
@@ -375,10 +445,10 @@ export const TrucoMataMataPage: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                      <h4 className="text-sm font-black uppercase text-emerald-400">Mata-Mata Oficial Montado Automaticamente</h4>
+                      <h4 className="text-sm font-black uppercase text-emerald-400">Mata-Mata Oficial • Séries Melhor de 03</h4>
                     </div>
                     <p className="text-xs text-zinc-300 font-medium">
-                      Confrontos consolidados pela classificação geral da 1ª Fase (1º×8º, 2º×7º, 3º×6º e 4º×5º).
+                      Confrontos consolidados pela classificação geral. A pontuação é atualizada pelo Painel Administrativo em tempo real.
                     </p>
                   </div>
                 </div>
@@ -398,7 +468,7 @@ export const TrucoMataMataPage: React.FC = () => {
                       <h4 className="text-sm font-black uppercase text-amber-400">Projeção Dinâmica do Mata-Mata em Tempo Real</h4>
                     </div>
                     <p className="text-xs text-zinc-300 font-medium">
-                      Os confrontos abaixo refletem a classificação atual da tabela. Ao preencher a última rodada da 1ª Fase, o chaveamento será oficializado automaticamente!
+                      Os confrontos abaixo refletem a classificação atual da tabela.
                     </p>
                   </div>
                 </div>
@@ -447,9 +517,10 @@ export const TrucoMataMataPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave A)</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave A) • Melhor de 03</span>
                   
                   <MatchCard
+                    tipo="semi_a1"
                     titulo="Quartas 1: 1º × 8º"
                     subtitulo="Confronto Direto por Classificação"
                     partida={semiA1}
@@ -460,6 +531,7 @@ export const TrucoMataMataPage: React.FC = () => {
                   />
 
                   <MatchCard
+                    tipo="semi_a2"
                     titulo="Quartas 2: 4º × 5º"
                     subtitulo="Confronto Direto por Classificação"
                     partida={semiA2}
@@ -478,9 +550,10 @@ export const TrucoMataMataPage: React.FC = () => {
                 {/* Semifinal 1 */}
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    🏆 Semifinal 1 (Decisão do Finalista Chave A)
+                    🏆 Semifinal 1 (Decisão do Finalista Chave A) • Melhor de 03
                   </span>
                   <MatchCard
+                    tipo="final_a"
                     titulo="Semifinal 1"
                     subtitulo="Venc. Quartas 1 × Venc. Quartas 2"
                     partida={finalA}
@@ -501,9 +574,10 @@ export const TrucoMataMataPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave B)</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quartas de Final (Chave B) • Melhor de 03</span>
                   
                   <MatchCard
+                    tipo="semi_b1"
                     titulo="Quartas 3: 2º × 7º"
                     subtitulo="Confronto Direto por Classificação"
                     partida={semiB1}
@@ -514,6 +588,7 @@ export const TrucoMataMataPage: React.FC = () => {
                   />
 
                   <MatchCard
+                    tipo="semi_b2"
                     titulo="Quartas 4: 3º × 6º"
                     subtitulo="Confronto Direto por Classificação"
                     partida={semiB2}
@@ -532,9 +607,10 @@ export const TrucoMataMataPage: React.FC = () => {
                 {/* Semifinal 2 */}
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-teal-400">
-                    🏆 Semifinal 2 (Decisão do Finalista Chave B)
+                    🏆 Semifinal 2 (Decisão do Finalista Chave B) • Melhor de 03
                   </span>
                   <MatchCard
+                    tipo="final_b"
                     titulo="Semifinal 2"
                     subtitulo="Venc. Quartas 3 × Venc. Quartas 4"
                     partida={finalB}
@@ -560,6 +636,7 @@ export const TrucoMataMataPage: React.FC = () => {
 
               <div className="w-full">
                 <MatchCard
+                  tipo="grande_final"
                   titulo="Grande Finalíssima"
                   subtitulo="Finalista Chave A × Finalista Chave B"
                   partida={grandeFinal}
@@ -574,99 +651,6 @@ export const TrucoMataMataPage: React.FC = () => {
 
         </div>
       </main>
-
-
-      {/* MODAL DE EDIÇÃO DE PLACAR NO MATA-MATA */}
-      {editingPartida && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-zinc-900 border border-amber-500/40 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.3)] relative animate-in zoom-in-95 duration-300">
-            <button
-              onClick={() => setEditingPartida(null)}
-              className="absolute top-5 right-5 text-zinc-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black">
-                <Edit3 size={20} />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{editingPartida.fase_nome}</span>
-                <h3 className="text-xl font-black uppercase text-white">Registrar Resultado</h3>
-              </div>
-            </div>
-
-            <form onSubmit={handleSalvarPlacar} className="flex flex-col gap-5">
-              
-              {/* Status */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase text-zinc-300">Status da Partida</label>
-                <select
-                  value={editStatus}
-                  onChange={e => setEditStatus(e.target.value as any)}
-                  className="bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:border-amber-500 outline-none"
-                >
-                  <option value="agendada">⚪ Aguardando Início</option>
-                  <option value="em_andamento">🟡 Em Andamento</option>
-                  <option value="finalizada">🟢 Concluída (Avança Vencedor)</option>
-                </select>
-              </div>
-
-              {/* Placar */}
-              <div className="grid grid-cols-2 gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <span className="text-xs font-bold uppercase text-zinc-300 line-clamp-1">
-                    {getEquipeById(editingPartida.time_a_id)?.nome || 'Time A'}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={editPontosA}
-                    onChange={e => setEditPontosA(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-20 text-center bg-zinc-900 border border-amber-500/50 rounded-xl py-2.5 text-2xl font-black text-amber-400 outline-none"
-                  />
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Pontos</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <span className="text-xs font-bold uppercase text-zinc-300 line-clamp-1">
-                    {getEquipeById(editingPartida.time_b_id)?.nome || 'Time B'}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={editPontosB}
-                    onChange={e => setEditPontosB(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-20 text-center bg-zinc-900 border border-amber-500/50 rounded-xl py-2.5 text-2xl font-black text-amber-400 outline-none"
-                  />
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Pontos</span>
-                </div>
-              </div>
-
-              <div className="mt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingPartida(null)}
-                  className="flex-1 py-3 rounded-xl bg-zinc-800 text-white font-bold text-xs uppercase tracking-wider"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingMatch}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black text-xs uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Save size={16} />
-                  <span>{savingMatch ? 'Salvando...' : 'Salvar Resultado'}</span>
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
